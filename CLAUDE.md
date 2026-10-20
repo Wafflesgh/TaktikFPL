@@ -27,6 +27,11 @@ dan blueprint, ikuti blueprint atau tanyakan.
 7. Bahasa UI: Bahasa Indonesia natural. Istilah teknis sepakbola tetap bahasa Inggris.
 8. Ikuti design tokens di Bagian 11. Jangan pakai logo klub/kompetisi resmi sebagai aset statis
    di repo; badge & foto pemain dimuat dari URL CDN yang dikonfigurasi (lihat Bagian 6).
+9. DATA ADALAH ASET JANGKA PANJANG (ML, bertahun-tahun) — docs/adr/0001-data-arsip-jangka-panjang.md.
+   API FPL di-reset tiap musim. Payload mentah diarsip immutable (bucket `archive` +
+   tabel data_archives); tabel fakta tidak pernah dihapus/dipangkas; hanya data turunan &
+   operasional boleh dipangkas, dan snapshot fitur per-deadline GW selalu disimpan (point-in-time).
+   Setiap sumber/endpoint baru wajib punya kebijakan arsip. Migrasi tidak menghapus kolom fakta.
 
 ## Stack
 - apps/web: Next.js (App Router) + TypeScript + Tailwind + shadcn/ui + TanStack Query + Recharts,

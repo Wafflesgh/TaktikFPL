@@ -13,8 +13,9 @@ from app.scheduler.runner import job
 
 @job("deadline_checkpoint")
 def deadline_checkpoint(gw: int, minutes_before: int) -> dict[str, Any]:
-    bootstrap = sync_bootstrap()
-    fixtures = sync_fixtures()
+    # Snapshot "apa yang diketahui saat keputusan diambil" untuk training ML (point-in-time).
+    bootstrap = sync_bootstrap(archive_reason="deadline")
+    fixtures = sync_fixtures(archive_reason="deadline")
     return {
         "gw": gw,
         "minutes_before": minutes_before,

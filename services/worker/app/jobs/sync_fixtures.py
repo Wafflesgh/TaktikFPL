@@ -9,6 +9,7 @@ import structlog
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
+from app.archive.store import archive_if_due
 from app.config import get_settings
 from app.db import get_engine
 from app.jobs.sync_bootstrap import current_season_id
@@ -231,13 +232,22 @@ def apply_fixtures(conn: Connection, rows: list[FixtureRow], source: str = "fpl"
 
 
 @job("sync_fixtures")
-def sync_fixtures() -> dict[str, Any]:
+def sync_fixtures(archive_reason: str | None = None) -> dict[str, Any]:
     settings = get_settings()
     engine = get_engine()
     with FPLClient(settings.fpl_base_url, settings.fpl_requests_per_second, engine) as fpl:
         payload = fpl.fixtures()
     with engine.begin() as conn:
         stats = apply_fixtures(conn, parse_fixtures(payload))
+    with engine.begin() as conn:
+        stats["archive"] = archive_if_due(
+            conn,
+            source="fpl",
+            endpoint="fixtures/",
+            payload=payload,
+            reason=archive_reason,
+            record_count=len(payload),
+        )
     if stats["changes"]:
         # Fase 2: notifikasi push/Telegram + trigger run_projections untuk GW terdampak.
         log.warning("fixtures.schedule_changed", count=len(stats["changes"]))

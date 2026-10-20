@@ -7,6 +7,7 @@ import structlog
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
+from app.archive.store import archive_if_due
 from app.config import get_settings
 from app.db import get_engine
 from app.scheduler.runner import JobSkipped, job
@@ -313,13 +314,24 @@ def apply_bootstrap(conn: Connection, data: dict[str, Any], today: date) -> dict
 
 
 @job("sync_bootstrap")
-def sync_bootstrap() -> dict[str, Any]:
+def sync_bootstrap(archive_reason: str | None = None) -> dict[str, Any]:
     settings = get_settings()
     engine = get_engine()
     with FPLClient(settings.fpl_base_url, settings.fpl_requests_per_second, engine) as fpl:
         data = fpl.bootstrap_static()
     with engine.begin() as conn:
         stats = apply_bootstrap(conn, data, datetime.now(UTC).date())
+    # Arsip permanen setelah data diterapkan; gagal arsip = job gagal (terlihat di job_runs).
+    with engine.begin() as conn:
+        stats["archive"] = archive_if_due(
+            conn,
+            source="fpl",
+            endpoint="bootstrap-static/",
+            payload=data,
+            reason=archive_reason,
+            gameweek=stats["next_gw"],
+            record_count=len(data.get("elements", [])),
+        )
 
     if stats["next_gw_new_or_changed"] and stats["next_deadline"] is not None:
         # Deadline GW berikut baru/berubah → jadwalkan ulang semua checkpoint (BLUEPRINT 9.2).

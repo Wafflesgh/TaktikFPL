@@ -7,6 +7,7 @@ from sqlalchemy import text
 
 from app.config import get_settings
 from app.db import get_engine
+from app.jobs.gw_finalize import gw_finalize, pending_finalization
 from app.jobs.sync_bootstrap import current_season_id
 from app.scheduler.runner import job
 from app.sources.fpl import FPLClient, parse_event_status
@@ -52,6 +53,13 @@ def poll_event_status() -> dict[str, Any]:
                 finalized.append(int(row))
 
     for gw in finalized:
-        # Fase 2: picu gw_finalize (dream-team, evaluasi model, laporan mingguan).
         log.info("gameweek.final", gw=gw)
-    return {"events": sorted(parsed), "finalized": finalized}
+
+    # Arsipkan setiap GW final yang belum diarsip (termasuk yang gagal di putaran sebelumnya).
+    with engine.connect() as conn:
+        pending = pending_finalization(conn)
+    archived = []
+    for gw in pending:
+        gw_finalize(gw=gw)
+        archived.append(gw)
+    return {"events": sorted(parsed), "finalized": finalized, "archived_gws": archived}

@@ -2,6 +2,29 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.2.0] — 2026-10-21 · Fondasi data jangka panjang untuk ML
+
+Permintaan Dilan: data harus dipertahankan bertahun-tahun untuk machine learning.
+Keputusan lengkap: `docs/adr/0001-data-arsip-jangka-panjang.md`.
+
+### Ditambahkan
+- Migrasi `20261020001600_archive.sql`: bucket privat `archive`, tabel manifest `data_archives`
+  (RLS: baca admin), index `player_form_features(as_of)`.
+- `app/archive/store.py`: arsip JSON gzip immutable (backend Supabase Storage atau folder lokal),
+  sha256, dedupe isi identik, path per sumber/musim/endpoint/tanggal.
+- Arsip `daily` (bootstrap & fixtures), `deadline` (dipaksa di setiap checkpoint deadline),
+  `gw_final` (job `gw_finalize`: event live, fixtures GW, dream team, set-piece notes; menandai
+  `player_fpl_gw_stats.is_final`), `season_end` (job `archive_season_snapshot`: element-summary semua
+  pemain di GW terakhir sebelum API FPL reset). `poll_event_status` memicu `gw_finalize` untuk setiap
+  GW final yang belum diarsip (self-healing, termasuk GW lampau saat aplikasi mulai di tengah musim).
+- CLI menerima argumen job: `python -m app.cli gw_finalize:gw=7`.
+- Aturan inti #9 di `CLAUDE.md`.
+
+### Diubah
+- `cleanup_retention`: `odds_snapshots` **tidak lagi dipangkas** (90 hari di blueprint) sampai closing
+  odds diarsip permanen; `player_form_features` harian > 30 hari dipangkas **kecuali** snapshot terakhir
+  sebelum setiap deadline GW (point-in-time untuk training).
+
 ## [0.1.0] — 2026-10-20 · Fase 1: Fondasi data
 
 Eksekusi `docs/INFRA_BLUEPRINT.md` Bagian 12 (Langkah 1–5, 8–11 secara lokal) + Fase 1 `docs/BLUEPRINT.md`.

@@ -92,6 +92,12 @@ class Settings(BaseSettings):
     # Deadline protocol
     deadline_checkpoints_min: str = "2880,1440,360,120,60,15"
 
+    # Arsip jangka panjang (docs/adr/0001-data-arsip-jangka-panjang.md)
+    archive_backend: str = "auto"  # auto | supabase | local
+    archive_dir: str = str(_REPO_ROOT / ".archive")
+    archive_bucket: str = "archive"
+    archive_daily_min_hours: float = 20.0
+
     # Scheduler
     scheduler_enabled: bool = True
     leader_retry_seconds: int = 30
