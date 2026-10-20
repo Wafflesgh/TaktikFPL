@@ -1,5 +1,6 @@
 import { FormBadge } from "@/components/FormBadge";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
+import { DeadlineTile } from "@/components/dashboard/DeadlineTile";
 import { FixtureGrid, NextMatchCard, StandingsTable } from "@/components/dashboard/Matches";
 import { FormLeaders, PlayerTable, type Sort } from "@/components/dashboard/Players";
 import { Spotlight } from "@/components/dashboard/Spotlight";
@@ -9,7 +10,7 @@ import { TopBar } from "@/components/shell/TopBar";
 import { Panel, StatTile } from "@/components/ui";
 import type { DashboardData, PlayerRow } from "@/lib/data/dashboard";
 import { FORM_ORDER } from "@/lib/form";
-import { countdown, countdownShort, formatWIB } from "@/lib/time";
+import { formatWIB } from "@/lib/time";
 
 const formRank = (p: PlayerRow) => FORM_ORDER.indexOf(p.form?.label ?? "minim_menit");
 
@@ -32,7 +33,7 @@ type Props = {
 
 /** Beranda desktop-first (ref-02): top bar + 3 kolom; mobile: kolom bertumpuk + bottom nav. */
 export function DashboardView({ displayName, isAdmin, data, pos, sort }: Props) {
-  const { next, fixtures, live, players, standings } = data;
+  const { next, fixtures, live, players, standings, fetchedAt } = data;
 
   const byForm = sortPlayers(players, "form");
   const spotlight = byForm.find((p) => p.form?.label === "panas" || p.form?.label === "bagus") ?? null;
@@ -77,12 +78,11 @@ export function DashboardView({ displayName, isAdmin, data, pos, sort }: Props) 
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
-              <StatTile
-                label="Deadline"
-                icon={<ClockIcon size={16} />}
-                value={next ? countdownShort(next.deadline_utc) : "-"}
-                hint={next ? `${countdown(next.deadline_utc)} (hari·jam·menit)` : undefined}
-              />
+              {next ? (
+                <DeadlineTile deadlineUtc={next.deadline_utc} serverNow={fetchedAt} />
+              ) : (
+                <StatTile label="Deadline" icon={<ClockIcon size={16} />} value="-" />
+              )}
               <StatTile
                 label="Laga GW"
                 icon={<CalendarIcon size={16} />}

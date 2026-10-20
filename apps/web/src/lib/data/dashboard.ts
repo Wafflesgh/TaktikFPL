@@ -168,6 +168,8 @@ export async function getDashboardData() {
     live,
     players,
     standings: computeStandings(resultsRes.data ?? [], teams),
+    /** Waktu server (ms) saat data diambil: titik awal countdown agar hidrasi cocok. */
+    fetchedAt: Date.now(),
   };
 }
 

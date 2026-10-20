@@ -2,6 +2,20 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [Unreleased] · Halaman Pengaturan & countdown deadline live
+
+### Ditambahkan
+- Halaman **Pengaturan** (`/pengaturan`): ubah nama tampilan, tema (Violet/Ember/Pitch dengan pratinjau
+  warna dari token tema masing-masing), dan profil risiko (Aman/Seimbang/Agresif + penjelasan singkat).
+  Disimpan lewat Server Action ke `public.users` milik pengguna login (validasi Zod, RLS); pesan sukses/gagal.
+- Menu profil di top bar kini punya tautan **Pengaturan** di atas "Keluar".
+- Tile **Deadline** di Beranda kini countdown live (diperbarui tiap 30 detik, tanpa animasi).
+
+### Diubah
+- Root layout memasang `data-theme` dari `users.theme` pengguna login (fallback Violet untuk tamu atau
+  bila Supabase gagal). `getViewer` kini di-`cache` per request dan ikut mengembalikan tema & profil risiko.
+  Akibatnya `/login` dan `/_not-found` dirender dinamis.
+
 ## [0.6.0] — 2026-10-21 · Halaman Jadwal & Profil Pemain (sesi Claude cloud)
 
 ### Ditambahkan
