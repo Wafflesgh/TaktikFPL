@@ -35,3 +35,7 @@ Thumbs.db
 apps/web/public/sw.js
 apps/web/public/sw.js.map
 apps/web/public/workbox-*.js
+
+# Arsip lokal (dev) — produksi memakai bucket Supabase `archive`
+.archive/
+.backup/

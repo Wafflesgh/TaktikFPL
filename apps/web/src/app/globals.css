@@ -1,0 +1,60 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@theme inline {
+  --font-sans: var(--font-inter), "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: var(--font-anton), "Bebas Neue", "Oswald", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  background-image: var(--bg-glow);
+  background-repeat: no-repeat;
+  background-size: 100% 520px;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  min-height: 100dvh;
+}
+
+/* Di layer components agar utilitas Tailwind (mis. bg-*) bisa menimpanya. */
+@layer components {
+  /* Panel "kaca" versi ringan: latar solid semi-transparan tanpa backdrop-filter (blur berat
+     di GPU laptop/HP). Tampilan nyaris sama di atas latar gelap. */
+  .glass {
+    background: color-mix(in srgb, var(--bg-elev) 88%, transparent);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+  }
+
+  /* Top bar menempel: latar hampir solid agar konten di bawahnya tidak tembus saat di-scroll. */
+  .topbar {
+    background: rgba(10, 10, 18, 0.86);
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+}
+
+a,
+button {
+  transition: all 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

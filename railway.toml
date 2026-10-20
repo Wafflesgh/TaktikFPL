@@ -1,0 +1,10 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "services/worker/Dockerfile"
+watchPatterns = ["services/worker/**", "railway.toml"]
+
+[deploy]
+healthcheckPath = "/v1/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

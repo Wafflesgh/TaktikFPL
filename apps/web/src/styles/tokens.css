@@ -1,0 +1,59 @@
+/* apps/web/src/styles/tokens.css */
+:root {
+  /* tipografi */
+  --font-display: "Anton", "Bebas Neue", "Oswald", sans-serif;  /* judul condensed (ref-01) */
+  --font-sans: "Inter", "Plus Jakarta Sans", system-ui, sans-serif; /* body (ref-02, ref-03) */
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;          /* angka statistik */
+
+  /* radius & glass */
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-blur: 18px;
+
+  /* status FPL */
+  --status-ok: #22C55E;
+  --status-doubt: #F59E0B;
+  --status-out: #EF4444;
+  --live-red: #FF3B3B;
+
+  /* FDR 1-5 */
+  --fdr-1: #1F8A4C; --fdr-2: #4ADE80; --fdr-3: #9CA3AF; --fdr-4: #F97316; --fdr-5: #B91C1C;
+}
+
+/* Tema Violet (default) — ref-03 */
+[data-theme="violet"] {
+  --bg: #07070C;
+  --bg-elev: #12121C;
+  --bg-glow: radial-gradient(60% 40% at 50% 0%, rgba(108, 59, 255, 0.35), transparent 70%);
+  --accent: #6C3BFF;
+  --accent-soft: rgba(108, 59, 255, 0.18);
+  --text: #F5F5FA;
+  --text-muted: #9A9AB0;
+}
+
+/* Tema Ember — ref-01 */
+[data-theme="ember"] {
+  --bg: #0A0A0A;
+  --bg-elev: #1A0F0B;
+  --bg-glow: linear-gradient(180deg, #FF7A1A 0%, #E8261E 45%, #0A0A0A 100%);
+  --accent: #FF5A1F;
+  --accent-soft: rgba(255, 90, 31, 0.2);
+  --text: #FFFFFF;
+  --text-muted: #FFD2C2;
+}
+
+/* Tema Pitch — ref-02 */
+[data-theme="pitch"] {
+  --bg: #06140D;
+  --bg-elev: #0D2017;
+  --bg-glow: radial-gradient(80% 60% at 50% 20%, rgba(34, 197, 94, 0.25), transparent 70%);
+  --accent: #3B5BFF;
+  --accent-2: #22C55E;
+  --accent-soft: rgba(59, 91, 255, 0.2);
+  --text: #F2F7F4;
+  --text-muted: #9FB8AA;
+}
