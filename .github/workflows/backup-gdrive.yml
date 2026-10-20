@@ -35,6 +35,10 @@ jobs:
       - working-directory: services/worker
         run: uv sync --frozen --no-dev
 
+      - name: Diagnostik konfigurasi (aman, tanpa menampilkan rahasia)
+        working-directory: services/worker
+        run: uv run python -m app.doctor
+
       - name: Pasang rclone
         run: sudo apt-get update -qq && sudo apt-get install -y -qq rclone
 

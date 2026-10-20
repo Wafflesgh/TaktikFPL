@@ -46,6 +46,9 @@ jobs:
           cache-dependency-glob: services/worker/uv.lock
       - run: uv sync --frozen --no-dev
 
+      - name: Diagnostik konfigurasi (aman, tanpa menampilkan rahasia)
+        run: uv run python -m app.doctor
+
       - name: Tick (job yang jatuh tempo)
         if: github.event_name == 'schedule' || inputs.jobs == ''
         run: uv run python -m app.tick
