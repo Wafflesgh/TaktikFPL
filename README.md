@@ -42,17 +42,32 @@ uv run python -m app.cli sync_bootstrap sync_fixtures poll_event_status
 uv run python -m app.cli sync_player_history build_form   # ±11 menit (1 request/detik)
 ```
 
-## Job terjadwal (worker leader)
+## Produksi (gratis): Supabase + GitHub Actions + Vercel + Google Drive
+
+1. Buat project Supabase (paket Free), jalankan migrasi (`pnpm exec supabase db push --include-seed`).
+2. GitHub → Settings → Secrets and variables → Actions → **Secrets**: `DATABASE_URL` (Session pooler),
+   `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `RCLONE_CONFIG`, dan kunci API opsional (`GEMINI_API_KEY`, …).
+   **Variables**: `FPL_TEAM_ID`.
+3. `RCLONE_CONFIG` (sekali, di laptop): pasang rclone (`winget install Rclone.Rclone`), lalu
+   `rclone config create gdrive drive scope=drive.file` (login Google di browser), lalu salin isi
+   `rclone config file` → base64 → secret `RCLONE_CONFIG`.
+4. Isi data awal: Actions → **worker-tick** → *Run workflow* dengan `jobs` =
+   `sync_bootstrap sync_fixtures poll_event_status backfill_history sync_player_history build_form`.
+5. Web di Vercel (Root Directory `apps/web`).
+
+## Job terjadwal (GitHub Actions `worker-tick`, tiap 15 menit)
 
 | Job | Jadwal | Isi |
 |---|---|---|
-| `sync_bootstrap` | 30 menit (5 menit di 24 jam terakhir sebelum deadline) | tim, pemain, status, harga, GW, deadline |
+| `sync_bootstrap` | 30 menit (tiap tick di 24 jam terakhir sebelum deadline) | tim, pemain, status, harga, GW, deadline |
 | `sync_fixtures` | 15 menit | fixture PL + deteksi perubahan jadwal + Blank/Double GW |
-| `poll_event_status` | 10 menit | bonus terkonfirmasi, liga diperbarui, GW final |
+| `poll_event_status` | 30 menit | bonus terkonfirmasi, GW final → arsip `gw_final` |
 | `sync_player_history` | harian 05:00 UTC | riwayat per laga → `player_fpl_gw_stats` |
 | `build_form` | harian 06:00 UTC | form pemain (last4/last8/season + label) |
 | `cleanup_retention` | harian 03:00 UTC | hapus data operasional lama |
-| `deadline_checkpoint` | dinamis T-48j, T-24j, T-6j, T-2j, T-60m, T-15m | refresh penuh sebelum deadline |
+| `deadline_checkpoint` | tick pertama setelah T-48j, T-24j, T-6j, T-2j, T-60m, T-15m | refresh penuh + arsip `deadline` |
+| `backfill_history` | manual | impor musim 2016/17–2025/26 (dataset vaastav) |
+| backup Google Drive | Minggu 10:00 WIB (workflow `backup-gdrive`) | snapshot DB + arsip baru |
 
 ## Test
 

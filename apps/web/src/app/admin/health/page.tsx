@@ -3,7 +3,7 @@ import { BottomNav } from "@/components/shell/NavLinks";
 import { TopBar } from "@/components/shell/TopBar";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { formatWIB } from "@/lib/time";
+import { formatWIB, minutesSince } from "@/lib/time";
 import { workerFetch } from "@/lib/worker";
 
 type WorkerHealth = {
@@ -70,7 +70,7 @@ export default async function AdminHealthPage() {
             ))}
           </dl>
         ) : (
-          <p className="text-sm text-red-300">Worker tidak terjangkau (WORKER_API_URL, status {worker.status}).</p>
+          <WorkerTickStatus lastRun={jobs?.[0] ?? null} />
         )}
         {worker.data && worker.data.missing_optional_env.length > 0 && (
           <p className="mt-3 text-xs text-[var(--text-muted)]">Env opsional belum diisi: {worker.data.missing_optional_env.join(", ")}</p>
@@ -98,5 +98,18 @@ export default async function AdminHealthPage() {
       </main>
       <BottomNav />
     </div>
+  );
+}
+
+/** Worker berjalan di GitHub Actions (tick ±15 menit): status dari job_runs terakhir. */
+function WorkerTickStatus({ lastRun }: { lastRun: { job_name: string; status: string; started_at: string } | null }) {
+  if (!lastRun) return <p className="text-sm text-amber-300">Belum ada job tercatat — cek workflow worker-tick di GitHub Actions.</p>;
+  const minutes = minutesSince(lastRun.started_at); // server component: dihitung per request
+  const stale = minutes > 45;
+  return (
+    <p className={`text-sm ${stale ? "text-red-300" : "text-green-300"}`}>
+      Worker (GitHub Actions): job terakhir <b>{lastRun.job_name}</b> ({lastRun.status}) {minutes} menit lalu
+      {stale ? " — terlambat, cek workflow worker-tick." : "."}
+    </p>
   );
 }

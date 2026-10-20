@@ -1,0 +1,68 @@
+name: worker-tick
+
+# Worker TaktikFPL tanpa server: tiap ±15 menit menjalankan job yang jatuh tempo
+# (docs/adr/0002-worker-github-actions.md). Jadwal hanya aktif di branch default (main).
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      jobs:
+        description: "Opsional: job manual dipisah spasi, mis. 'backfill_history' atau 'gw_finalize:gw=8'. Kosong = tick biasa."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  actions: write # keepalive: GitHub menonaktifkan jadwal setelah 60 hari tanpa aktivitas repo
+
+concurrency:
+  group: worker
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: services/worker
+    env:
+      APP_ENV: production
+      ARCHIVE_BACKEND: supabase
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      FPL_TEAM_ID: ${{ vars.FPL_TEAM_ID }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      GNEWS_API_KEY: ${{ secrets.GNEWS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: services/worker/uv.lock
+      - run: uv sync --frozen --no-dev
+
+      - name: Tick (job yang jatuh tempo)
+        if: github.event_name == 'schedule' || inputs.jobs == ''
+        run: uv run python -m app.tick
+
+      - name: Job manual
+        if: github.event_name == 'workflow_dispatch' && inputs.jobs != ''
+        env:
+          MANUAL_JOBS: ${{ inputs.jobs }}
+        # $MANUAL_JOBS sengaja tanpa kutip: dipecah per spasi menjadi argumen, tidak dieksekusi shell.
+        run: uv run python -m app.cli $MANUAL_JOBS
+
+      - name: Keepalive jadwal (sekali sehari)
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(date -u +%H)" = "00" ] && [ "$(date -u +%M)" -lt 15 ]; then
+            gh api -X PUT "repos/${{ github.repository }}/actions/workflows/worker-tick.yml/enable"
+            gh api -X PUT "repos/${{ github.repository }}/actions/workflows/backup-gdrive.yml/enable"
+          fi

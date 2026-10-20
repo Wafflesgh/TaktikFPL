@@ -40,3 +40,7 @@ export function countdownShort(iso: string, now: Date = new Date()): string {
   if (m >= 60) return `${Math.floor(m / 60)} jam`;
   return `${m} menit`;
 }
+
+export function minutesSince(iso: string, now: Date = new Date()): number {
+  return Math.round((now.getTime() - new Date(iso).getTime()) / 60000);
+}

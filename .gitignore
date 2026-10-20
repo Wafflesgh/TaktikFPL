@@ -38,3 +38,4 @@ apps/web/public/workbox-*.js
 
 # Arsip lokal (dev) — produksi memakai bucket Supabase `archive`
 .archive/
+.backup/

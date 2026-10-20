@@ -1,11 +1,14 @@
-"""Backup lokal (di laptop Dilan), dijalankan mingguan — docs/adr/0001-data-arsip-jangka-panjang.md.
+"""Backup mingguan ke Google Drive — docs/adr/0002-worker-github-actions.md.
 
-    uv run python -m app.backup                 # backup DB + cermin arsip ke BACKUP_DIR
-    uv run python -m app.backup --keep 8        # simpan 8 snapshot DB terakhir (arsip tidak dihapus)
+Dijalankan workflow `.github/workflows/backup-gdrive.yml`: backup ke folder sementara runner,
+lalu `rclone copy` ke Google Drive. Bisa juga manual:
+
+    uv run python -m app.backup --dest <folder>                       # backup DB + cermin arsip
+    uv run python -m app.backup --dest <folder> --archive-skip-list existing.txt
     uv run python -m app.backup restore --src <folder-snapshot> --target-url <postgres-url> --yes
 
-Konfigurasi produksi dibaca dari `.env.backup` di root repo (di-ignore git) bila ada:
-DATABASE_URL (Session pooler produksi), SUPABASE_URL, SUPABASE_SECRET_KEY, BACKUP_DIR.
+`--archive-skip-list`: daftar path arsip yang sudah ada di tujuan (keluaran `rclone lsf -R`),
+agar file arsip tidak diunduh ulang setiap minggu. `.env.backup` (bila ada) menimpa .env.
 
 Isi folder BACKUP_DIR:
     db/2026-10-25T030000Z/<schema>.<tabel>.csv.gz + manifest.json   (snapshot penuh, dirotasi)
@@ -28,7 +31,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_BACKUP_DIR = REPO_ROOT.parent / "TaktikFPL-backup"
+DEFAULT_BACKUP_DIR = REPO_ROOT / ".backup"
 SKIP_TABLES = {"raw_payloads"}  # cache debug 14 hari; payload permanen ada di arsip
 
 
@@ -139,8 +142,8 @@ def dump_database(engine: Engine, dest: Path) -> dict[str, Any]:
     return manifest
 
 
-def mirror_archive(engine: Engine, dest: Path) -> dict[str, int]:
-    """Unduh file arsip yang belum ada di lokal; verifikasi sha256 isi. Tidak pernah menghapus."""
+def mirror_archive(engine: Engine, dest: Path, skip: set[str] | None = None) -> dict[str, int]:
+    """Unduh file arsip yang belum ada di tujuan; verifikasi sha256 isi. Tidak pernah menghapus."""
     from app.archive.store import get_backend
 
     backend = get_backend()
@@ -149,7 +152,7 @@ def mirror_archive(engine: Engine, dest: Path) -> dict[str, int]:
     new = verified_fail = 0
     for path, sha in rows:
         target = dest / path
-        if target.exists():
+        if target.exists() or (skip and path in skip):
             continue
         data = backend.get(path)
         if hashlib.sha256(gzip.decompress(data)).hexdigest() != sha:
@@ -225,6 +228,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--dest", default=None, help="folder backup (default BACKUP_DIR)")
     parser.add_argument("--keep", type=int, default=8, help="jumlah snapshot DB yang disimpan")
     parser.add_argument("--no-archive", action="store_true", help="lewati cermin arsip")
+    parser.add_argument("--archive-skip-list", help="file berisi path arsip yang sudah ada di tujuan")
     parser.add_argument("--src", help="restore: folder snapshot db/<waktu>")
     parser.add_argument("--target-url", help="restore: URL Postgres tujuan")
     parser.add_argument("--yes", action="store_true", help="restore: konfirmasi menimpa data tujuan")
@@ -251,7 +255,11 @@ def main(argv: list[str]) -> int:
         "rows": sum(t["rows"] for t in manifest["tables"]),
     }
     if not args.no_archive:
-        result["archive"] = mirror_archive(engine, base / "archive")
+        skip = None
+        if args.archive_skip_list and Path(args.archive_skip_list).exists():
+            lines = Path(args.archive_skip_list).read_text(encoding="utf-8").splitlines()
+            skip = {ln.strip() for ln in lines if ln.strip()}
+        result["archive"] = mirror_archive(engine, base / "archive", skip)
     result["rotated_out"] = rotate(base / "db", args.keep)
     log_line = json.dumps(result, ensure_ascii=False)
     with (base / "backup.log").open("a", encoding="utf-8") as f:

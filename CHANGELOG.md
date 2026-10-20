@@ -2,6 +2,23 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.5.0] — 2026-10-21 · Worker di GitHub Actions + backup ke Google Drive (semua gratis)
+
+Keputusan Dilan: Supabase gratis, backup di Google Drive tanpa salinan lokal, worker di GitHub
+Actions. Detail: `docs/adr/0002-worker-github-actions.md`.
+
+### Ditambahkan
+- `app/tick.py` + workflow `worker-tick` (cron 15 menit): menjalankan job yang jatuh tempo berdasarkan
+  `job_runs` dan deadline GW (termasuk checkpoint T-48j … T-15m), job manual via *Run workflow*,
+  keepalive jadwal harian. 8 test penjadwalan.
+- Workflow `backup-gdrive` (Minggu 10:00 WIB): backup DB + arsip baru → Google Drive via rclone,
+  rotasi snapshot 8 minggu. `app.backup --archive-skip-list` agar arsip tidak diunduh ulang.
+- `/admin/health`: status worker dari job terakhir (peringatan bila > 45 menit).
+
+### Dihapus / diubah
+- Skrip Task Scheduler Windows (backup lokal) dihapus — diganti backup ke Google Drive.
+- Railway tidak dipakai (berbayar); `Dockerfile`/`railway.toml`/scheduler always-on tetap sebagai opsi.
+
 ## [0.4.0] — 2026-10-21 · Data historis 2016/17–2025/26 + backup lokal mingguan
 
 Keputusan Dilan: backup lokal mingguan; dataset vaastav dipakai sebagai data pendukung; tetap di
