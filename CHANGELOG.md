@@ -14,6 +14,12 @@ Actions. Detail: `docs/adr/0002-worker-github-actions.md`.
 - Workflow `backup-gdrive` (Minggu 10:00 WIB): backup DB + arsip baru → Google Drive via rclone,
   rotasi snapshot 8 minggu. `app.backup --archive-skip-list` agar arsip tidak diunduh ulang.
 - `/admin/health`: status worker dari job terakhir (peringatan bila > 45 menit).
+- Siap publish (web): halaman `loading` (kerangka 3 kolom), `error` (tombol coba lagi; prop `retry`
+  Next 16) dan `404`; pesan error login yang ramah (`?error=` dari magic link kedaluwarsa, pendaftaran
+  ditutup, rate limit); ikon PWA PNG 192/512/maskable + apple-touch-icon; header keamanan
+  (nosniff, DENY frame, referrer, permissions) + `noindex` (robots.txt, meta, X-Robots-Tag);
+  pesan 503 jelas bila env Supabase belum diisi. Proxy tidak lagi mengalihkan `robots.txt`/ikon ke
+  login, dan regex matcher-nya diperbaiki (`\.` agar benar-benar mencocokkan titik).
 
 ### Dihapus / diubah
 - Skrip Task Scheduler Windows (backup lokal) dihapus — diganti backup ke Google Drive.

@@ -8,6 +8,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Semua rute kecuali aset statis, manifest PWA, dan gambar.
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icon.*|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|robots.txt|icon.*|apple-icon.*|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

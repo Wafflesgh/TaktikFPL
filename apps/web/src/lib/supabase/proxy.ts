@@ -6,6 +6,13 @@ const PUBLIC_PATHS = ["/login", "/auth/callback"];
 
 /** Refresh sesi Supabase di setiap request dan arahkan pengguna non-login ke /login. */
 export async function updateSession(request: NextRequest) {
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    // Lebih jelas daripada crash: env Supabase belum diisi (lokal: .env root; produksi: Vercel).
+    return new NextResponse(
+      "TaktikFPL: NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY belum diisi.",
+      { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } },
+    );
+  }
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {

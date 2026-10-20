@@ -9,6 +9,14 @@ export const metadata: Metadata = {
   title: "TaktikFPL",
   description: "Asisten analisis & rekomendasi Fantasy Premier League",
   appleWebApp: { capable: true, title: "TaktikFPL", statusBarStyle: "black-translucent" },
+  robots: { index: false, follow: false }, // aplikasi pribadi
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
