@@ -44,3 +44,8 @@ export function countdownShort(iso: string, now: Date = new Date()): string {
 export function minutesSince(iso: string, now: Date = new Date()): number {
   return Math.round((now.getTime() - new Date(iso).getTime()) / 60000);
 }
+
+/** Tanggal snapshot harian (kolom date, hari UTC): "20 Okt". */
+export function formatSnapshotDay(day: string): string {
+  return formatInTimeZone(new Date(`${day}T00:00:00Z`), "UTC", "d MMM", { locale: id });
+}

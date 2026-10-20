@@ -2,6 +2,17 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.7.0] — 2026-10-20 · Hub Analisis: Harga & Transfer
+
+### Ditambahkan
+- Halaman **Analisis** (`/analisis`, desktop-first) sebagai hub; bagian pertama **Harga & Transfer**
+  (BLUEPRINT fitur #13 Price watch) dari `price_snapshots`: perubahan harga naik/turun antara dua hari
+  snapshot terakhir (£lama → £baru), top 15 net transfer masuk & keluar GW ini (masuk − keluar) dengan
+  kepemilikan, harga, badge form, dan filter posisi (`?pos=`); sparkline harga 14 hari (SVG inline)
+  per pemain; nama menaut ke `/pemain/{id}`. Data < 2 hari snapshot → pesan "Data harga belum cukup".
+- `src/lib/data/analisis.ts` (server-only, query berhalaman agar aman dari batas 1000 baris PostgREST);
+  tipe `price_snapshots` di `database.types.ts`. Navigasi Analisis aktif.
+
 ## [0.6.0] — 2026-10-21 · Halaman Jadwal & Profil Pemain (sesi Claude cloud)
 
 ### Ditambahkan
