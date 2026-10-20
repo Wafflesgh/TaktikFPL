@@ -55,6 +55,9 @@ export function TopBar({ displayName, isAdmin, liveCount }: Props) {
             </span>
           </summary>
           <div className="glass absolute right-0 mt-2 w-44 p-2 text-sm">
+            <Link href="/pengaturan" className="block w-full rounded-xl px-3 py-2 text-left hover:bg-white/10">
+              Pengaturan
+            </Link>
             <form action="/auth/signout" method="post">
               <button type="submit" className="w-full rounded-xl px-3 py-2 text-left hover:bg-white/10">
                 Keluar

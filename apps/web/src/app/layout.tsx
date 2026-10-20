@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, Inter } from "next/font/google";
+import { getViewer } from "@/lib/data/viewer";
+import { DEFAULT_THEME, type Theme } from "@/lib/preferences";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -25,10 +27,19 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
-  // Tema default Violet (BLUEPRINT 11.2); preferensi users.theme dipakai di fase berikutnya.
+/** Tema dari users.theme pengguna login; Violet (BLUEPRINT 11.2) untuk tamu atau bila Supabase gagal. */
+async function resolveTheme(): Promise<Theme> {
+  try {
+    return (await getViewer()).theme;
+  } catch {
+    return DEFAULT_THEME;
+  }
+}
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const theme = await resolveTheme();
   return (
-    <html lang="id" data-theme="violet" className={`${inter.variable} ${anton.variable} antialiased`}>
+    <html lang="id" data-theme={theme} className={`${inter.variable} ${anton.variable} antialiased`}>
       <body>{children}</body>
     </html>
   );
