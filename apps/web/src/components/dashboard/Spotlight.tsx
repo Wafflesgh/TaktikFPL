@@ -61,7 +61,7 @@ export function Spotlight({ player }: { player: PlayerRow | null }) {
 
           <dl className="grid grid-cols-2 gap-3 2xl:grid-cols-4">
             {stats.map((s) => (
-              <div key={s.label} className="rounded-2xl bg-black/30 p-3 backdrop-blur">
+              <div key={s.label} className="rounded-2xl bg-black/40 p-3">
                 <dt className="text-xs text-[var(--text-muted)]">{s.label}</dt>
                 <dd className="mt-1 font-display text-3xl leading-none">{s.value}</dd>
               </div>

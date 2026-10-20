@@ -59,7 +59,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navigasi utama"
-      className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit items-center gap-2 rounded-full border border-[var(--glass-border)] bg-black/60 p-2 backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit items-center gap-2 rounded-full border border-[var(--glass-border)] bg-black/85 p-2 lg:hidden"
     >
       {NAV.map(({ href, label, icon: Icon, ready }) => {
         const active = pathname === href;
