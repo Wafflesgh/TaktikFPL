@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { BottomNav } from "@/components/shell/NavLinks";
+import { TopBar } from "@/components/shell/TopBar";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatWIB } from "@/lib/time";
@@ -28,7 +30,7 @@ export default async function AdminHealthPage() {
   const userId = claims?.claims?.sub;
   if (!userId) redirect("/login");
 
-  const { data: me } = await supabase.from("users").select("is_admin").eq("id", userId).maybeSingle();
+  const { data: me } = await supabase.from("users").select("is_admin, display_name").eq("id", userId).maybeSingle();
   if (!me?.is_admin) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
@@ -45,11 +47,10 @@ export default async function AdminHealthPage() {
   ]);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
-      <header className="flex items-center justify-between">
-        <h1 className="font-display text-3xl uppercase">Admin · Health</h1>
-        <Link href="/" className="glass px-4 py-2 text-sm">Beranda</Link>
-      </header>
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
+      <TopBar displayName={me.display_name ?? "Admin"} isAdmin liveCount={0} />
+      <main className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+      <h1 className="font-display text-3xl uppercase">Admin · Health</h1>
 
       <section className="glass p-4">
         <h2 className="mb-2 font-semibold">Worker</h2>
@@ -94,6 +95,8 @@ export default async function AdminHealthPage() {
           </tbody>
         </table>
       </section>
-    </main>
+      </main>
+      <BottomNav />
+    </div>
   );
 }

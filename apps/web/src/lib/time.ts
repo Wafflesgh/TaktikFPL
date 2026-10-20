@@ -31,3 +31,12 @@ export function countdown(iso: string, now: Date = new Date()): string {
 export function formatPrice(tenths: number | null | undefined): string {
   return tenths == null ? "-" : `£${(tenths / 10).toFixed(1)}m`;
 }
+
+/** Ringkas untuk kartu: "3 hari", "5 jam", "12 menit". */
+export function countdownShort(iso: string, now: Date = new Date()): string {
+  const m = Math.floor((new Date(iso).getTime() - now.getTime()) / 60000);
+  if (m <= 0) return "lewat";
+  if (m >= 1440) return `${Math.floor(m / 1440)} hari`;
+  if (m >= 60) return `${Math.floor(m / 60)} jam`;
+  return `${m} menit`;
+}

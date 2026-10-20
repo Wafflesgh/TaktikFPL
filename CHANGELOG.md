@@ -2,6 +2,27 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.3.0] — 2026-10-21 · UI desktop-first dari referensi desain
+
+Permintaan Dilan: ikuti referensi tampilan, desktop diutamakan.
+
+### Diubah
+- Beranda dirombak desktop-first mengikuti ref-02 (dashboard 3 kolom, panel kaca, top bar dengan
+  navigasi pill berikon + indikator Live + profil): kolom kiri **GW Overview** (pemain terpanas,
+  kartu statistik deadline/laga/form panas/jadwal berubah), **Form Teratas** (garis progres ala panel
+  AI Prediction), **Perlu Diwaspadai** (pemain populer tidak fit); kolom tengah **Sorotan Form** (hero
+  pemain), **Jadwal GW** dalam WIB + FDR + penanda perubahan, **tabel pemain** (filter posisi, urut
+  form/harga/kepemilikan/xGI); kolom kanan **Laga Berikutnya/Live** dan **Klasemen** (dihitung dari
+  hasil fixture final).
+- Mobile (ref-01 & ref-03): kolom bertumpuk, bottom nav mengambang berbentuk pill; tanpa overflow
+  horizontal di 375 px. Halaman Analisis/Live/Jadwal/Tim Saya ditandai "segera".
+- Tampilan dipisah ke `DashboardView` (komponen murni) dan data ke `lib/data/dashboard.ts`.
+- `PlayerHeadshot`: ukuran `xl` untuk hero; fallback foto juga berjalan bila gambar gagal sebelum
+  hidrasi React (idempoten, aman untuk efek ganda StrictMode).
+- `.glass` dipindah ke `@layer components` agar bisa ditimpa utilitas; top bar memakai latar
+  hampir solid supaya konten tidak tembus saat di-scroll.
+- Diverifikasi visual di 1600 px, 1280 px, dan 375 px dengan snapshot data nyata (668 pemain, GW8).
+
 ## [0.2.0] — 2026-10-21 · Fondasi data jangka panjang untuk ML
 
 Permintaan Dilan: data harus dipertahankan bertahun-tahun untuk machine learning.

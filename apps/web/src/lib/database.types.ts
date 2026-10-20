@@ -61,6 +61,29 @@ export type Database = {
         reason: string | null;
         notified: boolean;
       }>;
+      seasons: Table<{
+        id: number;
+        label: string;
+        start_date: string;
+        end_date: string | null;
+        is_current: boolean;
+      }>;
+      fixtures: Table<{
+        id: number;
+        season_id: number;
+        competition_id: number;
+        gameweek_id: number | null;
+        home_team_id: number;
+        away_team_id: number;
+        kickoff_utc: string | null;
+        status: "scheduled" | "tbc" | "live" | "ht" | "finished" | "postponed" | "cancelled" | "abandoned";
+        minute: number | null;
+        home_goals: number | null;
+        away_goals: number | null;
+        difficulty_home: number | null;
+        difficulty_away: number | null;
+        fpl_fixture_id: number | null;
+      }>;
       teams: Table<{
         id: number;
         name: string;
