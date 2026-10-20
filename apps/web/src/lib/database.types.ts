@@ -125,6 +125,15 @@ export type Database = {
         joined_on: string | null;
         left_on: string | null;
       }>;
+      price_snapshots: Table<{
+        player_id: number;
+        captured_on: string;
+        price_tenths: number;
+        selected_by_pct: number | null;
+        transfers_in_event: number | null;
+        transfers_out_event: number | null;
+        price_change_progress: number | null;
+      }>;
       player_fpl_gw_stats: Table<
         {
           player_id: number;

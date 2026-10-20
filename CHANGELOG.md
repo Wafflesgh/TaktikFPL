@@ -2,7 +2,13 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
-## [Unreleased] · Halaman Pengaturan & countdown deadline live
+## [0.8.0] — 2026-10-21 · Pengaturan, Analisis harga, diagnostik worker
+
+### Ditambahkan (diagnostik)
+- `app.doctor`: langkah pertama `worker-tick` & `backup-gdrive` — memeriksa secret, format `DATABASE_URL`
+  (kurung siku, `@` di password, host direct, transaction pooler), koneksi DB, Storage, dan API FPL
+  dalam Bahasa Indonesia tanpa mencetak password/kunci. Tick pertama produksi gagal sebelum menulis apa
+  pun ke DB; langkah ini membuat penyebabnya terbaca di log Actions.
 
 ### Ditambahkan
 - Halaman **Pengaturan** (`/pengaturan`): ubah nama tampilan, tema (Violet/Ember/Pitch dengan pratinjau
@@ -15,6 +21,15 @@ Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://k
 - Root layout memasang `data-theme` dari `users.theme` pengguna login (fallback Violet untuk tamu atau
   bila Supabase gagal). `getViewer` kini di-`cache` per request dan ikut mengembalikan tema & profil risiko.
   Akibatnya `/login` dan `/_not-found` dirender dinamis.
+
+### Ditambahkan (Hub Analisis: Harga & Transfer)
+- Halaman **Analisis** (`/analisis`, desktop-first) sebagai hub; bagian pertama **Harga & Transfer**
+  (BLUEPRINT fitur #13 Price watch) dari `price_snapshots`: perubahan harga naik/turun antara dua hari
+  snapshot terakhir (£lama → £baru), top 15 net transfer masuk & keluar GW ini (masuk − keluar) dengan
+  kepemilikan, harga, badge form, dan filter posisi (`?pos=`); sparkline harga 14 hari (SVG inline)
+  per pemain; nama menaut ke `/pemain/{id}`. Data < 2 hari snapshot → pesan "Data harga belum cukup".
+- `src/lib/data/analisis.ts` (server-only, query berhalaman agar aman dari batas 1000 baris PostgREST);
+  tipe `price_snapshots` di `database.types.ts`. Navigasi Analisis aktif.
 
 ## [0.6.0] — 2026-10-21 · Halaman Jadwal & Profil Pemain (sesi Claude cloud)
 

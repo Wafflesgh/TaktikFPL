@@ -7,7 +7,7 @@ import { CalendarIcon, ChartIcon, HomeIcon, LiveIcon, ShirtIcon } from "@/compon
 // Navigasi utama (BLUEPRINT 11.3). Halaman yang belum dibangun ditandai "segera".
 export const NAV = [
   { href: "/", label: "Beranda", icon: HomeIcon, ready: true },
-  { href: "/analisis", label: "Analisis", icon: ChartIcon, ready: false },
+  { href: "/analisis", label: "Analisis", icon: ChartIcon, ready: true },
   { href: "/live", label: "Live", icon: LiveIcon, ready: false },
   { href: "/jadwal", label: "Jadwal", icon: CalendarIcon, ready: true },
   { href: "/tim", label: "Tim Saya", icon: ShirtIcon, ready: false },
