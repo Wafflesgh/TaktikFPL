@@ -2,6 +2,31 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.4.0] — 2026-10-21 · Data historis 2016/17–2025/26 + backup lokal mingguan
+
+Keputusan Dilan: backup lokal mingguan; dataset vaastav dipakai sebagai data pendukung; tetap di
+paket gratis Supabase.
+
+### Ditambahkan
+- Migrasi `20261021000100_history_features.sql` (aditif): `player_fpl_gw_stats` + `team_id`,
+  `opponent_team_id`, `was_home`, `starts`, `fpl_xp` (proyeksi resmi FPL), `transfers_in/out/balance`,
+  `source`, `extra` (statistik khusus musim, mis. tackles/recoveries 2016/17);
+  `gameweeks.deadline_estimated`; `seasons.data_source`.
+- `app/sources/vaastav.py` + job `backfill_history`: impor 10 musim (2016/17–2025/26) — 258 ribu baris
+  statistik per laga, 380 fixture/musim (2016/17–2017/18 direkonstruksi dari data per pemain), GW COVID
+  2019/20 (39–47 → 30–38), baris manajer 2024/25 dilewati. Diverifikasi: klasemen 2016/17 yang dihitung
+  ulang cocok dengan sejarah (Chelsea 93, Spurs 86). File CSV asli diarsip permanen (sumber `vaastav`).
+- `sync_player_history` kini juga mengisi tim, lawan, kandang/tandang, starts, dan transfer per laga.
+- `app/backup.py`: backup DB via COPY (CSV gzip per tabel + manifest sha256 + versi migrasi), cermin
+  arsip inkremental dengan verifikasi checksum, rotasi snapshot (default 8), dan `restore` — diuji
+  pulang-pergi: 56 tabel, 0 selisih baris. `scripts/backup-weekly.ps1` &
+  `scripts/register-backup-task.ps1` (Windows Task Scheduler, Minggu 10:00).
+- CLI menerima nilai berkoma: `backfill_history:seasons=2024-25,2025-26`.
+
+### Catatan kuota (paket gratis)
+- DB setelah backfill: ±172 MB dari 500 MB (tabel terbesar `player_fpl_gw_stats` ±148 MB).
+  Pertumbuhan ±20–30 MB/musim. Arsip vaastav ±12 MB di Storage (dari 1 GB).
+
 ## [0.3.0] — 2026-10-21 · UI desktop-first dari referensi desain
 
 Permintaan Dilan: ikuti referensi tampilan, desktop diutamakan.

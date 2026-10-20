@@ -5,6 +5,7 @@ import sys
 
 from app.config import get_settings
 from app.jobs import (  # noqa: F401
+    backfill_history,
     build_form,
     cleanup_retention,
     deadline_checkpoint,
@@ -26,7 +27,14 @@ def main(argv: list[str]) -> int:
     for arg in argv:
         # format: nama_job atau nama_job:kunci=nilai,kunci=nilai (mis. gw_finalize:gw=7)
         name, _, raw = arg.partition(":")
-        kwargs = dict(kv.split("=", 1) for kv in raw.split(",") if kv)
+        kwargs: dict[str, str] = {}
+        last = None
+        for part in (p for p in raw.split(",") if p):
+            if "=" in part:
+                last, val = part.split("=", 1)
+                kwargs[last] = val
+            elif last is not None:  # nilai yang mengandung koma, mis. seasons=2024-25,2025-26
+                kwargs[last] += "," + part
         if name not in JOBS:
             print(f"job tidak dikenal: {name}")
             return 2

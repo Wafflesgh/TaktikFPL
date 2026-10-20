@@ -280,6 +280,12 @@ class HistoryRow:
     ict_index: float | None
     value_tenths: int | None
     selected: int | None
+    was_home: bool | None = None
+    opponent_fpl_team: int | None = None
+    starts: int | None = None
+    transfers_in: int | None = None
+    transfers_out: int | None = None
+    transfers_balance: int | None = None
 
 
 def parse_history(summary: dict[str, Any]) -> list[HistoryRow]:
@@ -315,6 +321,12 @@ def parse_history(summary: dict[str, Any]) -> list[HistoryRow]:
                 ict_index=_f(h.get("ict_index")),
                 value_tenths=h.get("value"),
                 selected=h.get("selected"),
+                was_home=h.get("was_home"),
+                opponent_fpl_team=h.get("opponent_team"),
+                starts=h.get("starts"),
+                transfers_in=h.get("transfers_in"),
+                transfers_out=h.get("transfers_out"),
+                transfers_balance=h.get("transfers_balance"),
             )
         )
     return rows

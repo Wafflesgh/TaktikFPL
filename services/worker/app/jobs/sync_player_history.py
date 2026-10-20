@@ -25,13 +25,15 @@ UPSERT_SQL = text(
        clean_sheets, goals_conceded, own_goals, penalties_saved, penalties_missed, yellow_cards,
        red_cards, saves, defensive_contribution, expected_goals, expected_assists,
        expected_goal_involvements, expected_goals_conceded, influence, creativity, threat, ict_index,
-       value_tenths, selected, is_final)
+       value_tenths, selected, is_final, team_id, opponent_team_id, was_home, starts,
+       transfers_in, transfers_out, transfers_balance, source)
     values
       (:pid, :fx, :gw, :minutes, :total_points, :bonus, :bps, :goals_scored, :assists,
        :clean_sheets, :goals_conceded, :own_goals, :penalties_saved, :penalties_missed, :yellow_cards,
        :red_cards, :saves, :defensive_contribution, :expected_goals, :expected_assists,
        :expected_goal_involvements, :expected_goals_conceded, :influence, :creativity, :threat,
-       :ict_index, :value_tenths, :selected, :is_final)
+       :ict_index, :value_tenths, :selected, :is_final, :team, :opp, :home, :starts,
+       :transfers_in, :transfers_out, :transfers_balance, 'fpl_api')
     on conflict (player_id, fixture_id) do update set
       gameweek_id = excluded.gameweek_id, minutes = excluded.minutes,
       total_points = excluded.total_points, bonus = excluded.bonus, bps = excluded.bps,
@@ -46,7 +48,11 @@ UPSERT_SQL = text(
       expected_goals_conceded = excluded.expected_goals_conceded,
       influence = excluded.influence, creativity = excluded.creativity, threat = excluded.threat,
       ict_index = excluded.ict_index, value_tenths = excluded.value_tenths,
-      selected = excluded.selected, is_final = excluded.is_final
+      selected = excluded.selected, is_final = excluded.is_final,
+      team_id = excluded.team_id, opponent_team_id = excluded.opponent_team_id,
+      was_home = excluded.was_home, starts = excluded.starts,
+      transfers_in = excluded.transfers_in, transfers_out = excluded.transfers_out,
+      transfers_balance = excluded.transfers_balance
     where public.player_fpl_gw_stats.is_final is distinct from true
        or public.player_fpl_gw_stats.total_points is distinct from excluded.total_points
     """
@@ -56,15 +62,20 @@ UPSERT_SQL = text(
 def history_params(
     player_id: int,
     rows: list[HistoryRow],
-    fixture_by_fpl: dict[int, int],
+    fixture_by_fpl: dict[int, tuple[int, int, int]],
     gw_by_number: dict[int, tuple[int, bool]],
 ) -> list[dict[str, Any]]:
     params = []
     for h in rows:
-        fixture_id = fixture_by_fpl.get(h.fpl_fixture_id)
+        fx = fixture_by_fpl.get(h.fpl_fixture_id)
         gw = gw_by_number.get(h.round)
-        if fixture_id is None or gw is None:
+        if fx is None or gw is None:
             continue
+        fixture_id, home_team, away_team = fx
+        if h.was_home is None:
+            own = opp = None
+        else:
+            own, opp = (home_team, away_team) if h.was_home else (away_team, home_team)
         gw_id, gw_final = gw
         params.append(
             {
@@ -97,6 +108,13 @@ def history_params(
                 "value_tenths": h.value_tenths,
                 "selected": h.selected,
                 "is_final": gw_final,
+                "team": own,
+                "opp": opp,
+                "home": h.was_home,
+                "starts": h.starts,
+                "transfers_in": h.transfers_in,
+                "transfers_out": h.transfers_out,
+                "transfers_balance": h.transfers_balance,
             }
         )
     return params
@@ -120,10 +138,10 @@ def sync_player_history(limit: int | None = None) -> dict[str, Any]:
             {"s": season_id},
         ).all()
         fixture_by_fpl = {
-            int(fid): int(i)
-            for i, fid in conn.execute(
+            int(r.fpl_fixture_id): (int(r.id), int(r.home_team_id), int(r.away_team_id))
+            for r in conn.execute(
                 text(
-                    "select id, fpl_fixture_id from public.fixtures "
+                    "select id, fpl_fixture_id, home_team_id, away_team_id from public.fixtures "
                     "where season_id = :s and fpl_fixture_id is not null"
                 ),
                 {"s": season_id},

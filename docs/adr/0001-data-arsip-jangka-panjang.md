@@ -53,5 +53,9 @@ Fakta yang membentuk keputusan ini:
 - Perkiraan pertumbuhan arsip: ±70–100 MB/tahun (gzip) → muat di Storage free tier beberapa tahun;
   tabel fakta ±50–100 MB/tahun di DB. Setelah 2–3 musim kemungkinan perlu Supabase Pro.
 - Dataset training ML dibangun dari arsip + tabel fakta (Fase 2: ekspor Parquet per musim).
-- **Belum diputuskan** (butuh Dilan): tujuan backup di luar Supabase, dan backfill musim lampau
-  (2016/17–2025/26) dari dataset komunitas untuk backtest.
+- **Diputuskan 2026-10-21 (Dilan):**
+  - Backup di luar Supabase = **folder lokal di laptop**, mingguan (`python -m app.backup`,
+    Windows Task Scheduler). Snapshot DB dirotasi (8 terakhir), cermin arsip tidak pernah dihapus.
+  - Musim 2016/17–2025/26 diimpor dari dataset komunitas vaastav sebagai data pendukung analisis &
+    training (lisensi tidak dinyatakan → pemakaian pribadi; file asli diarsip untuk jejak asal-usul).
+  - Tetap di **paket gratis** Supabase → ukuran DB dipantau; data turunan dipangkas sesuai keputusan #3.

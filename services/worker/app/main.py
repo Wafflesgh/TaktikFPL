@@ -14,6 +14,7 @@ from app.db import get_engine
 
 # Impor modul job agar terdaftar di runner.JOBS (endpoint admin & CLI).
 from app.jobs import (  # noqa: F401
+    backfill_history,
     build_form,
     cleanup_retention,
     deadline_checkpoint,

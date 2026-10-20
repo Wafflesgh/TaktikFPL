@@ -109,12 +109,18 @@ def _slug(endpoint: str) -> str:
 
 
 def build_path(
-    source: str, season_label: str | None, endpoint: str, captured_at: datetime, reason: str, sha: str
+    source: str,
+    season_label: str | None,
+    endpoint: str,
+    captured_at: datetime,
+    reason: str,
+    sha: str,
+    ext: str = "json",
 ) -> str:
     """fpl/2026-27/bootstrap-static/2026/10/20/163555Z-daily-1a2b3c4d.json.gz"""
     season = (season_label or "no-season").replace("/", "-")
     ts = captured_at.astimezone(UTC)
-    return f"{source}/{season}/{_slug(endpoint)}/{ts:%Y/%m/%d}/{ts:%H%M%S}Z-{reason}-{sha[:8]}.json.gz"
+    return f"{source}/{season}/{_slug(endpoint)}/{ts:%Y/%m/%d}/{ts:%H%M%S}Z-{reason}-{sha[:8]}.{ext}.gz"
 
 
 @dataclass(frozen=True)
@@ -139,11 +145,42 @@ def archive_payload(
     backend: ArchiveBackend | None = None,
     captured_at: datetime | None = None,
 ) -> ArchiveResult:
-    """Simpan payload sebagai arsip immutable. Isi identik dengan arsip terakhir endpoint yang
-    sama tidak disimpan ulang (cukup satu salinan per versi data)."""
+    """Simpan payload JSON sebagai arsip immutable. Isi identik dengan arsip terakhir endpoint
+    yang sama tidak disimpan ulang (cukup satu salinan per versi data)."""
+    return archive_bytes(
+        conn,
+        source=source,
+        endpoint=endpoint,
+        raw=canonical_bytes(payload),
+        ext="json",
+        reason=reason,
+        season_label=season_label,
+        gameweek=gameweek,
+        record_count=record_count,
+        meta=meta,
+        backend=backend,
+        captured_at=captured_at,
+    )
+
+
+def archive_bytes(
+    conn: Connection,
+    *,
+    source: str,
+    endpoint: str,
+    raw: bytes,
+    ext: str,
+    reason: str,
+    season_label: str | None,
+    gameweek: int | None = None,
+    record_count: int | None = None,
+    meta: dict[str, Any] | None = None,
+    backend: ArchiveBackend | None = None,
+    captured_at: datetime | None = None,
+) -> ArchiveResult:
+    """Arsip isi mentah apa adanya (mis. CSV dataset historis), di-gzip. sha256 = hash isi asli."""
     if reason not in REASONS:
         raise ValueError(f"reason tidak valid: {reason}")
-    raw = canonical_bytes(payload)
     sha = hashlib.sha256(raw).hexdigest()
     last_sha = conn.execute(
         text(
@@ -156,7 +193,7 @@ def archive_payload(
         return ArchiveResult(None, 0, sha, True)
 
     when = captured_at or datetime.now(UTC)
-    path = build_path(source, season_label, endpoint, when, reason, sha)
+    path = build_path(source, season_label, endpoint, when, reason, sha, ext)
     data = gzip.compress(raw, compresslevel=9, mtime=0)
     store = backend or get_backend()
     store.put(path, data)
