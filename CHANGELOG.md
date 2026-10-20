@@ -2,6 +2,16 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [Unreleased] · Profil pemain
+
+### Ditambahkan
+- Halaman `/pemain/[id]` (desktop-first): hero dengan headshot besar, klub, posisi, harga, kepemilikan,
+  status/berita FPL, badge + alasan form; grafik batang poin per GW (SVG inline, 4 GW terakhir disorot);
+  tabel laga musim ini (lawan, H/A, menit, poin, G, A, bonus, xG, xA) dan riwayat per musim sejak 2016/17
+  (poin, menit, main, G, A, poin/90, xGI bila tersedia). Id divalidasi; id tak dikenal → 404.
+- `src/lib/data/player.ts` (server-only) dan `src/lib/data/viewer.ts` (nama & peran untuk TopBar).
+- Nama pemain di tabel pemain & Form Teratas di Beranda kini menautkan ke profil.
+
 ## [0.5.0] — 2026-10-21 · Worker di GitHub Actions + backup ke Google Drive (semua gratis)
 
 Keputusan Dilan: Supabase gratis, backup di Google Drive tanpa salinan lokal, worker di GitHub

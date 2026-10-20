@@ -27,7 +27,9 @@ export function FormLeaders({ players }: { players: PlayerRow[] }) {
             <PlayerHeadshot name={p.webName} urls={p.photos} size="sm" status={p.status} />
             <div className="min-w-0 flex-1">
               <div className="mb-1.5 flex items-center justify-between gap-2 text-sm">
-                <span className="truncate font-medium">{p.webName}</span>
+                <Link href={`/pemain/${p.id}`} className="truncate font-medium hover:text-[var(--accent)] hover:underline">
+                  {p.webName}
+                </Link>
                 <span className="tabular-nums text-[var(--text-muted)]">{Math.round((p.form?.score ?? 0) * 100)}%</span>
               </div>
               <ProgressLine value={p.form?.score ?? 0} color={FORM_COLOR[p.form?.label ?? ""] ?? "var(--accent)"} />
@@ -98,7 +100,9 @@ export function PlayerTable({
                       <span className="flex items-center gap-3">
                         <PlayerHeadshot name={p.webName} urls={p.photos} size="sm" status={p.status} />
                         <span className="min-w-0">
-                          <span className="block truncate font-medium">{p.webName}</span>
+                          <Link href={`/pemain/${p.id}`} className="block truncate font-medium hover:text-[var(--accent)] hover:underline">
+                            {p.webName}
+                          </Link>
                           <span className="block truncate text-xs text-[var(--text-muted)]" title={p.news ?? undefined}>
                             {p.team?.short}
                             {p.news ? ` · ${p.news}` : ""}
@@ -125,20 +129,22 @@ export function PlayerTable({
           {/* Mobile */}
           <ul className="grid gap-2 md:hidden">
             {players.map((p) => (
-              <li key={p.id} className="flex items-center gap-3 rounded-2xl bg-white/5 p-2 pr-3">
-                <PlayerHeadshot name={p.webName} urls={p.photos} status={p.status} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{p.webName}</p>
-                  <p className="truncate text-xs text-[var(--text-muted)]">
-                    {p.team?.short} · {p.position} · {formatPrice(p.priceTenths)} · {p.ownedPct ?? 0}%
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <FormBadge label={p.form?.label} reasons={p.form?.reasons} pointsPerMatch={p.form?.last4Ppm} />
-                  {p.form?.last4Ppm != null && (
-                    <span className="text-xs tabular-nums text-[var(--text-muted)]">{p.form.last4Ppm.toFixed(1)} pts</span>
-                  )}
-                </div>
+              <li key={p.id}>
+                <Link href={`/pemain/${p.id}`} className="flex items-center gap-3 rounded-2xl bg-white/5 p-2 pr-3 hover:bg-white/10">
+                  <PlayerHeadshot name={p.webName} urls={p.photos} status={p.status} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{p.webName}</p>
+                    <p className="truncate text-xs text-[var(--text-muted)]">
+                      {p.team?.short} · {p.position} · {formatPrice(p.priceTenths)} · {p.ownedPct ?? 0}%
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <FormBadge label={p.form?.label} reasons={p.form?.reasons} pointsPerMatch={p.form?.last4Ppm} />
+                    {p.form?.last4Ppm != null && (
+                      <span className="text-xs tabular-nums text-[var(--text-muted)]">{p.form.last4Ppm.toFixed(1)} pts</span>
+                    )}
+                  </div>
+                </Link>
               </li>
             ))}
           </ul>
