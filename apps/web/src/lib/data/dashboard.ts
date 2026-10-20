@@ -57,7 +57,42 @@ export type FixtureRow = {
 
 export type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 
-const num = (v: unknown): number | null => (v == null ? null : Number(v));
+export const num = (v: unknown): number | null => (v == null ? null : Number(v));
+
+type TeamDbRow = { id: number; name: string; short_name: string | null; fpl_team_code: number | null };
+
+export function teamMap(rows: TeamDbRow[]): Map<number, TeamInfo> {
+  return new Map(
+    rows.map((t) => [
+      t.id,
+      { id: t.id, name: t.name, short: t.short_name ?? t.name.slice(0, 3).toUpperCase(), badge: teamBadgeUrl(t.fpl_team_code) },
+    ]),
+  );
+}
+
+type FormDbRow = {
+  form_label: string | null;
+  form_score: number | null;
+  form_reasons: unknown;
+  last4_points_per_match: number | null;
+  season_points_per_match: number | null;
+  last4_xgi90: number | null;
+  last4_minutes_share: number | null;
+  last4_goals_minus_xg: number | null;
+};
+
+export function toFormInfo(f: FormDbRow): FormInfo {
+  return {
+    label: f.form_label,
+    score: num(f.form_score),
+    reasons: Array.isArray(f.form_reasons) ? (f.form_reasons as string[]) : [],
+    last4Ppm: num(f.last4_points_per_match),
+    seasonPpm: num(f.season_points_per_match),
+    last4Xgi90: num(f.last4_xgi90),
+    minutesShare: num(f.last4_minutes_share),
+    goalsMinusXg: num(f.last4_goals_minus_xg),
+  };
+}
 
 /** Semua data Beranda dalam satu panggilan server (RLS: pengguna login). */
 export async function getDashboardData() {
@@ -78,28 +113,8 @@ export async function getDashboardData() {
     supabase.from("v_player_form").select("player_id, form_label, form_score, form_reasons, last4_points_per_match, season_points_per_match, last4_xgi90, last4_minutes_share, last4_goals_minus_xg"),
   ]);
 
-  const teams = new Map<number, TeamInfo>(
-    (teamRes.data ?? []).map((t) => [
-      t.id,
-      { id: t.id, name: t.name, short: t.short_name ?? t.name.slice(0, 3).toUpperCase(), badge: teamBadgeUrl(t.fpl_team_code) },
-    ]),
-  );
-
-  const forms = new Map<number, FormInfo>(
-    (formRes.data ?? []).map((f) => [
-      f.player_id ?? 0,
-      {
-        label: f.form_label,
-        score: num(f.form_score),
-        reasons: Array.isArray(f.form_reasons) ? (f.form_reasons as string[]) : [],
-        last4Ppm: num(f.last4_points_per_match),
-        seasonPpm: num(f.season_points_per_match),
-        last4Xgi90: num(f.last4_xgi90),
-        minutesShare: num(f.last4_minutes_share),
-        goalsMinusXg: num(f.last4_goals_minus_xg),
-      },
-    ]),
-  );
+  const teams = teamMap(teamRes.data ?? []);
+  const forms = new Map<number, FormInfo>((formRes.data ?? []).map((f) => [f.player_id ?? 0, toFormInfo(f)]));
 
   const players: PlayerRow[] = (playerRes.data ?? []).map((p) => {
     const photos = playerPhotoUrls(p.fpl_code, p.photo_url_resolved);

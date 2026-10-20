@@ -1,0 +1,130 @@
+import { TeamBadge } from "@/components/ui";
+import type { GwRow, SeasonSummary } from "@/lib/data/player";
+import { formatWIB } from "@/lib/time";
+
+const dec = (v: number | null, digits = 2) => (v == null ? "-" : v.toFixed(digits));
+const th = "px-2 py-2 text-right font-medium";
+const td = "px-2 py-2 text-right tabular-nums";
+
+/** Laga musim ini, terbaru di atas; baris 4 GW terakhir disorot. Tabel menggulir di dalam panel di layar sempit. */
+export function GwTable({ rows, highlight }: { rows: GwRow[]; highlight: Set<number> }) {
+  if (rows.length === 0) return <p className="text-sm text-[var(--text-muted)]">Belum ada laga musim ini.</p>;
+  const total = (f: (r: GwRow) => number) => rows.reduce((acc, r) => acc + f(r), 0);
+  const xg = rows.some((r) => r.xg != null) ? total((r) => r.xg ?? 0) : null;
+  const xa = rows.some((r) => r.xa != null) ? total((r) => r.xa ?? 0) : null;
+
+  return (
+    <div className="-mx-5 overflow-x-auto px-5">
+      <table className="w-full min-w-[540px] text-sm">
+        <thead className="text-xs text-[var(--text-muted)]">
+          <tr>
+            <th className="py-2 pr-2 text-left font-medium">GW</th>
+            <th className="px-2 py-2 text-left font-medium">Lawan</th>
+            <th className="px-2 py-2 text-center font-medium" title="Kandang (H) / tandang (A)">H/A</th>
+            <th className={th}>Menit</th>
+            <th className={th}>Poin</th>
+            <th className={th} title="Gol">G</th>
+            <th className={th} title="Assist">A</th>
+            <th className={th}>Bonus</th>
+            <th className={th}>xG</th>
+            <th className={`${th} pr-0`}>xA</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[...rows].reverse().map((r) => (
+            <tr
+              key={r.fixtureId}
+              className={`border-t border-white/5 ${highlight.has(r.gw) ? "bg-[var(--accent-soft)]" : "hover:bg-white/[0.03]"}`}
+            >
+              <td className="py-2 pr-2 font-medium tabular-nums">{r.gw}</td>
+              <td className="px-2 py-2" title={formatWIB(r.kickoffUtc)}>
+                <span className="flex items-center gap-2">
+                  <TeamBadge url={r.opponent?.badge ?? null} short={r.opponent?.short ?? null} size={24} />
+                  {r.opponent?.short ?? "?"}
+                </span>
+              </td>
+              <td className="px-2 py-2 text-center text-[var(--text-muted)]">{r.home == null ? "-" : r.home ? "H" : "A"}</td>
+              <td className={`${td} ${r.minutes === 0 ? "text-[var(--text-muted)]" : ""}`}>{r.minutes}</td>
+              <td className={`${td} font-semibold`} title={r.isFinal ? undefined : "Sementara — bonus/poin belum final"}>
+                {r.points}
+                {!r.isFinal && <span className="text-[var(--text-muted)]">*</span>}
+              </td>
+              <td className={td}>{r.goals}</td>
+              <td className={td}>{r.assists}</td>
+              <td className={td}>{r.bonus}</td>
+              <td className={td}>{dec(r.xg)}</td>
+              <td className={`${td} pr-0`}>{dec(r.xa)}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot className="border-t border-white/15 font-semibold">
+          <tr>
+            <td className="py-2 pr-2" colSpan={3}>
+              Total · {rows.length} laga
+            </td>
+            <td className={td}>{total((r) => r.minutes)}</td>
+            <td className={td}>{total((r) => r.points)}</td>
+            <td className={td}>{total((r) => r.goals)}</td>
+            <td className={td}>{total((r) => r.assists)}</td>
+            <td className={td}>{total((r) => r.bonus)}</td>
+            <td className={td}>{dec(xg)}</td>
+            <td className={`${td} pr-0`}>{dec(xa)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  );
+}
+
+/** Ringkasan per musim (2016/17–sekarang). xGI hanya untuk musim yang punya data expected. */
+export function SeasonTable({ rows }: { rows: SeasonSummary[] }) {
+  if (rows.length === 0) return <p className="text-sm text-[var(--text-muted)]">Belum ada riwayat musim.</p>;
+  return (
+    <div className="-mx-5 overflow-x-auto px-5">
+      <table className="w-full min-w-[540px] text-sm">
+        <thead className="text-xs text-[var(--text-muted)]">
+          <tr>
+            <th className="py-2 pr-2 text-left font-medium">Musim</th>
+            <th className="px-2 py-2 text-left font-medium">Klub</th>
+            <th className={th}>Poin</th>
+            <th className={th}>Menit</th>
+            <th className={th} title="Laga dengan menit bermain > 0">Main</th>
+            <th className={th} title="Gol">G</th>
+            <th className={th} title="Assist">A</th>
+            <th className={th} title="Poin per 90 menit">Poin/90</th>
+            <th className={`${th} pr-0`} title="xG + xA (tersedia sejak 2022/23)">xGI</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((s) => (
+            <tr key={s.seasonId} className={`border-t border-white/5 ${s.isCurrent ? "bg-white/[0.04]" : "hover:bg-white/[0.03]"}`}>
+              <td className="whitespace-nowrap py-2 pr-2 font-medium tabular-nums">
+                {s.label}
+                {s.isCurrent && <span className="ml-2 rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-medium">berjalan</span>}
+              </td>
+              <td className="px-2 py-2">
+                <span className="flex items-center gap-1.5 whitespace-nowrap">
+                  {s.teams.length === 0
+                    ? "-"
+                    : s.teams.map((t) => (
+                        <span key={t.id} className="flex items-center gap-1.5" title={t.name}>
+                          <TeamBadge url={t.badge} short={t.short} size={20} />
+                          <span className="text-xs">{t.short}</span>
+                        </span>
+                      ))}
+                </span>
+              </td>
+              <td className={`${td} font-semibold`}>{s.points}</td>
+              <td className={td}>{s.minutes}</td>
+              <td className={td}>{s.appearances}</td>
+              <td className={td}>{s.goals}</td>
+              <td className={td}>{s.assists}</td>
+              <td className={td}>{dec(s.pointsPer90, 1)}</td>
+              <td className={`${td} pr-0`}>{dec(s.xgi)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

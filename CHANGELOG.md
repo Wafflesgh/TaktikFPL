@@ -2,7 +2,7 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
-## [Unreleased] — Halaman Jadwal
+## [0.6.0] — 2026-10-21 · Halaman Jadwal & Profil Pemain (sesi Claude cloud)
 
 ### Ditambahkan
 - Halaman **Jadwal** (`/jadwal`, desktop-first, BLUEPRINT 11.5 D): **Fixture Ticker** 6 GW (20 tim PL
@@ -13,6 +13,12 @@ Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://k
 - `src/lib/data/jadwal.ts` (server-only) dan `src/lib/data/viewer.ts` (nama & status admin untuk top
   bar, kini dipakai juga oleh Beranda). Navigasi Jadwal aktif.
 - Mobile 375 px: ticker digulir horizontal di dalam panel, kolom tim menempel; tanpa overflow halaman.
+- Halaman `/pemain/[id]` (desktop-first): hero dengan headshot besar, klub, posisi, harga, kepemilikan,
+  status/berita FPL, badge + alasan form; grafik batang poin per GW (SVG inline, 4 GW terakhir disorot);
+  tabel laga musim ini (lawan, H/A, menit, poin, G, A, bonus, xG, xA) dan riwayat per musim sejak 2016/17
+  (poin, menit, main, G, A, poin/90, xGI bila tersedia). Id divalidasi; id tak dikenal → 404.
+- `src/lib/data/player.ts` (server-only).
+- Nama pemain di tabel pemain & Form Teratas di Beranda kini menautkan ke profil.
 
 ## [0.5.0] — 2026-10-21 · Worker di GitHub Actions + backup ke Google Drive (semua gratis)
 

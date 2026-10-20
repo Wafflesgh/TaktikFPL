@@ -3,11 +3,19 @@
 // (butuh Docker) agar mencakup seluruh tabel.
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-type Table<Row> = {
+type Relationship = {
+  foreignKeyName: string;
+  columns: string[];
+  isOneToOne: boolean;
+  referencedRelation: string;
+  referencedColumns: string[];
+};
+
+type Table<Row, Rel extends Relationship[] = []> = {
   Row: Row;
   Insert: Partial<Row>;
   Update: Partial<Row>;
-  Relationships: [];
+  Relationships: Rel;
 };
 
 export type Database = {
@@ -99,6 +107,61 @@ export type Database = {
         league_code: string;
         is_promoted: boolean;
       }>;
+      players: Table<{
+        id: number;
+        full_name: string;
+        web_name: string;
+        fpl_code: number | null;
+        photo_file: string | null;
+        photo_url_resolved: string | null;
+      }>;
+      player_seasons: Table<{
+        player_id: number;
+        season_id: number;
+        team_id: number;
+        fpl_element_id: number | null;
+        fpl_position: "GKP" | "DEF" | "MID" | "FWD" | null;
+        real_position: string | null;
+        joined_on: string | null;
+        left_on: string | null;
+      }>;
+      player_fpl_gw_stats: Table<
+        {
+          player_id: number;
+          fixture_id: number;
+          gameweek_id: number;
+          minutes: number | null;
+          total_points: number | null;
+          bonus: number | null;
+          goals_scored: number | null;
+          assists: number | null;
+          expected_goals: number | null;
+          expected_assists: number | null;
+          is_final: boolean;
+          team_id: number | null;
+          opponent_team_id: number | null;
+          was_home: boolean | null;
+          starts: number | null;
+          fpl_xp: number | null;
+          source: string;
+        },
+        [
+          {
+            foreignKeyName: "player_fpl_gw_stats_fixture_id_fkey";
+            columns: ["fixture_id"];
+            isOneToOne: false;
+            referencedRelation: "fixtures";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "player_fpl_gw_stats_gameweek_id_fkey";
+            columns: ["gameweek_id"];
+            isOneToOne: false;
+            referencedRelation: "gameweeks";
+            referencedColumns: ["id"];
+          },
+        ]
+      >;
     };
     Views: {
       v_player_current: {
