@@ -2,6 +2,18 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [Unreleased] — Halaman Jadwal
+
+### Ditambahkan
+- Halaman **Jadwal** (`/jadwal`, desktop-first, BLUEPRINT 11.5 D): **Fixture Ticker** 6 GW (20 tim PL
+  musim berjalan × GW berikut; lawan + H/A berwarna FDR, double = dua chip bertumpuk, blank = sel abu;
+  urut FDR termudah atau nama via `?sort=`) dan **daftar laga per GW** (`?gw=`, default GW berikutnya)
+  dikelompokkan per hari WIB dengan jam kick-off, FDR, skor akhir, status ditunda/dibatalkan, dan badge
+  "Jadwal berubah" + ringkasan perubahan (`fixture_changes` 7 hari terakhir).
+- `src/lib/data/jadwal.ts` (server-only) dan `src/lib/data/viewer.ts` (nama & status admin untuk top
+  bar, kini dipakai juga oleh Beranda). Navigasi Jadwal aktif.
+- Mobile 375 px: ticker digulir horizontal di dalam panel, kolom tim menempel; tanpa overflow halaman.
+
 ## [0.5.0] — 2026-10-21 · Worker di GitHub Actions + backup ke Google Drive (semua gratis)
 
 Keputusan Dilan: Supabase gratis, backup di Google Drive tanpa salinan lokal, worker di GitHub

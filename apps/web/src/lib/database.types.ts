@@ -92,6 +92,13 @@ export type Database = {
         primary_color: string | null;
         secondary_color: string | null;
       }>;
+      team_seasons: Table<{
+        team_id: number;
+        season_id: number;
+        fpl_team_id: number | null;
+        league_code: string;
+        is_promoted: boolean;
+      }>;
     };
     Views: {
       v_player_current: {
