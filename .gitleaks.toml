@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "supabase-secret-key"
+description = "Supabase secret key"
+regex = '''sb_secret_[A-Za-z0-9_\-]{20,}'''
+tags = ["supabase", "secret"]

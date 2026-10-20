@@ -1,0 +1,18 @@
+{
+  "name": "taktikfpl",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "db:types": "supabase gen types typescript --local > apps/web/src/lib/database.types.ts",
+    "dev:web": "pnpm --filter web dev",
+    "dev:worker": "cd services/worker && uv run uvicorn app.main:app --reload --port 8000",
+    "redis:up": "docker compose up -d redis"
+  },
+  "devDependencies": {
+    "supabase": "^2.0.0"
+  }
+}
