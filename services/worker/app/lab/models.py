@@ -46,7 +46,8 @@ SPECS: list[ModelSpec] = [
     ModelSpec(
         "fpl_xp",
         "FPL official xP",
-        "FPL's own expected points for the gameweek (benchmark; not available for every season).",
+        "FPL's published expected points. Benchmark only: 83% of historical values are 0 and they may be "
+        "computed after the gameweek, so it is kept out of both ensembles.",
         "baseline",
     ),
     ModelSpec(
@@ -100,9 +101,9 @@ SPECS: list[ModelSpec] = [
     ModelSpec(
         "ensemble_mean",
         "Ensemble (mean)",
-        "Plain average of v1 + tactics, Hot form, Fixture chaser and FPL xP (when available).",
+        "Plain average of v1 + tactics, Hot form, Fixture chaser and Season PPG.",
         "ensemble",
-        {"members": ["v1_tactics", "hot_form", "fixture_chaser", "fpl_xp"]},
+        {"members": ["v1_tactics", "hot_form", "fixture_chaser", "season_ppg"]},
     ),
     ModelSpec(
         "ensemble_stack",
@@ -113,7 +114,6 @@ SPECS: list[ModelSpec] = [
             "members": [
                 "recent4",
                 "season_ppg",
-                "fpl_xp",
                 "form_fdr",
                 "v1",
                 "v1_tactics",
@@ -273,7 +273,7 @@ def ensemble_weighted(preds: dict[str, Preds], weights: dict[str, float]) -> Pre
     avail = {m: w for m, w in weights.items() if m in preds and w > 0}
     if not avail:
         return None
-    # Model berbobot yang tidak tersedia (mis. fpl_xp di musim berjalan): bobotnya dibagi ke yang ada.
+    # Model berbobot yang datanya tidak ada di suatu musim: bobotnya dibagi ke model yang ada.
     k = sum(w for w in weights.values() if w > 0) / sum(avail.values())
     first = preds[next(iter(avail))]
     return {
@@ -304,7 +304,7 @@ class StackLearner:
         return {m: float(v) for m, v in zip(self.members, w, strict=True)}
 
     def add(self, preds: dict[str, Preds], b: GwBundle) -> None:
-        # Model yang tidak tersedia (mis. fpl_xp di musim berjalan) diisi 0.
+        # Model yang tidak tersedia (mis. model yang datanya tidak ada di suatu musim) diisi 0.
         for pid, (pts, mins) in b.actual.items():
             if pid not in b.players:
                 continue

@@ -2,6 +2,13 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.18.1] — 2026-10-21 · Model Lab: FPL xP dikeluarkan dari ensemble
+
+### Diubah
+- Hasil lab pertama (2025/26, GW4–38): xP resmi FPL historis 83% bernilai 0 dan berkorelasi sama kuat dengan
+  poin GW sebelumnya (indikasi dihitung setelah GW) → hanya jadi pembanding, tidak lagi anggota ensemble.
+  Ensemble mean kini v1 + tactics, Hot form, Fixture chaser, Season PPG.
+
 ## [0.18.0] — 2026-10-21 · Model Lab: 12 model diuji & dibandingkan, model aktif bisa dipilih
 
 ### Ditambahkan
