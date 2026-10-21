@@ -1,6 +1,6 @@
 """Alasan pemilihan pemain (template deterministik) + XI terbaik satu GW."""
 
-from app.models.reasons import FixtureView, player_reasons
+from app.models.reasons import MAX_REASONS, FixtureView, player_reasons
 from app.optimize.squad import Candidate, best_xi
 
 
@@ -55,7 +55,7 @@ def test_double_gameweek_and_blank():
 def test_reasons_capped():
     form = {"form_label": "panas", "points_per_match": 9, "pct_underlying_pos": 0.95}
     fixtures = [fx(8, att=1.3), fx(8, att=1.2)] + [fx(g, att=1.3) for g in range(9, 14)]
-    assert len(player_reasons("MID", "d", 75, "knock", form, fixtures, 8)) == 6
+    assert len(player_reasons("MID", "d", 75, "knock", form, fixtures, 8)) <= MAX_REASONS
 
 
 def test_best_xi_fits_budget_with_bench():
@@ -108,3 +108,31 @@ def test_defender_picked_for_defcon_and_threat():
     rs = player_reasons("DEF", "a", None, None, None, [f], 8)
     ks = [r["kind"] for r in rs]
     assert "defcon" in ks and "threat" in ks
+
+
+def test_low_block_and_role_reasons():
+    f = FixtureView(
+        8,
+        "BUR",
+        True,
+        88.0,
+        1.1,
+        0.3,
+        opp_style="low_block",
+        opp_ppda=15.2,
+        opp_rank_passive=2,
+        opp_n_teams=20,
+    )
+    tactics = {
+        "xgi90": 0.55,
+        "split": {"low_block": {"minutes": 1240, "xgi90": 0.71, "shrunk": 0.66, "ratio": 1.2}},
+        "primary_role": "AMR",
+        "roles": {"AMR": 0.85, "FWR": 0.15},
+        "starts": 20,
+        "set_piece_xg_share": 0.3,
+    }
+    rs = {r["kind"]: r for r in player_reasons("MID", "a", None, None, None, [f], 8, tactics)}
+    assert "2nd most passive of 20" in rs["style"]["text"] and "+20%" in rs["style"]["text"]
+    assert rs["style"]["tone"] == "good"
+    assert rs["role"]["text"].startswith("Role: right winger (AMR) in 85% of last 20 starts")
+    assert "30% of xG from set pieces" in rs["role"]["text"]

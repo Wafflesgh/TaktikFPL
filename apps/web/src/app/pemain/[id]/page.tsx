@@ -5,10 +5,12 @@ import { ArrowRightIcon } from "@/components/icons";
 import { PlayerHero } from "@/components/player/PlayerHero";
 import { PointsChart } from "@/components/player/PointsChart";
 import { GwTable, SeasonTable } from "@/components/player/StatTables";
+import { TacticalProfile } from "@/components/player/TacticalProfile";
 import { BottomNav } from "@/components/shell/NavLinks";
 import { TopBar } from "@/components/shell/TopBar";
 import { Panel, StatTile } from "@/components/ui";
 import { getPlayerProfile, parsePlayerId } from "@/lib/data/player";
+import { getPlayerTactics } from "@/lib/data/tactics";
 import { getViewer } from "@/lib/data/viewer";
 
 async function load(params: PageProps<"/pemain/[id]">["params"]) {
@@ -27,6 +29,7 @@ export async function generateMetadata({ params }: PageProps<"/pemain/[id]">): P
 /** Profil pemain desktop-first (wireframe B): hero · grafik poin + form · laga musim ini + riwayat musim. */
 export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) {
   const [profile, viewer] = await Promise.all([load(params), getViewer()]);
+  const tactics = await getPlayerTactics(profile.player.id);
   const { player, gws, bars, lastFour, seasons, thisSeason, seasonLabel, liveCount } = profile;
   const f = player.form;
   const pct = (v: number | null | undefined) => (v != null ? `${Math.round(v * 100)}%` : "-");
@@ -39,7 +42,7 @@ export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) 
       <main className="flex min-w-0 flex-col gap-6">
         <Link href="/" className="inline-flex w-fit items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)]">
           <ArrowRightIcon size={16} className="rotate-180" />
-          Beranda
+          Home
         </Link>
 
         <PlayerHero player={player} season={thisSeason} seasonLabel={seasonLabel} />
@@ -55,7 +58,7 @@ export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) 
                   <span className="h-2.5 w-2.5 rounded-sm bg-[var(--accent)]" />Last 4 GWs
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-sm bg-white/30" />GW lain
+                  <span className="h-2.5 w-2.5 rounded-sm bg-white/30" />Other GWs
                 </span>
               </span>
             }
@@ -66,7 +69,7 @@ export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) 
           <Panel className="min-w-0 lg:col-span-4" title="Form (last 4)" subtitle="Computed by the worker (build_form) vs same-position players">
             {f ? (
               <div className="grid grid-cols-2 gap-3">
-                <StatTile label="Skor form" value={pct(f.score)} hint="persentil seposisi" />
+                <StatTile label="Form score" value={pct(f.score)} hint="percentile within position" />
                 <StatTile label="Pts/match" value={f.last4Ppm?.toFixed(1) ?? "-"} hint={`season: ${f.seasonPpm?.toFixed(1) ?? "-"}`} />
                 <StatTile label="xGI/90" value={f.last4Xgi90?.toFixed(2) ?? "-"} hint="last 4, shrunk" />
                 <StatTile label="Minutes share" value={pct(f.minutesShare)} hint="of available minutes" />
@@ -79,6 +82,8 @@ export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) 
             )}
           </Panel>
         </div>
+
+        <TacticalProfile data={tactics} />
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <Panel

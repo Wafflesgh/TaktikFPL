@@ -30,6 +30,7 @@ from app.jobs import (
     sync_bootstrap,
     sync_fixtures,
     sync_player_history,
+    sync_understat,
 )
 from app.logging import configure_logging
 
@@ -41,7 +42,8 @@ INTERVALS = {
 }
 # Toleransi agar tick yang datang sedikit lebih awal dari interval tetap menjalankan job.
 SLACK = timedelta(minutes=3)
-DAILY_AFTER_UTC = {"cleanup_retention": 3, "sync_player_history": 5, "evaluate_model": 7}
+# sync_understat sebelum proyeksi harian (data taktik) — Understat diperbarui beberapa jam setelah laga.
+DAILY_AFTER_UTC = {"cleanup_retention": 3, "sync_player_history": 5, "sync_understat": 6, "evaluate_model": 7}
 # Checkpoint deadline yang terlewat lebih dari ini dianggap basi (tidak dijalankan lagi).
 CHECKPOINT_GRACE = timedelta(minutes=45)
 # Status/berita pemain berubah -> proyeksi dihitung ulang, paling sering sekali per interval ini.
@@ -190,6 +192,7 @@ JOBS: dict[str, Callable[..., Any]] = {
     "deadline_checkpoint": deadline_checkpoint.deadline_checkpoint,
     "run_projections": run_projections.run_projections,
     "evaluate_model": evaluate_model.evaluate_model,
+    "sync_understat": sync_understat.sync_understat,
 }
 
 

@@ -133,6 +133,23 @@ export type Database = {
         xpts: number;
         component_breakdown: Json | null;
       }>;
+      player_form_features: Table<{
+        player_id: number;
+        as_of: string;
+        window_label: string;
+        metrics: Json;
+        sample_minutes: number;
+      }>;
+      fpl_chips: Table<{
+        season_id: number;
+        chip_id: number;
+        name: string;
+        number: number;
+        start_event: number;
+        stop_event: number;
+        chip_type: string | null;
+        updated_at: string;
+      }>;
       analysis_reports: Table<{
         id: number;
         gameweek_id: number;

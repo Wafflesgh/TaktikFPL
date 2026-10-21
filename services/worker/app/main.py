@@ -25,6 +25,7 @@ from app.jobs import (  # noqa: F401
     sync_bootstrap,
     sync_fixtures,
     sync_player_history,
+    sync_understat,
 )
 from app.logging import configure_logging
 from app.scheduler import registry

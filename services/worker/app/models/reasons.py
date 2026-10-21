@@ -1,6 +1,7 @@
 """Alasan pemilihan pemain — template deterministik dari angka engine (bukan LLM).
 
-Setiap alasan: {"kind", "tone", "text"}. kind ∈ availability | dgw | fixture | threat | defcon |
+Setiap alasan: {"kind", "tone", "text"}. kind ∈ availability | dgw | fixture | threat | defcon | style |
+role |
 form | run | minutes;
 tone ∈ good | warn | bad. Teks UI dalam bahasa Inggris (CLAUDE.md aturan 7).
 """
@@ -18,7 +19,7 @@ NAILED_MINS, ROTATION_MINS = 80.0, 55.0
 DEFCON_PTS = 0.8
 XGI_ATTACK = {"GKP": 9.9, "DEF": 0.25, "MID": 0.5, "FWD": 0.6}
 RUN_LENGTH = 5
-MAX_REASONS = 6  # UI menampilkan 3 teratas; rincian menampilkan semuanya
+MAX_REASONS = 8  # UI menampilkan 3 teratas; rincian menampilkan semuanya
 
 FORM_TEXT = {
     "panas": ("good", "Hot form"),
@@ -45,6 +46,72 @@ class FixtureView:
     p_assist: float = 0.0
     p_defcon: float = 0.0
     lam_team: float = 0.0  # gol yang diharapkan dicetak timnya
+    opp_style: str | None = None  # low_block | mid_block | high_press (Understat PPDA)
+    opp_ppda: float | None = None
+    opp_rank_passive: int | None = None  # 1 = tim paling pasif
+    opp_n_teams: int | None = None
+
+
+STYLE_MIN_MINUTES = 270
+ROLE_NAMES = {
+    "GK": "goalkeeper",
+    "DR": "right-back",
+    "DL": "left-back",
+    "DC": "centre-back",
+    "DMR": "right wing-back",
+    "DML": "left wing-back",
+    "DMC": "defensive midfielder",
+    "MR": "right midfielder",
+    "ML": "left midfielder",
+    "MC": "central midfielder",
+    "AMR": "right winger",
+    "AML": "left winger",
+    "AMC": "attacking midfielder",
+    "FWR": "right forward",
+    "FWL": "left forward",
+    "FW": "striker",
+}
+
+
+def _ordinal(n: int) -> str:
+    suffix = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
+
+
+def _style_reason(f: FixtureView, tactics: dict[str, Any]) -> tuple[str, str] | None:
+    """Rekam jejak pemain melawan gaya bertahan lawan (low block / high press)."""
+    if f.opp_style not in ("low_block", "high_press") or f.opp_rank_passive is None or not f.opp_n_teams:
+        return None
+    split = (tactics.get("split") or {}).get(f.opp_style)
+    overall = float(tactics.get("xgi90") or 0)
+    if not split or split.get("minutes", 0) < STYLE_MIN_MINUTES or overall <= 0:
+        return None
+    if f.opp_style == "low_block":
+        who = f"sits deep: {_ordinal(f.opp_rank_passive)} most passive of {f.opp_n_teams}"
+        label = "low blocks"
+    else:
+        rank = _ordinal(f.opp_n_teams - f.opp_rank_passive + 1)
+        who = f"presses high: {rank} most aggressive of {f.opp_n_teams}"
+        label = "high-pressing sides"
+    ratio = float(split["ratio"])
+    tone = "good" if ratio >= 1.05 else "warn" if ratio <= 0.95 else "good"
+    return tone, (
+        f"{f.opp} {who} (PPDA {f.opp_ppda:.1f}). Vs {label}: {float(split['xgi90']):.2f} xG+xA/90 "
+        f"vs {overall:.2f} overall over {int(split['minutes'])} mins → model {(ratio - 1) * 100:+.0f}%"
+    )
+
+
+def _role_reason(tactics: dict[str, Any]) -> str | None:
+    role = tactics.get("primary_role")
+    starts = int(tactics.get("starts") or 0)
+    if not role or starts < 3:
+        return None
+    share = float((tactics.get("roles") or {}).get(role, 0))
+    text = f"Role: {ROLE_NAMES.get(role, role)} ({role}) in {_pct(share)} of last {starts} starts"
+    sp = float(tactics.get("set_piece_xg_share") or 0)
+    if sp >= 0.25:
+        text += f"; {_pct(sp)} of xG from set pieces"
+    return text
 
 
 def _pct(p: float) -> str:
@@ -78,6 +145,7 @@ def player_reasons(
     form: dict[str, Any] | None,
     fixtures: list[FixtureView],
     first_gw: int,
+    tactics: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     out: list[dict[str, str]] = []
 
@@ -128,6 +196,17 @@ def player_reasons(
                 add("defcon", "good", f"{_pct(p_dc)} chance of defensive-contribution bonus (~{dc:.1f} pts)")
             else:
                 add("defcon", "good", f"Defensive contributions: ~{dc:.1f} pts expected")
+
+    if now and tactics:
+        for f in now:
+            sr = _style_reason(f, tactics)
+            if sr:
+                add("style", sr[0], sr[1])
+                break
+    if tactics:
+        role = _role_reason(tactics)
+        if role:
+            add("role", "good", role)
 
     if form:
         label = form.get("form_label")

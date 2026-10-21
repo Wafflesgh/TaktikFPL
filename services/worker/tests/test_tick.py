@@ -41,7 +41,12 @@ def test_cold_start_runs_everything_due():
 
 def test_intervals_respected():
     daily = fresh(
-        cleanup_retention=60, sync_player_history=60, build_form=30, run_projections=20, evaluate_model=10
+        cleanup_retention=60,
+        sync_player_history=60,
+        build_form=30,
+        run_projections=20,
+        evaluate_model=10,
+        sync_understat=10,
     )
     last = {**daily, **fresh(sync_bootstrap=14, sync_fixtures=14, poll_event_status=14)}
     assert jobs(plan(state(last), CPS)) == ["sync_fixtures"]  # 14 + slack 3 ≥ 15

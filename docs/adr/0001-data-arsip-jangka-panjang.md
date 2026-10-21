@@ -31,6 +31,9 @@ Fakta yang membentuk keputusan ini:
    - `gw_final`: `event/{gw}/live/`, `fixtures/?event={gw}`, `dream-team/{gw}/`,
      `team/set-piece-notes/` saat GW final (self-healing: GW final tanpa arsip diproses ulang).
    - `season_end`: `element-summary` semua pemain + bootstrap di GW terakhir, sebelum API reset.
+   - Understat (sejak 2026-10-21): `getLeagueData/EPL/{tahun}` harian (`daily`, ±20 jam) dan
+     `getMatchData/{id}` sekali per laga selesai (`gw_final`; backfill musim lalu = `backfill`).
+     Data per laga tidak masuk `raw_payloads` (hanya arsip) agar DB free tier tidak membengkak.
    - Isi identik dengan arsip terakhir endpoint yang sama tidak disimpan ulang.
 2. **Tabel fakta permanen** (tidak pernah dipangkas): `player_status_snapshots`, `price_snapshots`,
    `player_fpl_gw_stats`, `fixtures`, `fixture_changes`, `match_events`, `lineups`, statistik laga,

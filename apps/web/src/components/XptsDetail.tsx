@@ -92,6 +92,17 @@ export function XptsDetail({ fixtures, reasons }: { fixtures: XptsBreakdown[]; r
               ))}
             </tbody>
           </table>
+          {fixtures.map((f, i) =>
+            f.opp_style ? (
+              <p key={`s${i}`} className="mt-1">
+                Opponent style: <b>{String(f.opp_style).replace("_", " ")}</b> (PPDA {n(f.opp_ppda).toFixed(1)}) · player adjustment{" "}
+                <b>
+                  {n(f.style_mult || 1) >= 1 ? "+" : ""}
+                  {Math.round((n(f.style_mult || 1) - 1) * 100)}%
+                </b>
+              </p>
+            ) : null,
+          )}
           <p className="mt-1 text-[var(--text-muted)]">
             Expected goals for each side, from both teams&apos; attack/defence strength (last 19 matches, xG-based) and home advantage.
           </p>

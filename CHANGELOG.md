@@ -2,6 +2,24 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.17.0] — 2026-10-21 · Data taktik Understat: low block, high press, peran pemain
+
+### Ditambahkan
+- Adapter `app/sources/understat.py` (endpoint JSON Understat, 1 request/2 detik, retry, arsip immutable;
+  kebijakan arsip di ADR 0001). Tim dicocokkan lewat jadwal (tanpa daftar nama), laga lewat tim + kick-off,
+  pemain lewat kemiripan nama + menit (uji lokal: 2.156/2.158 pemain musim ini tercocokkan; sisanya ke
+  `unmatched_entities`). Tabel yang sudah ada dipakai: `team_match_stats` (PPDA, deep completions),
+  `lineups` (posisi per laga), `player_match_stats` (xG/xA/xGChain/xGBuildup), `shots` (situasi).
+- Job `sync_understat` (harian 06 UTC; backfill: `sync_understat:seasons=2025/26,max_matches=400`) +
+  snapshot `team_style_profiles` (low_block/high_press/mid_block/territorial/leaky, persentil) dan profil
+  taktik pemain (`player_form_features` window `tactical`).
+- `app/features/tactics.py` (point-in-time): gaya tim dari PPDA 19 laga; peran pemain dari 20 start
+  terakhir; xG+xA/90 melawan low block / mid / high press, di-shrink ke rata-rata pemain (prior 5 laga),
+  dibatasi −15%..+20% dan dipakai sebagai pengali xG/xA di xPts v1; porsi xG dari bola mati.
+- Alasan baru: "BUR sits deep: 2nd most passive of 20 (PPDA 15.2). Vs low blocks: 0.71 xG+xA/90 vs 0.55
+  overall over 1240 mins → model +20%" dan "Role: right winger (AMR) in 85% of last 20 starts".
+- Web: panel **Tactical profile** di halaman pemain; gaya lawan + penyesuaian di "Full breakdown".
+
 ## [0.16.0] — 2026-10-21 · Rencana musim & chip + patokan mingguan
 
 ### Ditambahkan

@@ -257,6 +257,10 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
                         out["p_assist"],
                         out["p_defcon"],
                         out["lam_team"],
+                        out.get("opp_style"),
+                        out.get("opp_ppda"),
+                        out.get("opp_rank_passive"),
+                        out.get("opp_n_teams"),
                     )
                 )
                 if gw == first_gw:
@@ -284,6 +288,7 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
             forms.get(int(p.id), {}).get("last4"),
             views[int(p.id)],
             first_gw,
+            tac.to_json() if (tac := ctx.tactics.get(int(p.id))) else None,
         )
     for row in rows:
         row["breakdown"] = json.dumps(row["breakdown"])

@@ -1,6 +1,6 @@
 """Konteks proyeksi xPts v1 (point-in-time) — dipakai run_projections (live) dan evaluate_model (backtest)."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any
 
@@ -8,6 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from app.features.rates import TeamRating, player_rates, shrunk_rates, team_rating, team_ratings
+from app.features.tactics import PlayerTactics, TeamStyle, player_tactics, team_styles
 from app.models.xpts_v1 import MODEL_VERSION, MatchRates, PlayerRates, project_v1
 
 __all__ = ["MODEL_VERSION", "Context", "build_context", "p_play", "project"]
@@ -21,6 +22,9 @@ class Context:
     ratings: dict[int, TeamRating]
     league_goals: float
     rates: dict[int, dict[str, float]]
+    # Data taktik Understat (kosong bila belum ada → pengali 1, model kembali ke v1 dasar).
+    styles: dict[int, TeamStyle] = field(default_factory=dict)
+    tactics: dict[int, PlayerTactics] = field(default_factory=dict)
 
 
 def scoring_rules(conn: Connection, season_id: int) -> dict[str, float]:
@@ -37,7 +41,14 @@ def build_context(conn: Connection, before: datetime, season_id: int, positions:
     rules = scoring_rules(conn, season_id)
     ratings, league = team_ratings(conn, before)
     raw = player_rates(conn, before, season_id)
-    return Context(rules, ratings, league, shrunk_rates(raw, positions, rules))
+    return Context(
+        rules,
+        ratings,
+        league,
+        shrunk_rates(raw, positions, rules),
+        styles=team_styles(conn, before),
+        tactics=player_tactics(conn, before),
+    )
 
 
 def p_play(status: str | None, chance_next: int | None) -> float:
@@ -64,5 +75,18 @@ def project(
         yc90=float(r.get("yc90", 0.0)),
         p_defcon=float(r.get("p_defcon", 0.0)),
     )
+    # Gaya lawan (low block / high press) × rekam jejak pemain melawan gaya itu (ter-shrink, dibatasi).
+    style = ctx.styles.get(opp_id)
+    tac = ctx.tactics.get(player_id)
+    mult = tac.mult(style.bucket) if (style and tac) else 1.0
+    if mult != 1.0:
+        pr = replace(pr, xg90=pr.xg90 * mult, xa90=pr.xa90 * mult)
     mr = MatchRates(tr.att, tr.defn, orr.att, orr.defn, is_home, ctx.league_goals)
-    return project_v1(pr, mr, ctx.rules)
+    out: dict[str, Any] = dict(project_v1(pr, mr, ctx.rules))
+    out["style_mult"] = round(mult, 3)
+    if style:
+        out["opp_style"] = style.bucket
+        out["opp_ppda"] = round(style.ppda, 2)
+        out["opp_rank_passive"] = style.rank_passive
+        out["opp_n_teams"] = style.n_teams
+    return out
