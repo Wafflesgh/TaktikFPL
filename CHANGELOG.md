@@ -2,6 +2,15 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.22.1] — 2026-10-21 · Pemicu worker andal dari Supabase
+
+### Diperbaiki
+- Jadwal `*/15` GitHub Actions hampir tidak terpicu (4 run terjadwal dalam sehari) sehingga sync, berita, dan
+  proyeksi tertunda berjam-jam. Migrasi `20261021000700_tick_trigger`: `pg_cron` memanggil
+  `private.trigger_worker_tick()` tiap 15 menit → `workflow_dispatch` worker-tick lewat `pg_net`. Token GitHub
+  (fine-grained, hanya repo ini, Actions read & write) disimpan di Supabase Vault `github_dispatch_token`, tidak
+  di repo; tanpa token fungsi tidak melakukan apa-apa. Fungsi di skema `private` (tidak bisa dipanggil anon).
+
 ## [0.22.0] — 2026-10-21 · Berita FPL realtime, auto-update, logo & badge
 
 ### Ditambahkan

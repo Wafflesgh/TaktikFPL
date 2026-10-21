@@ -28,7 +28,7 @@
 | Repo | https://github.com/Wafflesgh/TaktikFPL (publik), monorepo pnpm (`apps/web`) + uv (`services/worker`, Python 3.12) |
 | Web | Next.js 16.4 (App Router, `cacheComponents: false`, prop `error.tsx` = `retry`) di **Vercel Hobby**, region `syd1` (`apps/web/vercel.json`), URL **https://taktik-fpl.vercel.app**, deploy otomatis dari `main` (root `apps/web`). Env Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, 3 template foto/badge. Tanpa login (anon read). |
 | DB | **Supabase free**, project ref `nkbnxrjbdwkqmqazkmvz` (Sydney), URL `https://nkbnxrjbdwkqmqazkmvz.supabase.co`, publishable key `sb_publishable_rwZJ0CRhnxgsHasMv1qLfg_5h9-9Mif` (aman ditampilkan). Worker memakai **Session pooler** `aws-0-ap-southeast-2.pooler.supabase.com:5432`, user `postgres.nkbnxrjbdwkqmqazkmvz` (password hanya di secret). Storage bucket privat `archive` (arsip immutable). |
-| Worker | GitHub Actions `worker-tick.yml` cron `*/15 * * * *` → `python -m app.tick` (menjadwalkan job dari `job_runs`). Input manual `jobs` = daftar job dipisah spasi, format `job:k=v,k=v` (mis. `gw_finalize:gw=8`). Timeout 90 menit. Langkah diagnostik `app/doctor.py`. |
+| Worker | GitHub Actions `worker-tick.yml` cron `*/15 * * * *` → `python -m app.tick` (menjadwalkan job dari `job_runs`). Input manual `jobs` = daftar job dipisah spasi, format `job:k=v,k=v` (mis. `gw_finalize:gw=8`). Timeout 90 menit. Langkah diagnostik `app/doctor.py`. **Jadwal GitHub sering terlewat** (21 Okt: hanya 4 run terjadwal/hari) → pemicu utama = **Supabase pg_cron** `worker-tick` (*/15) → `private.trigger_worker_tick()` → `workflow_dispatch` via pg_net, token fine-grained PAT (repo TaktikFPL, Actions read & write) di **Supabase Vault** `github_dispatch_token` (kedaluwarsa → perbarui di Vault). Cek: `select * from cron.job_run_details order by start_time desc limit 5;` dan `select status_code, created from net._http_response order by created desc limit 5;` (204 = OK). |
 | Workflow lain | `ci.yml` (lint/test), `db-migrate.yml` (hanya bila var `DB_MIGRATE_ENABLED=true`; normalnya migrasi via Supabase CLI lokal), `backup-gdrive.yml` (Minggu 03:00 UTC, rclone → Google Drive; **secret `RCLONE_CONFIG` BELUM diisi** → backup belum aktif). |
 | Secrets GitHub (terisi) | `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`. Belum: `RCLONE_CONFIG`, `GEMINI_API_KEY`, `API_FOOTBALL_KEY`, `ODDS_API_KEY`, `GNEWS_API_KEY`. `DATABASE_URL` dengan karakter khusus diperbaiki otomatis (`app/db.py repair_url`). |
 | Region | Supabase Sydney, Vercel syd1, runner GitHub di AS → tulis DB secara **batch** (executemany), bukan per baris. |
@@ -67,7 +67,7 @@
 - Memori Claude: `C:\Users\alfia\.claude\projects\D--Claude-Project-Taktik-FPL\memory\` (`MEMORY.md`,
   `project-state.md`, `user-preferences.md`).
 
-## 5. Database (22 migrasi; terakhir `20261021000600_news_realtime` — cek sudah di-push)
+## 5. Database (23 migrasi; terakhir `20261021000700_tick_trigger` (pg_cron/pg_net) — cek sudah di-push)
 
 `supabase/migrations/`: base, master (teams/players/external ids/unmatched_entities), calendar (seasons, gameweeks,
 fixtures — kolom `understat_match_id`), match_data (lineups, player_match_stats, team_match_stats, match_events,
