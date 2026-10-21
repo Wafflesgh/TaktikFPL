@@ -17,7 +17,8 @@ export function TopBar({ displayName, isAdmin, liveCount }: Props) {
   return (
     <header className="glass topbar sticky top-4 z-30 flex items-center justify-between gap-4 px-4 py-3 lg:px-6">
       <Link href="/" className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--accent)] font-display text-lg text-white">T</span>
+        {/* eslint-disable-next-line @next/next/no-img-element -- logo statis kecil milik TaktikFPL */}
+        <img src="/logo-128.png" alt="" width={40} height={40} className="h-10 w-10 rounded-xl" />
         <span className="font-display text-2xl uppercase tracking-wide">TaktikFPL</span>
       </Link>
 

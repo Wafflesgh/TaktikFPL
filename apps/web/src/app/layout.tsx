@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false }, // aplikasi pribadi
   icons: {
     icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
     ],
     apple: "/apple-touch-icon.png",
