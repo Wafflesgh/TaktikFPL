@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarIcon, ChartIcon, HomeIcon, LiveIcon, ShirtIcon } from "@/components/icons";
+import { CalendarIcon, ChartIcon, ClockIcon, HomeIcon, LiveIcon, ShirtIcon } from "@/components/icons";
 
 // Navigasi utama (BLUEPRINT 11.3). Halaman yang belum dibangun ditandai "segera".
 export const NAV = [
@@ -11,6 +11,7 @@ export const NAV = [
   { href: "/live", label: "Live", icon: LiveIcon, ready: false },
   { href: "/jadwal", label: "Fixtures", icon: CalendarIcon, ready: true },
   { href: "/tim", label: "My Team", icon: ShirtIcon, ready: true },
+  { href: "/rencana", label: "Season Plan", icon: ClockIcon, ready: true },
 ] as const;
 
 /** Desktop: pill berlabel untuk item aktif, lingkaran ikon untuk lainnya (ref-02). */

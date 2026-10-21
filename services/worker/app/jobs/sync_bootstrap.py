@@ -1,5 +1,6 @@
 """sync_bootstrap: bootstrap-static → seasons, teams, players, gameweeks, status & harga."""
 
+import json
 from datetime import UTC, date, datetime
 from typing import Any
 
@@ -335,6 +336,52 @@ def _upsert_scoring(conn: Connection, season_id: int, data: dict[str, Any]) -> i
     return len(rules)
 
 
+def _upsert_chips_settings(conn: Connection, season_id: int, data: dict[str, Any]) -> int:
+    """Aturan chip (jendela GW per chip) + game_settings → dipakai rencana musim. 0 bila tabel belum ada."""
+    exists = conn.execute(text("select to_regclass('public.fpl_chips') is not null")).scalar_one()
+    if not exists:
+        return 0  # migrasi 20261021000400 belum diterapkan
+    chips = [c for c in data.get("chips") or [] if c.get("start_event") and c.get("stop_event")]
+    if chips:
+        conn.execute(
+            text(
+                """
+                insert into public.fpl_chips
+                  (season_id, chip_id, name, number, start_event, stop_event, chip_type, updated_at)
+                values (:s, :id, :name, :num, :a, :b, :t, now())
+                on conflict (season_id, chip_id) do update set
+                  name = excluded.name, number = excluded.number, start_event = excluded.start_event,
+                  stop_event = excluded.stop_event, chip_type = excluded.chip_type, updated_at = now()
+                """
+            ),
+            [
+                {
+                    "s": season_id,
+                    "id": int(c["id"]),
+                    "name": c["name"],
+                    "num": int(c.get("number") or 1),
+                    "a": int(c["start_event"]),
+                    "b": int(c["stop_event"]),
+                    "t": c.get("chip_type"),
+                }
+                for c in chips
+            ],
+        )
+    settings = data.get("game_settings") or {}
+    if settings:
+        conn.execute(
+            text(
+                """
+                insert into public.fpl_game_settings (season_id, key, value, updated_at)
+                values (:s, :k, cast(:v as jsonb), now())
+                on conflict (season_id, key) do update set value = excluded.value, updated_at = now()
+                """
+            ),
+            [{"s": season_id, "k": k, "v": json.dumps(v)} for k, v in settings.items()],
+        )
+    return len(chips)
+
+
 def apply_bootstrap(conn: Connection, data: dict[str, Any], today: date) -> dict[str, Any]:
     season_id = current_season_id(conn)
     fpl_to_team = _upsert_teams(conn, season_id, data)
@@ -342,6 +389,7 @@ def apply_bootstrap(conn: Connection, data: dict[str, Any], today: date) -> dict
     stats.update(_upsert_players(conn, season_id, data, fpl_to_team, today))
     stats.update(_upsert_gameweeks(conn, season_id, data))
     stats["scoring_rules"] = _upsert_scoring(conn, season_id, data)
+    stats["chips"] = _upsert_chips_settings(conn, season_id, data)
     return stats
 
 

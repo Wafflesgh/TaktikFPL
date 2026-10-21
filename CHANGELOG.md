@@ -2,6 +2,19 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.16.0] — 2026-10-21 · Rencana musim & chip + patokan mingguan
+
+### Ditambahkan
+- Migrasi `20261021000400_season_plan.sql`: tabel `fpl_chips` & `fpl_game_settings` (dari bootstrap-static,
+  tidak di-hardcode) dan report_type `season_plan`.
+- Worker `app/optimize/season.py`: xPts semua GW tersisa → per GW: XI/cadangan/kapten squad acuan, Free Hit
+  (squad £100m sekali pakai, ILP), Wildcard (squad 6 GW terbaik vs squad acuan, dikurangi nilai free transfer
+  biasa), DGW/BGW; GW terbaik tiap chip di jendelanya + alasan berangka. Disimpan sebagai laporan
+  `season_plan` (satu snapshot permanen per GW, diperbarui maks tiap 6 jam) beserta matriks xPts.
+- Web `/rencana` (Season Plan): kartu chip (untuk squad Anda bila Team ID diisi — chip yang sudah dipakai
+  dibaca dari riwayat FPL; satu chip per GW), tabel GW-per-GW, dan **Weekly baseline** (perubahan rekomendasi
+  dari minggu ke minggu).
+
 ## [0.15.0] — 2026-10-21 · Alasan dengan persentase + rincian xPts
 
 ### Ditambahkan

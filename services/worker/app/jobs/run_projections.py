@@ -8,10 +8,12 @@ begitu ada run yang lebih baru — cukup untuk evaluasi model & training (point-
 
 import json
 from collections import defaultdict
-from datetime import UTC, datetime
+from collections.abc import Sequence
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import text
+from sqlalchemy.engine import Engine
 
 from app.db import get_engine
 from app.jobs.sync_bootstrap import current_season_id
@@ -19,6 +21,7 @@ from app.models import engine as v1
 from app.models import xpts_v0
 from app.models.reasons import FixtureView, player_reasons
 from app.models.xpts_v0 import FixtureCtx, PlayerForm
+from app.optimize.season import SeasonInput, plan_season
 from app.optimize.squad import Candidate, best_xi, optimize_squad
 from app.scheduler.runner import JobSkipped, job
 
@@ -39,6 +42,106 @@ def _f(m: dict[str, Any] | None, key: str) -> float | None:
     return float(m[key])
 
 
+SEASON_PLAN_EVERY = timedelta(hours=6)
+
+
+def _season_plan(
+    engine: Engine,
+    season_id: int,
+    gws: dict[int, int],
+    first_gw: int,
+    fixtures: Sequence[Any],
+    players: Sequence[Any],
+    season_xpts: dict[int, dict[int, float]],
+    team_short: dict[int, str],
+    template: list[int],
+) -> dict[str, Any]:
+    """Rencana musim & chip → laporan 'season_plan'.
+
+    Satu snapshot permanen per GW (patokan mingguan), diperbarui paling sering tiap 6 jam.
+    """
+    with engine.connect() as conn:
+        if not conn.execute(text("select to_regclass('public.fpl_chips') is not null")).scalar_one():
+            return {"skipped": "migrasi season_plan belum diterapkan"}
+        last = conn.execute(
+            text(
+                "select max(created_at) from public.analysis_reports "
+                "where report_type = 'season_plan' and gameweek_id = :g"
+            ),
+            {"g": gws[first_gw]},
+        ).scalar_one()
+        if last is not None and datetime.now(UTC) - last < SEASON_PLAN_EVERY:
+            return {"skipped": "baru dibuat"}
+        chips = [
+            dict(r._mapping)
+            for r in conn.execute(
+                text(
+                    "select name, number, start_event, stop_event from public.fpl_chips where season_id = :s"
+                ),
+                {"s": season_id},
+            )
+        ]
+        settings = {
+            r.key: r.value
+            for r in conn.execute(
+                text("select key, value from public.fpl_game_settings where season_id = :s"), {"s": season_id}
+            )
+        }
+    gw_of = {v: k for k, v in gws.items()}
+    per_team: dict[int, dict[int, int]] = defaultdict(lambda: defaultdict(int))
+    for fx in fixtures:
+        g = gw_of[int(fx.gameweek_id)]
+        per_team[g][int(fx.home_team_id)] += 1
+        per_team[g][int(fx.away_team_id)] += 1
+    info = {int(p.id): p for p in players if p.fpl_position}
+    inp = SeasonInput(
+        first_gw=first_gw,
+        last_gw=max(gws),
+        xpts={pid: dict(v) for pid, v in season_xpts.items() if pid in info},
+        position={pid: p.fpl_position for pid, p in info.items()},
+        team={pid: int(p.team_id) for pid, p in info.items()},
+        price={pid: int(p.price_tenths or 0) for pid, p in info.items()},
+        name={pid: n for pid, n in _names(engine, list(info)).items()},
+        team_short=team_short,
+        fixtures_per_team={g: dict(t) for g, t in per_team.items()},
+        template=template,
+        chips=chips,
+        budget_tenths=int(settings.get("squad_total_spend") or 1000),
+        max_per_team=int(settings.get("squad_team_limit") or 3),
+    )
+    content = {"kind": "season_plan", **plan_season(inp), "settings": settings}
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "delete from public.analysis_reports where report_type = 'season_plan' and gameweek_id = :g"
+            ),
+            {"g": gws[first_gw]},
+        )
+        conn.execute(
+            text(
+                """
+                insert into public.analysis_reports (gameweek_id, report_type, status, title, content_json)
+                values (:g, 'season_plan', 'ok', :t, cast(:c as jsonb))
+                """
+            ),
+            {"g": gws[first_gw], "t": f"Season plan from GW{first_gw}", "c": json.dumps(content)},
+        )
+    return {
+        "gws": len(content["gws"]),
+        "chips": {c["label"] + str(c["start_event"]): c["recommended_gw"] for c in content["chips"]},
+    }
+
+
+def _names(engine: Engine, ids: list[int]) -> dict[int, str]:
+    with engine.connect() as conn:
+        return {
+            int(r.id): r.web_name
+            for r in conn.execute(
+                text("select id, web_name from public.players where id = any(:i)"), {"i": ids}
+            )
+        }
+
+
 @job("run_projections")
 def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
     if run_type not in RUN_TYPES:
@@ -52,14 +155,14 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
         if nxt is None:
             raise JobSkipped("tidak ada GW berikutnya (akhir musim?)")
         first_gw = int(nxt.number)
+        horizon_last = (
+            first_gw + HORIZON_GW - 1
+        )  # proyeksi rinci & squad; GW sesudahnya hanya untuk rencana musim
         gws = {
             int(r.number): int(r.id)
             for r in conn.execute(
-                text(
-                    "select id, number from public.gameweeks where season_id = :s "
-                    "and number between :a and :b"
-                ),
-                {"s": season_id, "a": first_gw, "b": first_gw + HORIZON_GW - 1},
+                text("select id, number from public.gameweeks where season_id = :s and number >= :a"),
+                {"s": season_id, "a": first_gw},
             )
         }
         gw_number_by_id = {v: k for k, v in gws.items()}
@@ -108,6 +211,7 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
 
     rows: list[dict[str, Any]] = []
     per_gw: dict[int, dict[int, float]] = defaultdict(lambda: defaultdict(float))
+    season_xpts: dict[int, dict[int, float]] = defaultdict(lambda: defaultdict(float))
     views: dict[int, list[FixtureView]] = defaultdict(list)
     first_row: dict[int, int] = {}  # pemain → indeks baris laga pertamanya di GW terdekat (tempat alasan)
     for p in players:
@@ -131,6 +235,9 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
                 ctx_form = form if gw == first_gw else PlayerForm(**{**form.__dict__, "chance_next": None})
                 fdr = fx.difficulty_home if is_home else fx.difficulty_away
                 out = xpts_v0.project(ctx_form, FixtureCtx(fdr=fdr, is_home=is_home))
+            season_xpts[int(p.id)][gw] += out["xpts"]
+            if gw > horizon_last:
+                continue
             per_gw[int(p.id)][gw] += out["xpts"]
             if use_v1:
                 views[int(p.id)].append(
@@ -311,7 +418,12 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
             {"r": run_id},
         ).rowcount
 
+    season = _season_plan(
+        engine, season_id, gws, first_gw, fixtures, players, season_xpts, team_short, plan.squad
+    )
+
     return {
+        "season_plan": season,
         "model_run_id": run_id,
         "first_gw": first_gw,
         "projections": len(rows),
