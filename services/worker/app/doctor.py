@@ -7,11 +7,14 @@ format atau password tidak cocok) terbaca jelas dalam Bahasa Indonesia.
 """
 
 import os
+import re
 import sys
 from urllib.parse import unquote, urlsplit
 
 import httpx
 import psycopg
+
+from app.db import repair_url
 
 RESERVED = set("@:/?#[]%")
 
@@ -56,7 +59,7 @@ def check_database_url(url: str) -> list[str]:
     password = unquote(parts.password or "")
     if not password:
         problems.append("Password tidak ditemukan di DATABASE_URL.")
-    elif RESERVED & set(parts.password or ""):
+    elif RESERVED & set(re.sub(r"%[0-9A-Fa-f]{2}", "", parts.password or "")):
         problems.append("Password berisi karakter khusus yang belum di-encode (@ : / ? # [ ] %).")
     return problems
 
@@ -80,8 +83,11 @@ def main() -> int:
         print(f"   {name}: {'ada' if present else 'KOSONG'}")
         ok &= present
 
-    url = os.environ.get("DATABASE_URL", "")
+    raw_url = os.environ.get("DATABASE_URL", "")
     print("== DATABASE_URL")
+    for msg in check_database_url(raw_url):
+        print("   catatan (diperbaiki otomatis bila bisa): " + msg)
+    url = repair_url(raw_url)
     if url:
         print("   " + describe(url))
     problems = check_database_url(url)

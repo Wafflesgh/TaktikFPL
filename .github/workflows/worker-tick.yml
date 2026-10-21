@@ -47,18 +47,18 @@ jobs:
       - run: uv sync --frozen --no-dev
 
       - name: Diagnostik konfigurasi (aman, tanpa menampilkan rahasia)
-        run: uv run python -m app.doctor
+        run: uv run --no-dev python -m app.doctor
 
       - name: Tick (job yang jatuh tempo)
         if: github.event_name == 'schedule' || inputs.jobs == ''
-        run: uv run python -m app.tick
+        run: uv run --no-dev python -m app.tick
 
       - name: Job manual
         if: github.event_name == 'workflow_dispatch' && inputs.jobs != ''
         env:
           MANUAL_JOBS: ${{ inputs.jobs }}
         # $MANUAL_JOBS sengaja tanpa kutip: dipecah per spasi menjadi argumen, tidak dieksekusi shell.
-        run: uv run python -m app.cli $MANUAL_JOBS
+        run: uv run --no-dev python -m app.cli $MANUAL_JOBS
 
       - name: Keepalive jadwal (sekali sehari)
         if: github.event_name == 'schedule'

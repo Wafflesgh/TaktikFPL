@@ -36,3 +36,17 @@ def test_empty_url():
 def test_describe_never_prints_password():
     text = describe(GOOD)
     assert "Abc123xyz" not in text and "9 karakter" in text
+
+
+def test_repair_url_encodes_special_password_and_strips_brackets():
+    from app.db import normalize_url, repair_url
+
+    raw = "postgresql://postgres.abcref:[p@ss:w/rd#1]@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres"
+    fixed = repair_url(raw)
+    assert fixed == (
+        "postgresql://postgres.abcref:p%40ss%3Aw%2Frd%231@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres"
+    )
+    assert check_database_url(fixed) == []
+    assert repair_url(fixed) == fixed  # idempoten, tidak di-encode dua kali
+    assert repair_url(GOOD) == GOOD
+    assert normalize_url(raw).startswith("postgresql+psycopg://postgres.abcref:p%40ss")
