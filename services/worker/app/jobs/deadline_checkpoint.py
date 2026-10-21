@@ -6,6 +6,7 @@ proyeksi ulang (jika input_hash berubah), Gemini, dan Laporan Deadline T-60.
 
 from typing import Any
 
+from app.jobs.run_projections import run_projections
 from app.jobs.sync_bootstrap import sync_bootstrap
 from app.jobs.sync_fixtures import sync_fixtures
 from app.scheduler.runner import job
@@ -16,6 +17,8 @@ def deadline_checkpoint(gw: int, minutes_before: int) -> dict[str, Any]:
     # Snapshot "apa yang diketahui saat keputusan diambil" untuk training ML (point-in-time).
     bootstrap = sync_bootstrap(archive_reason="deadline")
     fixtures = sync_fixtures(archive_reason="deadline")
+    # Proyeksi ulang dengan status/berita terbaru; run 't60' disimpan permanen (point-in-time).
+    run_projections(run_type=f"t{minutes_before}")
     return {
         "gw": gw,
         "minutes_before": minutes_before,

@@ -25,6 +25,7 @@ from app.jobs import (
     cleanup_retention,
     deadline_checkpoint,
     poll_event_status,
+    run_projections,
     sync_bootstrap,
     sync_fixtures,
     sync_player_history,
@@ -103,8 +104,13 @@ def plan(state: State, checkpoints_min: list[int]) -> list[Plan]:
     # build_form setelah riwayat pemain diperbarui
     hist, form = state.last_ok.get("sync_player_history"), state.last_ok.get("build_form")
     history_planned = any(p.job == "sync_player_history" for p in out)
-    if history_planned or (hist is not None and (form is None or form < hist)):
+    form_planned = history_planned or (hist is not None and (form is None or form < hist))
+    if form_planned:
         out.append(Plan("build_form", {}, "setelah sync_player_history"))
+    # Proyeksi: setelah form diperbarui, atau bila belum ada proyeksi hari ini.
+    proj = state.last_ok.get("run_projections")
+    if form_planned or proj is None or proj < today or (form is not None and proj < form):
+        out.append(Plan("run_projections", {}, "setelah build_form / harian"))
     return out
 
 
@@ -163,6 +169,7 @@ JOBS: dict[str, Callable[..., Any]] = {
     "build_form": build_form.build_form,
     "cleanup_retention": cleanup_retention.cleanup_retention,
     "deadline_checkpoint": deadline_checkpoint.deadline_checkpoint,
+    "run_projections": run_projections.run_projections,
 }
 
 

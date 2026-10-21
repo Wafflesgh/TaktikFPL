@@ -26,6 +26,7 @@ dependencies = [
   "rapidfuzz>=3.9",
   "pywebpush>=2.0",
   "sentry-sdk>=2.10",
+  "highspy>=1.7",
 ]
 
 [dependency-groups]

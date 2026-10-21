@@ -20,6 +20,7 @@ from app.jobs import (  # noqa: F401
     deadline_checkpoint,
     gw_finalize,
     poll_event_status,
+    run_projections,
     sync_bootstrap,
     sync_fixtures,
     sync_player_history,

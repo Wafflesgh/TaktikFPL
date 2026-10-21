@@ -107,6 +107,34 @@ export type Database = {
         league_code: string;
         is_promoted: boolean;
       }>;
+      model_runs: Table<{
+        id: number;
+        gameweek_id: number;
+        run_type: string;
+        model_version: string;
+        status: string;
+        finished_at: string | null;
+        notes: Json | null;
+      }>;
+      projections: Table<{
+        id: number;
+        model_run_id: number;
+        player_id: number;
+        fixture_id: number;
+        xmins: number | null;
+        xpts: number;
+        component_breakdown: Json | null;
+      }>;
+      analysis_reports: Table<{
+        id: number;
+        gameweek_id: number;
+        model_run_id: number | null;
+        report_type: string;
+        status: string;
+        title: string | null;
+        content_json: Json | null;
+        created_at: string;
+      }>;
       players: Table<{
         id: number;
         full_name: string;

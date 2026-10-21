@@ -2,6 +2,20 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.10.0] — 2026-10-21 · Tim Saya, proyeksi xPts 6 GW, rekomendasi & squad dari nol (Fase 2 awal)
+
+### Ditambahkan
+- Worker `app/models/xpts_v0.py`: xPts per pemain per laga = poin/90 (60% form 4 laga + 40% musim,
+  ter-shrink) × xMins (porsi menit × peluang main dari status FPL) × faktor FDR × kandang/tandang.
+- Job `run_projections` (harian setelah `build_form` + di setiap checkpoint deadline): proyeksi 6 GW ke depan,
+  nilai horizon terdiskon 0.85/GW, squad optimal dari nol via ILP (PuLP 4 + solver HiGHS, dependensi baru
+  `highspy`) disimpan sebagai laporan `weekly_draft`. Retensi: 3 run terbaru utuh; run `t60` permanen dan
+  dipangkas ke GW-nya sendiri.
+- Web `/tim` (navigasi Tim Saya aktif): input FPL Team ID (cookie), squad dari API FPL (server-side), strip
+  xPts per GW, kapten/vice, rekomendasi transfer per posisi (budget + bank, maks 3/klub, diurutkan gain xPts
+  6 GW), catatan **Tahan** (GW depan sulit tetapi GW sesudahnya bagus) / **Jual**, dan squad wildcard optimal.
+- Test: xPts, horizon (kasus jadwal sulit lalu mudah), optimizer patuh aturan FPL, penjadwalan tick.
+
 ## [0.9.0] — 2026-10-21 · Tanpa login (keputusan Dilan)
 
 ### Diubah

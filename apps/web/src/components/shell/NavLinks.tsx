@@ -10,7 +10,7 @@ export const NAV = [
   { href: "/analisis", label: "Analisis", icon: ChartIcon, ready: true },
   { href: "/live", label: "Live", icon: LiveIcon, ready: false },
   { href: "/jadwal", label: "Jadwal", icon: CalendarIcon, ready: true },
-  { href: "/tim", label: "Tim Saya", icon: ShirtIcon, ready: false },
+  { href: "/tim", label: "Tim Saya", icon: ShirtIcon, ready: true },
 ] as const;
 
 /** Desktop: pill berlabel untuk item aktif, lingkaran ikon untuk lainnya (ref-02). */
