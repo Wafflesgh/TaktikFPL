@@ -40,7 +40,9 @@ def test_cold_start_runs_everything_due():
 
 
 def test_intervals_respected():
-    daily = fresh(cleanup_retention=60, sync_player_history=60, build_form=30, run_projections=20)
+    daily = fresh(
+        cleanup_retention=60, sync_player_history=60, build_form=30, run_projections=20, evaluate_model=10
+    )
     last = {**daily, **fresh(sync_bootstrap=14, sync_fixtures=14, poll_event_status=14)}
     assert jobs(plan(state(last), CPS)) == ["sync_fixtures"]  # 14 + slack 3 ≥ 15
 
@@ -54,6 +56,7 @@ def test_bootstrap_every_tick_within_24h_of_deadline():
         sync_player_history=60,
         build_form=30,
         run_projections=20,
+        evaluate_model=10,
     )
     far = plan(state(last, deadline=NOW + timedelta(hours=30)), CPS)
     near = plan(state(last, deadline=NOW + timedelta(hours=20)), CPS)
@@ -105,3 +108,18 @@ def test_projections_follow_form():
     assert "run_projections" in jobs(plan(state(last), CPS))
     last = fresh(cleanup_retention=60, sync_player_history=120, build_form=90, run_projections=60)
     assert "run_projections" not in jobs(plan(state(last), CPS))
+
+
+def test_status_change_triggers_reprojection():
+    from app.tick import Plan, followup
+
+    st = state(fresh(run_projections=40))
+    out = followup("sync_bootstrap", {"status_snapshots": 3}, [], st)
+    assert out is not None and out.job == "run_projections"
+    # tidak ada perubahan status → tidak proyeksi ulang
+    assert followup("sync_bootstrap", {"status_snapshots": 0}, [], st) is None
+    # proyeksi baru saja jalan → tunggu interval
+    assert followup("sync_bootstrap", {"status_snapshots": 3}, [], state(fresh(run_projections=5))) is None
+    # proyeksi sudah ada di antrean → tidak dobel
+    queued = [Plan("run_projections", {}, "harian")]
+    assert followup("sync_bootstrap", {"status_snapshots": 3}, queued, st) is None

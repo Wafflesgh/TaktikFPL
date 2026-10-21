@@ -1,6 +1,9 @@
 // Rekomendasi dari angka engine (xPts v0 di worker). Fungsi murni: hanya membandingkan & mengurutkan
 // nilai proyeksi, tidak membuat angka baru (CLAUDE.md aturan 1).
 
+/** Alasan dari worker (app/models/reasons.py). */
+export type Reason = { kind: string; tone: "good" | "warn" | "bad"; text: string };
+
 export type ProjPlayer = {
   id: number;
   name: string;
@@ -14,6 +17,7 @@ export type ProjPlayer = {
   /** Total xPts horizon terdiskon (0.85 per GW). */
   horizon: number;
   next: number;
+  reasons: Reason[];
 };
 
 export type TransferIdea = {

@@ -1,4 +1,5 @@
-"""run_projections: xPts v0 untuk 6 GW ke depan → projections + squad optimal (wildcard).
+"""run_projections: xPts v1 (fallback v0 bila aturan poin belum ada) untuk 6 GW ke depan
+→ projections + squad optimal (wildcard).
 
 Retensi (paket gratis, ADR 0001): run harian/adhoc hanya 3 terbaru disimpan utuh; run 't60'
 (titik keputusan sebelum deadline) disimpan permanen tetapi dipangkas ke laga GW-nya sendiri
@@ -7,14 +8,18 @@ begitu ada run yang lebih baru — cukup untuk evaluasi model & training (point-
 
 import json
 from collections import defaultdict
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import text
 
 from app.db import get_engine
 from app.jobs.sync_bootstrap import current_season_id
-from app.models.xpts_v0 import MODEL_VERSION, FixtureCtx, PlayerForm, project
-from app.optimize.squad import Candidate, optimize_squad
+from app.models import engine as v1
+from app.models import xpts_v0
+from app.models.reasons import FixtureView, player_reasons
+from app.models.xpts_v0 import FixtureCtx, PlayerForm
+from app.optimize.squad import Candidate, best_xi, optimize_squad
 from app.scheduler.runner import JobSkipped, job
 
 HORIZON_GW = 6
@@ -71,7 +76,7 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
         players = conn.execute(
             text(
                 """
-                select id, team_id, fpl_position, status, chance_next, price_tenths
+                select id, team_id, fpl_position, status, chance_next, news, price_tenths
                 from public.v_player_current
                 """
             )
@@ -87,6 +92,14 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
             )
         ):
             forms[int(r.player_id)][r.window_label] = r.metrics
+        team_short = {
+            int(t.id): t.short_name or "?"
+            for t in conn.execute(text("select id, short_name from public.teams"))
+        }
+        positions = {int(p.id): p.fpl_position for p in players if p.fpl_position}
+        ctx = v1.build_context(conn, datetime.now(UTC), season_id, positions)
+    use_v1 = bool(ctx.rules.get("goals_scored_MID"))  # aturan poin dari bootstrap sudah tersimpan
+    model_version = v1.MODEL_VERSION if use_v1 else xpts_v0.MODEL_VERSION
 
     by_team: dict[int, list[Any]] = defaultdict(list)
     for fx in fixtures:
@@ -95,6 +108,8 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
 
     rows: list[dict[str, Any]] = []
     per_gw: dict[int, dict[int, float]] = defaultdict(lambda: defaultdict(float))
+    views: dict[int, list[FixtureView]] = defaultdict(list)
+    first_row: dict[int, int] = {}  # pemain → indeks baris laga pertamanya di GW terdekat (tempat alasan)
     for p in players:
         f = forms.get(int(p.id), {})
         form = PlayerForm(
@@ -108,21 +123,49 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
         for fx, is_home in by_team.get(int(p.team_id), []):
             gw = gw_number_by_id[int(fx.gameweek_id)]
             # chance_of_playing hanya relevan untuk GW terdekat; GW berikutnya pakai status saja.
-            ctx_form = form if gw == first_gw else PlayerForm(**{**form.__dict__, "chance_next": None})
-            out = project(
-                ctx_form,
-                FixtureCtx(fdr=fx.difficulty_home if is_home else fx.difficulty_away, is_home=is_home),
-            )
+            if use_v1:
+                opp = int(fx.away_team_id if is_home else fx.home_team_id)
+                play = v1.p_play(p.status, p.chance_next if gw == first_gw else None)
+                out = v1.project(ctx, int(p.id), p.fpl_position, int(p.team_id), opp, is_home, play)
+            else:
+                ctx_form = form if gw == first_gw else PlayerForm(**{**form.__dict__, "chance_next": None})
+                fdr = fx.difficulty_home if is_home else fx.difficulty_away
+                out = xpts_v0.project(ctx_form, FixtureCtx(fdr=fdr, is_home=is_home))
             per_gw[int(p.id)][gw] += out["xpts"]
+            if use_v1:
+                views[int(p.id)].append(
+                    FixtureView(
+                        gw, team_short.get(opp, "?"), is_home, out["xmins"], out["att_mult"], out["team_cs"]
+                    )
+                )
+                if gw == first_gw:
+                    first_row.setdefault(int(p.id), len(rows))
             rows.append(
                 {
                     "pid": int(p.id),
                     "fx": int(fx.id),
                     "xmins": out["xmins"],
                     "xpts": out["xpts"],
-                    "breakdown": json.dumps({**out, "gw": gw, "home": is_home}),
+                    "breakdown": {**out, "gw": gw, "home": is_home},
                 }
             )
+
+    # Alasan pemilihan (form, lawan, menit, cedera) — disimpan di baris laga pertama GW terdekat.
+    for p in players:
+        idx = first_row.get(int(p.id))
+        if idx is None or not p.fpl_position:
+            continue
+        rows[idx]["breakdown"]["reasons"] = player_reasons(
+            p.fpl_position,
+            p.status,
+            p.chance_next,
+            p.news,
+            forms.get(int(p.id), {}).get("last4"),
+            views[int(p.id)],
+            first_gw,
+        )
+    for row in rows:
+        row["breakdown"] = json.dumps(row["breakdown"])
 
     # Squad optimal dari nol (budget £100.0m) memakai nilai horizon terdiskon.
     info = {int(p.id): p for p in players}
@@ -138,6 +181,19 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
         if info[pid].fpl_position and info[pid].price_tenths
     ]
     plan = optimize_squad(candidates)
+    # XI terbaik GW terdekat saja (tanpa budget) — panel "Team of the week" di Home.
+    xi = best_xi(
+        [
+            Candidate(
+                c.player_id,
+                c.position,
+                c.team_id,
+                c.price_tenths,
+                round(per_gw[c.player_id].get(first_gw, 0.0), 3),
+            )
+            for c in candidates
+        ]
+    )
 
     with engine.begin() as conn:
         run_id = conn.execute(
@@ -150,7 +206,7 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
             {
                 "g": gws[first_gw],
                 "t": run_type,
-                "v": MODEL_VERSION,
+                "v": model_version,
                 "n": json.dumps({"horizon_gw": HORIZON_GW, "discount": DISCOUNT, "first_gw": first_gw}),
             },
         ).scalar_one()
@@ -190,7 +246,16 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
                         "horizon_gw": HORIZON_GW,
                         "discount": DISCOUNT,
                         "first_gw": first_gw,
-                        "model_version": MODEL_VERSION,
+                        "model_version": model_version,
+                        "best_xi": {
+                            "gw": first_gw,
+                            "starters": xi.starters,
+                            "captain": xi.captain,
+                            "vice": xi.vice,
+                            "formation": xi.formation,
+                            "xpts": xi.value,
+                            "solver_status": xi.status,
+                        },
                     }
                 ),
             },
@@ -238,6 +303,8 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
         "squad_status": plan.status,
         "squad_cost": plan.cost_tenths / 10,
         "squad_value_xi": plan.value_xi,
+        "best_xi": xi.value,
+        "with_reasons": len(first_row),
         "runs_pruned": pruned,
         "t60_rows_trimmed": trimmed,
     }

@@ -1,5 +1,6 @@
 import { FormBadge } from "@/components/FormBadge";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
+import { BestXiPanel } from "@/components/dashboard/BestXi";
 import { DeadlineTile } from "@/components/dashboard/DeadlineTile";
 import { FixtureGrid, NextMatchCard, StandingsTable } from "@/components/dashboard/Matches";
 import { FormLeaders, PlayerTable, type Sort } from "@/components/dashboard/Players";
@@ -8,6 +9,7 @@ import { AlertIcon, CalendarIcon, ClockIcon, FlameIcon } from "@/components/icon
 import { BottomNav } from "@/components/shell/NavLinks";
 import { TopBar } from "@/components/shell/TopBar";
 import { Panel, StatTile } from "@/components/ui";
+import type { BestXi } from "@/lib/data/bestxi";
 import type { DashboardData, PlayerRow } from "@/lib/data/dashboard";
 import { FORM_ORDER } from "@/lib/form";
 import { formatWIB } from "@/lib/time";
@@ -27,12 +29,13 @@ type Props = {
   displayName: string;
   isAdmin: boolean;
   data: DashboardData;
+  bestXi: BestXi | null;
   pos: string | undefined;
   sort: Sort;
 };
 
 /** Beranda desktop-first (ref-02): top bar + 3 kolom; mobile: kolom bertumpuk + bottom nav. */
-export function DashboardView({ displayName, isAdmin, data, pos, sort }: Props) {
+export function DashboardView({ displayName, isAdmin, data, bestXi, pos, sort }: Props) {
   const { next, fixtures, live, players, standings, fetchedAt } = data;
 
   const byForm = sortPlayers(players, "form");
@@ -123,6 +126,7 @@ export function DashboardView({ displayName, isAdmin, data, pos, sort }: Props) 
 
         {/* Kolom tengah: hero + jadwal + pemain */}
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-8 xl:col-span-6">
+          <BestXiPanel xi={bestXi} />
           <Spotlight player={spotlight} />
           <Panel
             title={next ? `GW${next.number} Fixtures` : "Fixtures"}

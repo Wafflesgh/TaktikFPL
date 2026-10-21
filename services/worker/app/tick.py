@@ -24,6 +24,7 @@ from app.jobs import (
     build_form,
     cleanup_retention,
     deadline_checkpoint,
+    evaluate_model,
     poll_event_status,
     run_projections,
     sync_bootstrap,
@@ -40,9 +41,11 @@ INTERVALS = {
 }
 # Toleransi agar tick yang datang sedikit lebih awal dari interval tetap menjalankan job.
 SLACK = timedelta(minutes=3)
-DAILY_AFTER_UTC = {"cleanup_retention": 3, "sync_player_history": 5}
+DAILY_AFTER_UTC = {"cleanup_retention": 3, "sync_player_history": 5, "evaluate_model": 7}
 # Checkpoint deadline yang terlewat lebih dari ini dianggap basi (tidak dijalankan lagi).
 CHECKPOINT_GRACE = timedelta(minutes=45)
+# Status/berita pemain berubah -> proyeksi dihitung ulang, paling sering sekali per interval ini.
+REPROJECT_MIN = timedelta(minutes=30)
 
 
 @dataclass(frozen=True)
@@ -114,6 +117,22 @@ def plan(state: State, checkpoints_min: list[int]) -> list[Plan]:
     return out
 
 
+def followup(done: str, result: dict[str, Any] | None, todo: list[Plan], state: State) -> Plan | None:
+    """Job tambahan berdasarkan hasil job yang baru selesai (fungsi murni).
+
+    sync_bootstrap menemukan status/berita cedera baru -> run_projections ulang supaya
+    rekomendasi langsung memperhitungkan pemain yang diragukan/absen.
+    """
+    if done != "sync_bootstrap" or not result or not result.get("status_snapshots"):
+        return None
+    if any(p.job == "run_projections" for p in todo):
+        return None  # proyeksi memang akan jalan di tick ini
+    since = _since(state, "run_projections")
+    if since is not None and since + SLACK < REPROJECT_MIN:
+        return None
+    return Plan("run_projections", {}, f"status pemain berubah ({result['status_snapshots']})")
+
+
 def load_state(now: datetime) -> State:
     with get_engine().connect() as conn:
         last_ok = {
@@ -170,6 +189,7 @@ JOBS: dict[str, Callable[..., Any]] = {
     "cleanup_retention": cleanup_retention.cleanup_retention,
     "deadline_checkpoint": deadline_checkpoint.deadline_checkpoint,
     "run_projections": run_projections.run_projections,
+    "evaluate_model": evaluate_model.evaluate_model,
 }
 
 
@@ -186,11 +206,18 @@ def main(argv: list[str]) -> int:
     if args.dry_run:
         return 0
     failed = 0
-    for p in todo:
+    queue = list(todo)
+    while queue:
+        p = queue.pop(0)
         try:
-            JOBS[p.job](**p.kwargs)
+            result = JOBS[p.job](**p.kwargs)
         except Exception:  # sudah tercatat di job_runs; lanjutkan job lain
             failed += 1
+            continue
+        extra = followup(p.job, result, queue, state)
+        if extra is not None:
+            print(json.dumps({"followup": extra.__dict__}, default=str))
+            queue.append(extra)
     return 1 if failed else 0
 
 

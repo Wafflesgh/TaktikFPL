@@ -2,6 +2,31 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.13.0] — 2026-10-21 · Alasan pemilihan, Best XI di Beranda, proyeksi ulang saat berita cedera
+
+### Ditambahkan
+- Worker `app/models/reasons.py`: alasan per pemain dari angka engine (template, bukan LLM) — cedera/diragukan
+  (status + % peluang main + berita FPL), double/blank GW, laga mudah/sulit (pengali serangan vs laga rata-rata
+  tim; peluang clean sheet untuk bek/kiper), label form 4 laga, statistik dasar top-% posisi, rangkaian 5 laga
+  sesudahnya ("Easier run after this GW"), menit (nailed / rotasi). Disimpan di `component_breakdown.reasons`.
+- `best_xi` (ILP): XI terbaik GW berikutnya tanpa budget, formasi valid, maks 3/klub → `best_xi` di laporan
+  `weekly_draft`. Web: panel **Best XI** di Beranda (lawan, xPts, alasan, kapten/vice).
+- Web `/tim`: chip alasan di squad awal, squad sendiri, dan rekomendasi transfer.
+
+### Diubah
+- Tick: bila `sync_bootstrap` menemukan perubahan status/berita pemain, `run_projections` langsung dijalankan
+  ulang (maks sekali per 30 menit) — sebelumnya hanya harian/checkpoint deadline.
+
+## [0.12.0] — 2026-10-21 · xPts v1 per komponen + akurasi model
+
+### Ditambahkan
+- Aturan poin FPL dari `bootstrap-static game_config.scoring` → `fpl_scoring_rules` (tidak di-hardcode).
+- `xpts_v1`: kekuatan serang/bertahan tim (19 laga, xG, prior promosi) × rate pemain ter-shrink → komponen
+  menit, gol, assist, clean sheet, kebobolan, save, bonus, defcon, kartu; peluang main dari status/chance.
+  Fallback ke v0 bila aturan poin belum tersimpan.
+- Job `evaluate_model` (harian 07 UTC): backtest point-in-time per GW selesai vs baseline rata-rata 4 laga →
+  `model_evaluations`. Web: bagian **Model accuracy** di halaman Analysis.
+
 ## [0.11.0] — 2026-10-21 · English UI
 
 ### Diubah

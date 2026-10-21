@@ -2,7 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { playerPhotoUrls } from "@/lib/assets";
 import { getEntry, getPicks } from "@/lib/fpl";
-import { bestTransfers, holdNotes, horizonOf, type ProjPlayer } from "@/lib/reco";
+import { bestTransfers, holdNotes, horizonOf, type ProjPlayer, type Reason } from "@/lib/reco";
 import { createClient } from "@/lib/supabase/server";
 
 export const ENTRY_COOKIE = "tfpl_entry";
@@ -42,16 +42,19 @@ async function loadProjections() {
     if (data.length < 1000) break;
   }
   const byPlayer = new Map<number, Record<number, number>>();
+  const reasons = new Map<number, Reason[]>();
   for (const r of rows) {
-    const gw = Number((r.component_breakdown as { gw?: number } | null)?.gw ?? firstGw);
+    const bd = r.component_breakdown as { gw?: number; reasons?: Reason[] } | null;
+    if (bd?.reasons) reasons.set(r.player_id, bd.reasons);
+    const gw = Number(bd?.gw ?? firstGw);
     const m = byPlayer.get(r.player_id) ?? {};
     m[gw] = (m[gw] ?? 0) + Number(r.xpts);
     byPlayer.set(r.player_id, m);
   }
-  return { runId: run.id, firstGw, horizonGw: Number(notes.horizon_gw ?? 6), modelVersion: run.model_version, finishedAt: run.finished_at, byPlayer };
+  return { runId: run.id, firstGw, horizonGw: Number(notes.horizon_gw ?? 6), modelVersion: run.model_version, finishedAt: run.finished_at, byPlayer, reasons };
 }
 
-async function loadPool(byPlayer: Map<number, Record<number, number>>, firstGw: number) {
+async function loadPool(byPlayer: Map<number, Record<number, number>>, firstGw: number, reasons: Map<number, Reason[]>) {
   const supabase = await createClient();
   const [{ data: players }, { data: teams }] = await Promise.all([
     supabase.from("v_player_current").select("id, web_name, fpl_code, photo_url_resolved, team_id, fpl_position, status, price_tenths, fpl_element_id").limit(1000),
@@ -71,6 +74,7 @@ async function loadPool(byPlayer: Map<number, Record<number, number>>, firstGw: 
       byGw,
       horizon: horizonOf(byGw, firstGw),
       next: byGw[firstGw] ?? 0,
+      reasons: reasons.get(p.id ?? 0) ?? [],
       elementId: p.fpl_element_id,
       photos: playerPhotoUrls(p.fpl_code, p.photo_url_resolved),
     };
@@ -101,7 +105,7 @@ export async function getEntryId(): Promise<number | null> {
 export async function getTimData(entryId: number | null) {
   const proj = await loadProjections();
   if (!proj) return { status: "no_projections" as const };
-  const pool = await loadPool(proj.byPlayer, proj.firstGw);
+  const pool = await loadPool(proj.byPlayer, proj.firstGw, proj.reasons);
   const byId = new Map(pool.map((p) => [p.id, p]));
   const optimal = await loadOptimalSquad();
   const optimalPlayers = optimal ? optimal.squad.map((id) => byId.get(id)).filter((p): p is (typeof pool)[number] => Boolean(p)) : [];

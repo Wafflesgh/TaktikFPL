@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { setEntry } from "@/app/tim/actions";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
+import { Reasons } from "@/components/Reasons";
 import { Panel } from "@/components/ui";
 import type { TimData } from "@/lib/data/tim";
 import type { ProjPlayer } from "@/lib/reco";
@@ -104,6 +105,7 @@ function StartingSquad({ data }: { data: Ready }) {
                         <p className="text-xs text-[var(--text-muted)]">
                           {p.teamShort} · {formatPrice(p.priceTenths)} {starter ? "" : "· bench"}
                         </p>
+                        <Reasons reasons={p.reasons} max={3} className="mt-1" />
                       </div>
                       <GwStrip p={p} firstGw={firstGw} n={horizonGw} />
                       <span className="w-16 text-right text-sm font-semibold tabular-nums" title="Total 6-GW xPts (discounted)">
@@ -137,7 +139,7 @@ function Alternatives({ data }: { data: Ready }) {
               <p className="mb-1 text-xs uppercase tracking-wider text-[var(--text-muted)]">{pos}</p>
               <ul className="flex flex-col gap-0.5">
                 {[...alt.top.map((p) => ({ p, tag: "" })), ...alt.value.map((p) => ({ p, tag: "value" }))].map(({ p, tag }) => (
-                  <li key={p.id} className="flex items-center justify-between gap-2">
+                  <li key={p.id} className="flex items-center justify-between gap-2" title={p.reasons?.map((r) => r.text).join(" · ")}>
                     <Link href={`/pemain/${p.id}`} className="truncate hover:underline">
                       {p.name}
                       {tag && <span className="ml-1 rounded-full bg-green-500/15 px-1.5 text-[10px] text-green-300">{tag}</span>}
@@ -216,6 +218,7 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
                             <p className="text-xs text-[var(--text-muted)]">
                               {p.teamShort} · {formatPrice(p.priceTenths)} {p.isStarter ? "" : "· bench"}
                             </p>
+                            <Reasons reasons={p.reasons} max={3} className="mt-1" />
                           </div>
                           <GwStrip p={p} firstGw={firstGw} n={horizonGw} />
                           <span className="w-16 text-right text-sm font-semibold tabular-nums" title="Total 6-GW xPts (discounted)">
@@ -267,6 +270,7 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
                         <span className="text-green-300">+{t.gainHorizon.toFixed(1)} xPts</span> over {horizonGw} GWs
                         <span className="text-[var(--text-muted)]"> · GW{firstGw}: {t.gainNext >= 0 ? "+" : ""}{t.gainNext.toFixed(1)}</span>
                       </p>
+                      <Reasons reasons={t.in.reasons} max={3} className="mt-2" />
                       {t.gainHorizon < 4 && (
                         <p className="text-xs text-amber-300">Only worth it with a free transfer (a −4 hit isn&apos;t covered).</p>
                       )}
