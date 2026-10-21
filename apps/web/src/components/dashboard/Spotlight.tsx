@@ -9,16 +9,16 @@ export function Spotlight({ player }: { player: PlayerRow | null }) {
   if (!player) {
     return (
       <section className="glass grid min-h-[340px] place-items-center p-8 text-center text-[var(--text-muted)]">
-        Data form belum tersedia — jalankan job <code>sync_player_history</code> dan <code>build_form</code> di worker.
+        Form data not available yet — run the <code>sync_player_history</code> dan <code>build_form</code> jobs in the worker.
       </section>
     );
   }
   const f = player.form;
   const stats = [
-    { label: "Poin/laga (4 laga)", value: f?.last4Ppm?.toFixed(1) ?? "-" },
-    { label: "Poin/laga musim", value: f?.seasonPpm?.toFixed(1) ?? "-" },
+    { label: "Pts/match (last 4)", value: f?.last4Ppm?.toFixed(1) ?? "-" },
+    { label: "Pts/match season", value: f?.seasonPpm?.toFixed(1) ?? "-" },
     { label: "xGI per 90", value: f?.last4Xgi90?.toFixed(2) ?? "-" },
-    { label: "Porsi menit", value: f?.minutesShare != null ? `${Math.round(f.minutesShare * 100)}%` : "-" },
+    { label: "Minutes share", value: f?.minutesShare != null ? `${Math.round(f.minutesShare * 100)}%` : "-" },
   ];
   return (
     <section className="glass relative overflow-hidden p-0">
@@ -43,7 +43,7 @@ export function Spotlight({ player }: { player: PlayerRow | null }) {
         <div className="flex flex-col justify-between gap-6">
           <div>
             <p className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
-              Sorotan form · 4 laga terakhir
+              Form spotlight · last 4 matches
             </p>
             <h2 className="mt-2 font-display text-5xl uppercase leading-none xl:text-6xl">{player.webName}</h2>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">

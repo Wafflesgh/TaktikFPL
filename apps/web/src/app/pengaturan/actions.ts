@@ -13,10 +13,10 @@ const schema = z.object({
   displayName: z
     .string()
     .trim()
-    .min(1, "Nama tampilan wajib diisi.")
-    .max(DISPLAY_NAME_MAX, `Nama tampilan maksimal ${DISPLAY_NAME_MAX} karakter.`),
-  theme: z.enum(THEME_OPTIONS.map((o) => o.value) as [Theme, ...Theme[]], "Tema tidak dikenal."),
-  riskProfile: z.enum(RISK_OPTIONS.map((o) => o.value) as [RiskProfile, ...RiskProfile[]], "Profil risiko tidak dikenal."),
+    .min(1, "Display name is required.")
+    .max(DISPLAY_NAME_MAX, `Display name must be at most ${DISPLAY_NAME_MAX} characters.`),
+  theme: z.enum(THEME_OPTIONS.map((o) => o.value) as [Theme, ...Theme[]], "Unknown theme."),
+  riskProfile: z.enum(RISK_OPTIONS.map((o) => o.value) as [RiskProfile, ...RiskProfile[]], "Unknown risk profile."),
 });
 
 /** Simpan preferensi ke cookie browser (aplikasi tanpa login). */
@@ -35,7 +35,7 @@ export async function saveSettings(prev: SettingsState, formData: FormData): Pro
 
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {
-    return { status: "error", message: parsed.error.issues[0]?.message ?? "Data tidak valid.", values: submitted };
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Invalid data.", values: submitted };
   }
 
   const { displayName, theme, riskProfile } = parsed.data;
@@ -47,5 +47,5 @@ export async function saveSettings(prev: SettingsState, formData: FormData): Pro
 
   // Tema & nama dipakai di root layout dan top bar semua halaman.
   revalidatePath("/", "layout");
-  return { status: "success", message: "Pengaturan tersimpan.", values: parsed.data };
+  return { status: "success", message: "Settings saved.", values: parsed.data };
 }

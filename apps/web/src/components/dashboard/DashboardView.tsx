@@ -60,19 +60,19 @@ export function DashboardView({ displayName, isAdmin, data, pos, sort }: Props) 
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-4 xl:col-span-3">
           <Panel
             title={next ? `GW${next.number} Overview` : "Overview"}
-            subtitle={next ? `Deadline ${formatWIB(next.deadline_utc)}` : "Data gameweek belum tersedia"}
+            subtitle={next ? `Deadline ${formatWIB(next.deadline_utc)}` : "Gameweek data not available yet"}
           >
             {spotlight && (
               <div className="mb-3 flex items-center gap-3 rounded-2xl bg-[var(--accent-soft)] p-3">
                 <PlayerHeadshot name={spotlight.webName} urls={spotlight.photos} size="md" status={spotlight.status} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-[var(--text-muted)]">Pemain terpanas</p>
+                  <p className="text-xs text-[var(--text-muted)]">Hottest player</p>
                   <p className="truncate font-semibold">{spotlight.webName}</p>
                   <p className="text-xs text-[var(--text-muted)]">
                     {spotlight.team?.short} · {spotlight.position}
                   </p>
                 </div>
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-black/40 font-display text-xl" title="Poin per laga, 4 laga terakhir">
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-black/40 font-display text-xl" title="Points per match, last 4 matches">
                   {spotlight.form?.last4Ppm?.toFixed(1) ?? "-"}
                 </span>
               </div>
@@ -84,17 +84,17 @@ export function DashboardView({ displayName, isAdmin, data, pos, sort }: Props) 
                 <StatTile label="Deadline" icon={<ClockIcon size={16} />} value="-" />
               )}
               <StatTile
-                label="Laga GW"
+                label="GW matches"
                 icon={<CalendarIcon size={16} />}
                 value={fixtures.length}
-                hint={next?.is_double ? "Double GW" : next?.is_blank ? "Blank GW" : "GW normal"}
+                hint={next?.is_double ? "Double GW" : next?.is_blank ? "Blank GW" : "Normal GW"}
               />
-              <StatTile label="Form panas" icon={<FlameIcon size={16} />} value={hotCount} hint="pemain, 4 laga terakhir" />
+              <StatTile label="Hot form" icon={<FlameIcon size={16} />} value={hotCount} hint="players, last 4 matches" />
               <StatTile
-                label="Jadwal berubah"
+                label="Schedule changes"
                 icon={<AlertIcon size={16} />}
                 value={changedCount}
-                hint="7 hari terakhir"
+                hint="last 7 days"
                 tone={changedCount > 0 ? "warn" : "default"}
               />
             </div>
@@ -103,7 +103,7 @@ export function DashboardView({ displayName, isAdmin, data, pos, sort }: Props) 
           <FormLeaders players={leaders} />
 
           {flagged.length > 0 && (
-            <Panel title="Perlu Diwaspadai" subtitle="Pemain populer (≥5% owned) dengan status tidak fit">
+            <Panel title="Watch Out" subtitle="Popular players (≥5% owned) flagged as not fit">
               <ul className="flex flex-col gap-3">
                 {flagged.map((p) => (
                   <li key={p.id} className="flex items-start gap-3 text-sm">
@@ -112,7 +112,7 @@ export function DashboardView({ displayName, isAdmin, data, pos, sort }: Props) 
                       <p className="font-medium">
                         {p.webName} <span className="text-xs text-[var(--text-muted)]">{p.team?.short}</span>
                       </p>
-                      <p className="text-xs text-amber-300">{p.news ?? "Status diragukan"}</p>
+                      <p className="text-xs text-amber-300">{p.news ?? "Doubtful"}</p>
                     </div>
                   </li>
                 ))}
@@ -125,8 +125,8 @@ export function DashboardView({ displayName, isAdmin, data, pos, sort }: Props) 
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-8 xl:col-span-6">
           <Spotlight player={spotlight} />
           <Panel
-            title={next ? `Jadwal GW${next.number}` : "Jadwal"}
-            subtitle="Waktu kick-off dalam WIB · angka berwarna = FDR"
+            title={next ? `GW${next.number} Fixtures` : "Fixtures"}
+            subtitle="Kick-off times in WIB · coloured numbers = FDR"
           >
             <FixtureGrid fixtures={fixtures} />
           </Panel>
@@ -138,17 +138,17 @@ export function DashboardView({ displayName, isAdmin, data, pos, sort }: Props) 
           <NextMatchCard live={live} next={upcoming} />
           <StandingsTable rows={standings} />
           {spotlight?.form && (
-            <Panel title="Catatan Form" subtitle="Cara membaca label">
+            <Panel title="Form Guide" subtitle="How to read the labels">
               <ul className="flex flex-col gap-2 text-xs text-[var(--text-muted)]">
                 {["panas", "bagus", "stabil", "menurun", "dingin"].map((l) => (
                   <li key={l} className="flex items-center gap-2">
                     <FormBadge label={l} />
                     <span>
-                      {l === "panas" && "15% teratas posisinya & tren tidak turun"}
-                      {l === "bagus" && "di atas mayoritas pemain seposisi"}
-                      {l === "stabil" && "rata-rata posisinya"}
-                      {l === "menurun" && "tren underlying turun ≥15% vs musimnya"}
-                      {l === "dingin" && "di bawah mayoritas pemain seposisi"}
+                      {l === "panas" && "top 15% of position & trend not falling"}
+                      {l === "bagus" && "above most players in the same position"}
+                      {l === "stabil" && "around the position average"}
+                      {l === "menurun" && "underlying trend down ≥15% vs their season"}
+                      {l === "dingin" && "below most players in the same position"}
                     </span>
                   </li>
                 ))}

@@ -5,7 +5,7 @@ import { TopBar } from "@/components/shell/TopBar";
 import { getEntryId, getTimData } from "@/lib/data/tim";
 import { getViewer } from "@/lib/data/viewer";
 
-export const metadata: Metadata = { title: "Tim Saya · TaktikFPL" };
+export const metadata: Metadata = { title: "My Team · TaktikFPL" };
 
 export default async function TimPage() {
   const entryId = await getEntryId();

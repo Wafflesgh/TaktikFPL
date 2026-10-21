@@ -116,7 +116,7 @@ def form_label(
 ) -> dict[str, Any]:
     """Label form + alasan singkat (Bahasa Indonesia). Ambang sengaja sederhana & transparan."""
     if last4["minutes"] < MIN_MINUTES_LAST4:
-        return {"label": "minim_menit", "reasons": ["menit bermain di 4 laga terakhir sangat sedikit"]}
+        return {"label": "minim_menit", "reasons": ["very few minutes in the last 4 matches"]}
 
     # Tren: last4 mentah di-shrink ke baseline musim PEMAIN ITU SENDIRI (bukan rata-rata posisi),
     # agar beda ukuran sampel last4 vs season tidak menciptakan tren palsu.
@@ -126,18 +126,18 @@ def form_label(
     trend = (recent - base) / base if base > 0 else 0.0
     score = 0.6 * pct_points + 0.4 * pct_underlying
 
-    metric = "poin per 90" if position in UNDERLYING_KEY else "xGI per 90"
+    metric = "points per 90" if position in UNDERLYING_KEY else "xGI per 90"
     reasons: list[str] = []
     if score >= 0.85:
-        reasons.append(f"4 laga terakhir termasuk 15% teratas {position}")
+        reasons.append(f"last 4 matches in the top 15% of {position}s")
     elif score < 0.35:
-        reasons.append(f"4 laga terakhir di bawah mayoritas {position} lain")
+        reasons.append(f"last 4 matches below most other {position}s")
     if trend >= 0.15:
-        reasons.append(f"{metric} 4 laga terakhir naik dibanding rata-rata musimnya")
+        reasons.append(f"{metric} over the last 4 is up vs their season average")
     elif trend <= -0.15:
-        reasons.append(f"{metric} 4 laga terakhir turun dibanding rata-rata musimnya")
+        reasons.append(f"{metric} over the last 4 is down vs their season average")
     if last4["minutes_share"] < 0.6:
-        reasons.append("menit bermain mulai berkurang (risiko rotasi)")
+        reasons.append("minutes are dropping (rotation risk)")
 
     if score >= 0.85 and trend > -0.15:
         label = "panas"
@@ -147,16 +147,16 @@ def form_label(
         label = "menurun" if trend <= -0.15 else "stabil"
     elif trend > 0.15:
         label = "stabil"
-        reasons.append("hasil belum muncul tapi tren membaik")
+        reasons.append("returns not there yet but the trend is improving")
     else:
         label = "dingin"
 
     # Regression-to-the-mean (BLUEPRINT 4.8 #1)
     g_minus_xg = last4["goals_minus_xg"]
     if g_minus_xg >= 1.5:
-        reasons.append("gol jauh di atas xG — rawan turun (overperform)")
+        reasons.append("goals well above xG — likely to regress (overperforming)")
     elif g_minus_xg <= -1.5:
-        reasons.append("gol jauh di bawah xG — kandidat bangkit (underperform)")
+        reasons.append("goals well below xG — bounce-back candidate (underperforming)")
     return {"label": label, "score": round(score, 3), "trend": round(trend, 3), "reasons": reasons}
 
 

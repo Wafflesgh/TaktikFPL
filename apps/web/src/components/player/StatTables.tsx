@@ -8,7 +8,7 @@ const td = "px-2 py-2 text-right tabular-nums";
 
 /** Laga musim ini, terbaru di atas; baris 4 GW terakhir disorot. Tabel menggulir di dalam panel di layar sempit. */
 export function GwTable({ rows, highlight }: { rows: GwRow[]; highlight: Set<number> }) {
-  if (rows.length === 0) return <p className="text-sm text-[var(--text-muted)]">Belum ada laga musim ini.</p>;
+  if (rows.length === 0) return <p className="text-sm text-[var(--text-muted)]">No matches this season yet.</p>;
   const total = (f: (r: GwRow) => number) => rows.reduce((acc, r) => acc + f(r), 0);
   const xg = rows.some((r) => r.xg != null) ? total((r) => r.xg ?? 0) : null;
   const xa = rows.some((r) => r.xa != null) ? total((r) => r.xa ?? 0) : null;
@@ -19,10 +19,10 @@ export function GwTable({ rows, highlight }: { rows: GwRow[]; highlight: Set<num
         <thead className="text-xs text-[var(--text-muted)]">
           <tr>
             <th className="py-2 pr-2 text-left font-medium">GW</th>
-            <th className="px-2 py-2 text-left font-medium">Lawan</th>
-            <th className="px-2 py-2 text-center font-medium" title="Kandang (H) / tandang (A)">H/A</th>
-            <th className={th}>Menit</th>
-            <th className={th}>Poin</th>
+            <th className="px-2 py-2 text-left font-medium">Opponent</th>
+            <th className="px-2 py-2 text-center font-medium" title="Home (H) / away (A)">H/A</th>
+            <th className={th}>Mins</th>
+            <th className={th}>Pts</th>
             <th className={th} title="Gol">G</th>
             <th className={th} title="Assist">A</th>
             <th className={th}>Bonus</th>
@@ -45,7 +45,7 @@ export function GwTable({ rows, highlight }: { rows: GwRow[]; highlight: Set<num
               </td>
               <td className="px-2 py-2 text-center text-[var(--text-muted)]">{r.home == null ? "-" : r.home ? "H" : "A"}</td>
               <td className={`${td} ${r.minutes === 0 ? "text-[var(--text-muted)]" : ""}`}>{r.minutes}</td>
-              <td className={`${td} font-semibold`} title={r.isFinal ? undefined : "Sementara — bonus/poin belum final"}>
+              <td className={`${td} font-semibold`} title={r.isFinal ? undefined : "Provisional — bonus/points not final"}>
                 {r.points}
                 {!r.isFinal && <span className="text-[var(--text-muted)]">*</span>}
               </td>
@@ -60,7 +60,7 @@ export function GwTable({ rows, highlight }: { rows: GwRow[]; highlight: Set<num
         <tfoot className="border-t border-white/15 font-semibold">
           <tr>
             <td className="py-2 pr-2" colSpan={3}>
-              Total · {rows.length} laga
+              Total · {rows.length} matches
             </td>
             <td className={td}>{total((r) => r.minutes)}</td>
             <td className={td}>{total((r) => r.points)}</td>
@@ -78,21 +78,21 @@ export function GwTable({ rows, highlight }: { rows: GwRow[]; highlight: Set<num
 
 /** Ringkasan per musim (2016/17–sekarang). xGI hanya untuk musim yang punya data expected. */
 export function SeasonTable({ rows }: { rows: SeasonSummary[] }) {
-  if (rows.length === 0) return <p className="text-sm text-[var(--text-muted)]">Belum ada riwayat musim.</p>;
+  if (rows.length === 0) return <p className="text-sm text-[var(--text-muted)]">No season history yet.</p>;
   return (
     <div className="-mx-5 overflow-x-auto px-5">
       <table className="w-full min-w-[540px] text-sm">
         <thead className="text-xs text-[var(--text-muted)]">
           <tr>
-            <th className="py-2 pr-2 text-left font-medium">Musim</th>
+            <th className="py-2 pr-2 text-left font-medium">Season</th>
             <th className="px-2 py-2 text-left font-medium">Klub</th>
-            <th className={th}>Poin</th>
-            <th className={th}>Menit</th>
-            <th className={th} title="Laga dengan menit bermain > 0">Main</th>
+            <th className={th}>Pts</th>
+            <th className={th}>Mins</th>
+            <th className={th} title="Matches with minutes > 0">Apps</th>
             <th className={th} title="Gol">G</th>
             <th className={th} title="Assist">A</th>
-            <th className={th} title="Poin per 90 menit">Poin/90</th>
-            <th className={`${th} pr-0`} title="xG + xA (tersedia sejak 2022/23)">xGI</th>
+            <th className={th} title="Points per 90 minutes">Pts/90</th>
+            <th className={`${th} pr-0`} title="xG + xA (available since 2022/23)">xGI</th>
           </tr>
         </thead>
         <tbody>

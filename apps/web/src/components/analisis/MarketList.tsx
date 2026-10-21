@@ -38,7 +38,7 @@ export function MarketList<T extends MarketPlayer>({
                   <span className="whitespace-nowrap text-xs text-[var(--text-muted)]">
                     {p.team?.short} · {p.position}
                   </span>
-                  <span className="whitespace-nowrap text-xs text-[var(--text-muted)]" title="Kepemilikan">
+                  <span className="whitespace-nowrap text-xs text-[var(--text-muted)]" title="Ownership">
                     {p.ownedPct ?? 0}%
                   </span>
                   <FormBadge label={p.form?.label} reasons={p.form?.reasons} pointsPerMatch={p.form?.last4Ppm} />

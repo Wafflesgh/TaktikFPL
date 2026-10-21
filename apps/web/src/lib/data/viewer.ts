@@ -22,7 +22,7 @@ export const getViewer = cache(async (): Promise<Viewer> => {
   const jar = await cookies();
   const saved = jar.get(PREF_COOKIES.name)?.value?.trim() || null;
   return {
-    displayName: saved ?? "Manajer",
+    displayName: saved ?? "Manager",
     savedDisplayName: saved,
     isAdmin: true,
     theme: parseTheme(jar.get(PREF_COOKIES.theme)?.value) ?? DEFAULT_THEME,

@@ -44,15 +44,15 @@ export default async function AdminHealthPage() {
         {worker.data ? (
           <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm md:grid-cols-4">
             <dt className="text-[var(--text-muted)]">Status</dt><dd>{worker.data.status}</dd>
-            <dt className="text-[var(--text-muted)]">Versi</dt><dd>{worker.data.version}</dd>
-            <dt className="text-[var(--text-muted)]">Leader</dt><dd>{worker.data.is_leader ? "ya" : "tidak"}</dd>
-            <dt className="text-[var(--text-muted)]">DB</dt><dd>{worker.data.db_ok ? "ok" : "gagal"}</dd>
-            <dt className="text-[var(--text-muted)]">Redis</dt><dd>{worker.data.redis_ok == null ? "tidak dikonfigurasi" : worker.data.redis_ok ? "ok" : "gagal"}</dd>
+            <dt className="text-[var(--text-muted)]">Version</dt><dd>{worker.data.version}</dd>
+            <dt className="text-[var(--text-muted)]">Leader</dt><dd>{worker.data.is_leader ? "yes" : "no"}</dd>
+            <dt className="text-[var(--text-muted)]">DB</dt><dd>{worker.data.db_ok ? "ok" : "failed"}</dd>
+            <dt className="text-[var(--text-muted)]">Redis</dt><dd>{worker.data.redis_ok == null ? "not configured" : worker.data.redis_ok ? "ok" : "failed"}</dd>
             <dt className="text-[var(--text-muted)]">AI tier</dt><dd>{worker.data.ai_tier}</dd>
             {Object.entries(worker.data.sources).map(([src, s]) => (
               <div key={src} className="contents">
                 <dt className="text-[var(--text-muted)]">Sumber {src}</dt>
-                <dd>{formatWIB(s.last_fetch)} · {s.requests_today ?? 0} req hari ini</dd>
+                <dd>{formatWIB(s.last_fetch)} · {s.requests_today ?? 0} requests today</dd>
               </div>
             ))}
           </dl>
@@ -60,15 +60,15 @@ export default async function AdminHealthPage() {
           <WorkerTickStatus lastRun={jobs?.[0] ?? null} />
         )}
         {worker.data && worker.data.missing_optional_env.length > 0 && (
-          <p className="mt-3 text-xs text-[var(--text-muted)]">Env opsional belum diisi: {worker.data.missing_optional_env.join(", ")}</p>
+          <p className="mt-3 text-xs text-[var(--text-muted)]">Optional env not set: {worker.data.missing_optional_env.join(", ")}</p>
         )}
       </section>
 
       <section className="glass overflow-x-auto p-4">
-        <h2 className="mb-2 font-semibold">Job terakhir</h2>
+        <h2 className="mb-2 font-semibold">Recent jobs</h2>
         <table className="w-full text-left text-sm">
           <thead className="text-[var(--text-muted)]">
-            <tr><th className="py-1">Job</th><th>Status</th><th>Mulai</th><th>Selesai</th></tr>
+            <tr><th className="py-1">Job</th><th>Status</th><th>Started</th><th>Finished</th></tr>
           </thead>
           <tbody>
             {(jobs ?? []).map((j) => (
@@ -90,13 +90,13 @@ export default async function AdminHealthPage() {
 
 /** Worker berjalan di GitHub Actions (tick ±15 menit): status dari job_runs terakhir. */
 function WorkerTickStatus({ lastRun }: { lastRun: { job_name: string; status: string; started_at: string } | null }) {
-  if (!lastRun) return <p className="text-sm text-amber-300">Belum ada job tercatat — cek workflow worker-tick di GitHub Actions.</p>;
+  if (!lastRun) return <p className="text-sm text-amber-300">No jobs recorded yet — check the worker-tick workflow in GitHub Actions.</p>;
   const minutes = minutesSince(lastRun.started_at); // server component: dihitung per request
   const stale = minutes > 45;
   return (
     <p className={`text-sm ${stale ? "text-red-300" : "text-green-300"}`}>
-      Worker (GitHub Actions): job terakhir <b>{lastRun.job_name}</b> ({lastRun.status}) {minutes} menit lalu
-      {stale ? " — terlambat, cek workflow worker-tick." : "."}
+      Worker (GitHub Actions): last job <b>{lastRun.job_name}</b> ({lastRun.status}) {minutes} minutes ago
+      {stale ? " — late, check the worker-tick workflow." : "."}
     </p>
   );
 }

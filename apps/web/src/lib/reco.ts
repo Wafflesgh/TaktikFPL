@@ -85,12 +85,12 @@ export function holdNotes(squad: ProjPlayer[], firstGw: number): HoldNote[] {
       .map(([, x]) => x);
     const avgLater = later.length ? later.reduce((a, b) => a + b, 0) / later.length : 0;
     if (["i", "s", "u", "n"].includes(p.status ?? "") && p.horizon < 2) {
-      notes.push({ player: p, kind: "jual", reason: "tidak tersedia & proyeksi 6 GW sangat rendah" });
+      notes.push({ player: p, kind: "jual", reason: "unavailable & very low 6-GW projection" });
     } else if (avgLater > 2 && p.next <= 0.75 * avgLater) {
       notes.push({
         player: p,
         kind: "tahan",
-        reason: `GW${firstGw} sulit (${p.next.toFixed(1)} xPts), tapi rata-rata ${avgLater.toFixed(1)} xPts di GW berikutnya`,
+        reason: `GW${firstGw} is tough (${p.next.toFixed(1)} xPts), but averages ${avgLater.toFixed(1)} xPts in the following GWs`,
       });
     }
   }

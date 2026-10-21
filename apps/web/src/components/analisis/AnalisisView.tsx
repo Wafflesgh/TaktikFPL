@@ -12,9 +12,9 @@ type Props = {
 };
 
 // Bagian hub Analisis; bagian berikutnya ditambahkan di sini.
-const SECTIONS = [{ id: "harga-transfer", label: "Harga & Transfer" }] as const;
+const SECTIONS = [{ id: "harga-transfer", label: "Prices & Transfers" }] as const;
 
-/** Hub Analisis desktop-first. Bagian pertama: Harga & Transfer (BLUEPRINT fitur #13 Price watch). */
+/** Hub Analisis desktop-first. Bagian pertama: Prices & Transfers (BLUEPRINT fitur #13 Price watch). */
 export function AnalisisView({ displayName, isAdmin, data, pos }: Props) {
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
@@ -23,8 +23,8 @@ export function AnalisisView({ displayName, isAdmin, data, pos }: Props) {
       <main className="flex min-w-0 flex-col gap-6">
         <header className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="font-display text-4xl uppercase leading-none">Analisis</h1>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">Angka dari snapshot harian worker · hari snapshot dalam UTC</p>
+            <h1 className="font-display text-4xl uppercase leading-none">Analysis</h1>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">Numbers from the worker&apos;s daily snapshots · snapshot days in UTC</p>
           </div>
           <nav aria-label="Bagian analisis" className="flex flex-wrap gap-1 text-xs">
             {SECTIONS.map((s) => (
@@ -38,9 +38,9 @@ export function AnalisisView({ displayName, isAdmin, data, pos }: Props) {
         <section id="harga-transfer" aria-labelledby="harga-transfer-title" className="flex min-w-0 scroll-mt-4 flex-col gap-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 id="harga-transfer-title" className="font-display text-2xl uppercase leading-none">
-              Harga & Transfer
+              Prices & Transfers
             </h2>
-            {data.latestDate && <p className="text-xs text-[var(--text-muted)]">Snapshot terbaru {formatSnapshotDay(data.latestDate)}</p>}
+            {data.latestDate && <p className="text-xs text-[var(--text-muted)]">Latest snapshot {formatSnapshotDay(data.latestDate)}</p>}
           </div>
           <div className="grid grid-cols-1 gap-6">
             <PriceChanges data={data} />

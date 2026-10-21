@@ -13,22 +13,22 @@ export default function ErrorPage({ error, retry }: { error: unknown; retry: () 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-4 px-4">
       <section className="glass flex flex-col gap-3 p-6">
-        <h1 className="font-display text-3xl uppercase">Ada yang tidak beres</h1>
+        <h1 className="font-display text-3xl uppercase">Something went wrong</h1>
         <p className="text-sm text-[var(--text-muted)]">
-          Data belum bisa dimuat. Biasanya karena koneksi ke database sedang lambat atau worker sedang
-          memperbarui data. Coba lagi sebentar lagi.
+          Data could not be loaded. Usually the database connection is slow or the worker is
+          updating data. Please try again in a moment.
         </p>
-        {digest && <p className="text-xs text-[var(--text-muted)]">Kode: {digest}</p>}
+        {digest && <p className="text-xs text-[var(--text-muted)]">Code: {digest}</p>}
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => retry()}
             className="rounded-full bg-[var(--accent)] px-5 py-2 font-semibold text-white"
           >
-            Coba lagi
+            Try again
           </button>
           <Link href="/" className="rounded-full bg-white/10 px-5 py-2">
-            Beranda
+            Home
           </Link>
         </div>
       </section>

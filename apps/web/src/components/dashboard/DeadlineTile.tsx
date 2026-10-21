@@ -26,7 +26,7 @@ export function DeadlineTile({ deadlineUtc, serverNow }: { deadlineUtc: string; 
       label="Deadline"
       icon={<ClockIcon size={16} />}
       value={<time dateTime={deadlineUtc}>{countdownShort(deadlineUtc, now)}</time>}
-      hint={`${countdown(deadlineUtc, now)} (hari·jam·menit)`}
+      hint={`${countdown(deadlineUtc, now)} (days·hours·mins)`}
     />
   );
 }

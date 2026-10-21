@@ -24,7 +24,8 @@ dan blueprint, ikuti blueprint atau tanyakan.
 5. Setiap job terjadwal mencatat diri ke tabel job_runs (mulai, selesai, status, error).
 6. Output AI divalidasi dengan schema (Pydantic di worker, Zod di web). Gagal validasi = retry
    sekali dengan pesan error, lalu tandai report sebagai degraded, jangan crash.
-7. Bahasa UI: Bahasa Indonesia natural. Istilah teknis sepakbola tetap bahasa Inggris.
+7. Bahasa UI: ENGLISH (keputusan Dilan 2026-10-21, menggantikan Bahasa Indonesia di blueprint).
+   Waktu tetap ditampilkan dalam WIB. Komentar kode & dokumen boleh Bahasa Indonesia.
 8. Ikuti design tokens di Bagian 11. Jangan pakai logo klub/kompetisi resmi sebagai aset statis
    di repo; badge & foto pemain dimuat dari URL CDN yang dikonfigurasi (lihat Bagian 6).
 9. DATA ADALAH ASET JANGKA PANJANG (ML, bertahun-tahun) — docs/adr/0001-data-arsip-jangka-panjang.md.

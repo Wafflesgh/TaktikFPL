@@ -47,12 +47,12 @@ export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           <Panel
             className="min-w-0 lg:col-span-8"
-            title="Poin per GW"
-            subtitle={seasonLabel ? `Musim ${seasonLabel} · DGW dijumlah · arahkan kursor/ketuk batang untuk detail` : undefined}
+            title="Points per GW"
+            subtitle={seasonLabel ? `Season ${seasonLabel} · DGWs summed · hover/tap a bar for details` : undefined}
             action={
               <span className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
                 <span className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-sm bg-[var(--accent)]" />4 GW terakhir
+                  <span className="h-2.5 w-2.5 rounded-sm bg-[var(--accent)]" />Last 4 GWs
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-2.5 w-2.5 rounded-sm bg-white/30" />GW lain
@@ -63,19 +63,19 @@ export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) 
             <PointsChart bars={bars} highlight={lastFour} />
           </Panel>
 
-          <Panel className="min-w-0 lg:col-span-4" title="Form 4 Laga" subtitle="Dihitung worker (build_form) vs pemain seposisi">
+          <Panel className="min-w-0 lg:col-span-4" title="Form (last 4)" subtitle="Computed by the worker (build_form) vs same-position players">
             {f ? (
               <div className="grid grid-cols-2 gap-3">
                 <StatTile label="Skor form" value={pct(f.score)} hint="persentil seposisi" />
-                <StatTile label="Poin/laga" value={f.last4Ppm?.toFixed(1) ?? "-"} hint={`musim: ${f.seasonPpm?.toFixed(1) ?? "-"}`} />
-                <StatTile label="xGI/90" value={f.last4Xgi90?.toFixed(2) ?? "-"} hint="4 laga, ter-shrink" />
-                <StatTile label="Porsi menit" value={pct(f.minutesShare)} hint="dari menit tersedia" />
+                <StatTile label="Pts/match" value={f.last4Ppm?.toFixed(1) ?? "-"} hint={`season: ${f.seasonPpm?.toFixed(1) ?? "-"}`} />
+                <StatTile label="xGI/90" value={f.last4Xgi90?.toFixed(2) ?? "-"} hint="last 4, shrunk" />
+                <StatTile label="Minutes share" value={pct(f.minutesShare)} hint="of available minutes" />
                 <div className="col-span-2">
-                  <StatTile label="Gol − xG" value={signed(f.goalsMinusXg)} hint="positif = finishing di atas ekspektasi" />
+                  <StatTile label="Goals − xG" value={signed(f.goalsMinusXg)} hint="positive = finishing above expectation" />
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-[var(--text-muted)]">Belum ada data form untuk pemain ini.</p>
+              <p className="text-sm text-[var(--text-muted)]">No form data for this player yet.</p>
             )}
           </Panel>
         </div>
@@ -83,12 +83,12 @@ export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <Panel
             className="min-w-0"
-            title="Laga Musim Ini"
-            subtitle="Terbaru di atas · baris berwarna = 4 GW terakhir · * = poin belum final"
+            title="This Season's Matches"
+            subtitle="Newest first · highlighted rows = last 4 GWs · * = points not final"
           >
             <GwTable rows={gws} highlight={lastFour} />
           </Panel>
-          <Panel className="min-w-0" title="Riwayat Musim" subtitle="Sejak 2016/17 · xGI tersedia mulai 2022/23">
+          <Panel className="min-w-0" title="Season History" subtitle="Since 2016/17 · xGI available from 2022/23">
             <SeasonTable rows={seasons} />
           </Panel>
         </div>

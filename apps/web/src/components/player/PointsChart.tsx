@@ -24,7 +24,7 @@ function barPath(x: number, base: number, end: number, w: number): string {
  * dimainkan memakai warna aksen. Hover/tap: tooltip bawaan via <title> dengan area sentuh selebar slot.
  */
 export function PointsChart({ bars, highlight }: { bars: GwBar[]; highlight: Set<number> }) {
-  if (bars.length === 0) return <p className="text-sm text-[var(--text-muted)]">Belum ada data gameweek musim ini.</p>;
+  if (bars.length === 0) return <p className="text-sm text-[var(--text-muted)]">No gameweek data this season yet.</p>;
 
   const values = bars.map((b) => b.points ?? 0);
   const max = Math.max(4, ...values);
@@ -43,7 +43,7 @@ export function PointsChart({ bars, highlight }: { bars: GwBar[]; highlight: Set
         className="block h-auto w-full text-[var(--text)]"
         style={{ minWidth: bars.length * 15 }}
         role="img"
-        aria-label="Grafik batang poin per gameweek musim ini"
+        aria-label="Bar chart of points per gameweek this season"
       >
         <line x1={0} x2={width} y1={zeroY} y2={zeroY} stroke="currentColor" strokeOpacity={0.2} />
         {bars.map((b, i) => {
@@ -51,10 +51,10 @@ export function PointsChart({ bars, highlight }: { bars: GwBar[]; highlight: Set
           const hot = highlight.has(b.gw);
           const p = b.points;
           const tip = b.played
-            ? `GW${b.gw} · ${b.label}: ${p} poin`
+            ? `GW${b.gw} · ${b.label}: ${p} pts`
             : b.finished
-              ? `GW${b.gw}: tidak ada laga / tidak terdaftar`
-              : `GW${b.gw}: belum dimainkan`;
+              ? `GW${b.gw}: no match / not registered`
+              : `GW${b.gw}: not played yet`;
           // Label nilai selektif: 4 GW terakhir + poin tertinggi musim. Nilai negatif ditulis di atas garis nol.
           const showValue = p != null && (hot || (p === best && p > 0));
           return (

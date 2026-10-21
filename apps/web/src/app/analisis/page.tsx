@@ -4,7 +4,7 @@ import { POSITIONS } from "@/components/dashboard/Players";
 import { getAnalisisData } from "@/lib/data/analisis";
 import { getViewer } from "@/lib/data/viewer";
 
-export const metadata: Metadata = { title: "Analisis · TaktikFPL" };
+export const metadata: Metadata = { title: "Analysis · TaktikFPL" };
 
 function pick(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;

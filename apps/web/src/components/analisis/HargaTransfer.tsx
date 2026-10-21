@@ -5,7 +5,7 @@ import { Panel } from "@/components/ui";
 import { TREND_LIMIT, type AnalisisData, type PriceMove, type TransferTrend } from "@/lib/data/analisis";
 import { formatPrice, formatSnapshotDay } from "@/lib/time";
 
-const NOT_ENOUGH = "Data harga belum cukup — butuh minimal 2 hari snapshot";
+const NOT_ENOUGH = "Not enough price data yet — needs at least 2 snapshot days";
 
 const compact = new Intl.NumberFormat("id-ID", { notation: "compact", maximumFractionDigits: 1 });
 const full = new Intl.NumberFormat("id-ID");
@@ -24,7 +24,7 @@ function PriceValue({ p }: { p: PriceMove }) {
 
 function NetValue({ t }: { t: TransferTrend }) {
   return (
-    <span title={`Masuk ${full.format(t.transfersIn)} · keluar ${full.format(t.transfersOut)} · net ${full.format(t.net)}`}>
+    <span title={`In ${full.format(t.transfersIn)} · out ${full.format(t.transfersOut)} · net ${full.format(t.net)}`}>
       <p className={`text-sm font-semibold ${t.net > 0 ? "text-green-300" : "text-red-300"}`}>
         {t.net > 0 ? "+" : "−"}
         {compact.format(Math.abs(t.net))}
@@ -40,15 +40,15 @@ export function PriceChanges({ data }: { data: AnalisisData }) {
   const ready = latestDate && previousDate;
   return (
     <Panel
-      title="Perubahan Harga"
-      subtitle={ready ? `${formatSnapshotDay(previousDate)} → ${formatSnapshotDay(latestDate)} · ${risers.length} naik, ${fallers.length} turun` : "Dua hari snapshot terakhir"}
+      title="Price Changes"
+      subtitle={ready ? `${formatSnapshotDay(previousDate)} → ${formatSnapshotDay(latestDate)} · ${risers.length} up, ${fallers.length} down` : "Last two snapshot days"}
     >
       {!ready ? (
         <p className="text-sm text-[var(--text-muted)]">{NOT_ENOUGH}</p>
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <MarketList title="Naik" players={risers} endDate={latestDate} empty="Tidak ada harga yang naik." value={(p) => <PriceValue p={p} />} />
-          <MarketList title="Turun" players={fallers} endDate={latestDate} empty="Tidak ada harga yang turun." value={(p) => <PriceValue p={p} />} />
+          <MarketList title="Risers" players={risers} endDate={latestDate} empty="No price rises." value={(p) => <PriceValue p={p} />} />
+          <MarketList title="Fallers" players={fallers} endDate={latestDate} empty="No price falls." value={(p) => <PriceValue p={p} />} />
         </div>
       )}
     </Panel>
@@ -63,11 +63,11 @@ export function TransferTrends({ data, pos }: { data: AnalisisData; pos: string 
   const posLabel = pos ? ` ${pos}` : "";
   return (
     <Panel
-      title={`Tren Transfer${nextGw ? ` · menuju GW${nextGw}` : ""}`}
+      title={`Transfer Trends${nextGw ? ` · ahead of GW${nextGw}` : ""}`}
       subtitle={
         latestDate
-          ? `Net transfer (masuk − keluar) sejak deadline terakhir · snapshot ${formatSnapshotDay(latestDate)} · top ${TREND_LIMIT}`
-          : "Net transfer sejak deadline terakhir"
+          ? `Net transfers (in − out) since the last deadline · snapshot ${formatSnapshotDay(latestDate)} · top ${TREND_LIMIT}`
+          : "Net transfers since the last deadline"
       }
       action={
         <div className="flex flex-wrap justify-end gap-1 text-xs">
@@ -87,17 +87,17 @@ export function TransferTrends({ data, pos }: { data: AnalisisData; pos: string 
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <MarketList
-            title="Paling banyak dibeli"
+            title="Most bought"
             players={transfersIn}
             endDate={latestDate}
-            empty={`Belum ada net transfer masuk${posLabel}.`}
+            empty={`No net transfers in yet${posLabel}.`}
             value={(t) => <NetValue t={t} />}
           />
           <MarketList
-            title="Paling banyak dijual"
+            title="Most sold"
             players={transfersOut}
             endDate={latestDate}
-            empty={`Belum ada net transfer keluar${posLabel}.`}
+            empty={`No net transfers out yet${posLabel}.`}
             value={(t) => <NetValue t={t} />}
           />
         </div>

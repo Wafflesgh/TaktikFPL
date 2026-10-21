@@ -6,11 +6,11 @@ import { CalendarIcon, ChartIcon, HomeIcon, LiveIcon, ShirtIcon } from "@/compon
 
 // Navigasi utama (BLUEPRINT 11.3). Halaman yang belum dibangun ditandai "segera".
 export const NAV = [
-  { href: "/", label: "Beranda", icon: HomeIcon, ready: true },
-  { href: "/analisis", label: "Analisis", icon: ChartIcon, ready: true },
+  { href: "/", label: "Home", icon: HomeIcon, ready: true },
+  { href: "/analisis", label: "Analysis", icon: ChartIcon, ready: true },
   { href: "/live", label: "Live", icon: LiveIcon, ready: false },
-  { href: "/jadwal", label: "Jadwal", icon: CalendarIcon, ready: true },
-  { href: "/tim", label: "Tim Saya", icon: ShirtIcon, ready: true },
+  { href: "/jadwal", label: "Fixtures", icon: CalendarIcon, ready: true },
+  { href: "/tim", label: "My Team", icon: ShirtIcon, ready: true },
 ] as const;
 
 /** Desktop: pill berlabel untuk item aktif, lingkaran ikon untuk lainnya (ref-02). */
@@ -24,12 +24,12 @@ export function TopNav() {
           return (
             <span
               key={href}
-              title={`${label} — segera hadir`}
+              title={`${label} — coming soon`}
               aria-disabled="true"
               className="grid h-11 w-11 cursor-not-allowed place-items-center rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)] opacity-60"
             >
               <Icon />
-              <span className="sr-only">{label} (segera)</span>
+              <span className="sr-only">{label} (coming soon)</span>
             </span>
           );
         }
@@ -74,9 +74,9 @@ export function BottomNav() {
             <span className="sr-only">{label}</span>
           </Link>
         ) : (
-          <span key={href} aria-disabled="true" title={`${label} — segera`} className={`grid h-12 w-12 place-items-center rounded-full ${cls}`}>
+          <span key={href} aria-disabled="true" title={`${label} — coming soon`} className={`grid h-12 w-12 place-items-center rounded-full ${cls}`}>
             <Icon />
-            <span className="sr-only">{label} (segera)</span>
+            <span className="sr-only">{label} (coming soon)</span>
           </span>
         );
       })}

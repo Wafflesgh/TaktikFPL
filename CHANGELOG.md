@@ -2,6 +2,13 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.11.0] — 2026-10-21 · English UI
+
+### Diubah
+- Seluruh teks UI web diterjemahkan ke bahasa Inggris (keputusan Dilan); format tanggal en-GB, waktu tetap
+  WIB; `<html lang="en">`. Alasan form dari worker juga berbahasa Inggris (berlaku setelah `build_form`
+  berikutnya). URL halaman tidak berubah. Aturan #7 di CLAUDE.md diperbarui.
+
 ## [0.10.0] — 2026-10-21 · Tim Saya, proyeksi xPts 6 GW, rekomendasi & squad dari nol (Fase 2 awal)
 
 ### Ditambahkan

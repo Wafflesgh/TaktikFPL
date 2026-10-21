@@ -56,7 +56,7 @@ def test_label_hot_and_overperformance_flag():
     ]
     v = form_label(_shrunk(ms, 4), _shrunk(ms, None), 0.95, 0.9, "FWD")
     assert v["label"] == "panas"
-    assert any("overperform" in r for r in v["reasons"])
+    assert any("overperforming" in r for r in v["reasons"])
 
 
 def test_label_declining_underlying():
@@ -70,7 +70,7 @@ def test_label_cold_but_underlying_improving_is_stable():
     ms = [line(i, pts=1, xg=0.05) for i in range(8)] + [line(8 + i, pts=1, xg=0.5, xa=0.2) for i in range(4)]
     v = form_label(_shrunk(ms, 4), _shrunk(ms, None), 0.1, 0.4, "MID")
     assert v["label"] == "stabil"
-    assert any("tren membaik" in r for r in v["reasons"])
+    assert any("trend is improving" in r for r in v["reasons"])
 
 
 def test_build_player_form_ranks_within_position():

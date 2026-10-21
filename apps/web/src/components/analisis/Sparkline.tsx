@@ -25,7 +25,7 @@ export function Sparkline({ points, endDate, days }: { points: PricePoint[]; end
   const first = pts[0];
   const last = pts[pts.length - 1];
   const color = last.priceTenths > first.priceTenths ? "var(--status-ok)" : last.priceTenths < first.priceTenths ? "var(--status-out)" : "var(--text-muted)";
-  const label = `${days} hari: ${formatPrice(first.priceTenths)} (${formatSnapshotDay(first.date)}) → ${formatPrice(last.priceTenths)} (${formatSnapshotDay(last.date)})${max !== min ? ` · rentang ${formatPrice(min)}–${formatPrice(max)}` : ""}`;
+  const label = `${days} days: ${formatPrice(first.priceTenths)} (${formatSnapshotDay(first.date)}) → ${formatPrice(last.priceTenths)} (${formatSnapshotDay(last.date)})${max !== min ? ` · range ${formatPrice(min)}–${formatPrice(max)}` : ""}`;
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-6 w-14 shrink-0 sm:w-[72px]" role="img" aria-label={label}>

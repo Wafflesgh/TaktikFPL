@@ -13,7 +13,7 @@ export function FormBadge({ label, reasons = [], pointsPerMatch }: Props) {
   }
   const meta = FORM_LABELS[label] ?? { text: label, className: "bg-white/10 ring-white/20" };
   const title = [
-    pointsPerMatch != null ? `${Number(pointsPerMatch).toFixed(1)} poin/laga (4 laga terakhir)` : null,
+    pointsPerMatch != null ? `${Number(pointsPerMatch).toFixed(1)} pts/match (last 4)` : null,
     ...reasons,
   ]
     .filter(Boolean)

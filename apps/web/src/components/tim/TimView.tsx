@@ -22,7 +22,7 @@ function GwStrip({ p, firstGw, n }: { p: ProjPlayer; firstGw: number; n: number 
         return (
           <span
             key={gw}
-            title={`GW${gw}: ${x == null ? "tidak main (blank)" : x.toFixed(1) + " xPts"}`}
+            title={`GW${gw}: ${x == null ? "no match (blank)" : x.toFixed(1) + " xPts"}`}
             className="grid h-7 w-9 place-items-center rounded-md text-[11px] tabular-nums"
             style={x == null ? { background: "rgba(255,255,255,0.04)" } : cellStyle(x)}
           >
@@ -38,17 +38,17 @@ function EntryForm({ entryId, message }: { entryId: number | null; message?: str
   return (
     <form action={setEntry} className="flex flex-wrap items-end gap-2">
       <label className="flex flex-col gap-1 text-sm">
-        <span className="text-[var(--text-muted)]">FPL Team ID (angka di URL halaman Points FPL)</span>
+        <span className="text-[var(--text-muted)]">FPL Team ID (the number in your FPL Points page URL)</span>
         <input
           name="entry"
           defaultValue={entryId ?? ""}
           inputMode="numeric"
-          placeholder="mis. 1234567"
+          placeholder="e.g. 1234567"
           className="w-56 rounded-xl border border-[var(--glass-border)] bg-black/30 px-3 py-2 outline-none focus:border-[var(--accent)]"
         />
       </label>
       <button type="submit" className="rounded-full bg-[var(--accent)] px-5 py-2 font-semibold text-white">
-        {entryId ? "Ganti tim" : "Tampilkan tim saya"}
+        {entryId ? "Change team" : "Show my team"}
       </button>
       {message && <p className="w-full text-sm text-amber-300">{message}</p>}
     </form>
@@ -58,8 +58,8 @@ function EntryForm({ entryId, message }: { entryId: number | null; message?: str
 export function TimView({ data, entryId }: { data: TimData; entryId: number | null }) {
   if (data.status === "no_projections") {
     return (
-      <Panel title="Tim Saya">
-        <p className="text-sm text-[var(--text-muted)]">Proyeksi belum tersedia — worker menghitungnya setiap hari (job run_projections).</p>
+      <Panel title="My Team">
+        <p className="text-sm text-[var(--text-muted)]">Projections not available yet — the worker computes them daily (run_projections job).</p>
       </Panel>
     );
   }
@@ -70,20 +70,20 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
     <main className="grid grid-cols-1 gap-6 xl:grid-cols-12">
       <div className="flex min-w-0 flex-col gap-6 xl:col-span-8">
         <Panel
-          title={data.status === "ok" ? data.entry.name : "Tim Saya"}
+          title={data.status === "ok" ? data.entry.name : "My Team"}
           subtitle={
             data.status === "ok"
-              ? `${data.entry.player_first_name} ${data.entry.player_last_name} · squad GW${data.picksGw} · bank ${formatPrice(data.bankTenths)} · rank ${data.entry.summary_overall_rank?.toLocaleString("id-ID") ?? "-"}`
-              : "Masukkan FPL Team ID untuk melihat squad dan rekomendasi"
+              ? `${data.entry.player_first_name} ${data.entry.player_last_name} · squad GW${data.picksGw} · bank ${formatPrice(data.bankTenths)} · rank ${data.entry.summary_overall_rank?.toLocaleString("en-GB") ?? "-"}`
+              : "Enter your FPL Team ID to see your squad and recommendations"
           }
         >
           <EntryForm
             entryId={entryId}
             message={
               data.status === "entry_not_found"
-                ? "Team ID tidak ditemukan di FPL. Periksa lagi angkanya."
+                ? "Team ID not found on FPL. Please check the number."
                 : data.status === "no_picks"
-                  ? "Squad belum tersedia dari FPL (mungkin tim baru dibuat sebelum GW pertama)."
+                  ? "Squad not available from FPL yet (the team may have been created before its first GW)."
                   : undefined
             }
           />
@@ -91,8 +91,8 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
 
         {data.status === "ok" && (
           <Panel
-            title={`Squad & proyeksi GW${firstGw}–${lastGw}`}
-            subtitle={`xPts per GW dari engine (${data.modelVersion}). Squad = pilihan GW${data.picksGw} di FPL; transfer setelah deadline belum terlihat.`}
+            title={`Squad & projections GW${firstGw}–${lastGw}`}
+            subtitle={`xPts per GW from the engine (${data.modelVersion}). Squad = your GW${data.picksGw} picks on FPL; transfers after the deadline are not visible yet.`}
           >
             <div className="flex flex-col gap-4">
               {POS_ORDER.map((pos) => {
@@ -111,11 +111,11 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
                               {p.isCaptain ? " (C)" : p.isVice ? " (V)" : ""}
                             </Link>
                             <p className="text-xs text-[var(--text-muted)]">
-                              {p.teamShort} · {formatPrice(p.priceTenths)} {p.isStarter ? "" : "· cadangan"}
+                              {p.teamShort} · {formatPrice(p.priceTenths)} {p.isStarter ? "" : "· bench"}
                             </p>
                           </div>
                           <GwStrip p={p} firstGw={firstGw} n={horizonGw} />
-                          <span className="w-16 text-right text-sm font-semibold tabular-nums" title="Total xPts 6 GW (terdiskon)">
+                          <span className="w-16 text-right text-sm font-semibold tabular-nums" title="Total 6-GW xPts (discounted)">
                             {p.horizon.toFixed(1)}
                           </span>
                         </li>
@@ -132,7 +132,7 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
       <div className="flex min-w-0 flex-col gap-6 xl:col-span-4">
         {data.status === "ok" && (
           <>
-            <Panel title="Kapten" subtitle={`Proyeksi GW${firstGw} tertinggi di starting XI`}>
+            <Panel title="Captain" subtitle={`Highest GW${firstGw} projection in the starting XI`}>
               {data.captain ? (
                 <p className="text-sm">
                   <b className="text-lg">{data.captain.name}</b> — {data.captain.next.toFixed(1)} xPts
@@ -147,9 +147,9 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
               )}
             </Panel>
 
-            <Panel title="Rekomendasi transfer" subtitle={`Berdasarkan total xPts GW${firstGw}–${lastGw} (bobot 0.85/GW), bukan hanya GW depan`}>
+            <Panel title="Transfer recommendations" subtitle={`Based on total xPts for GW${firstGw}–${lastGw} (0.85 weight per GW), not just next GW`}>
               {data.transfers.length === 0 ? (
-                <p className="text-sm text-[var(--text-muted)]">Tidak ada transfer yang jelas lebih baik — simpan free transfer.</p>
+                <p className="text-sm text-[var(--text-muted)]">No clearly better transfer — save your free transfer.</p>
               ) : (
                 <ol className="flex flex-col gap-3 text-sm">
                   {data.transfers.map((t, i) => (
@@ -158,28 +158,28 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
                         {i + 1}. {t.out.name} → <Link href={`/pemain/${t.in.id}`} className="text-[var(--accent)] hover:underline">{t.in.name}</Link>
                       </p>
                       <p className="text-xs text-[var(--text-muted)]">
-                        {t.in.teamShort} · {formatPrice(t.in.priceTenths)} · sisa bank {formatPrice(t.budgetLeftTenths)}
+                        {t.in.teamShort} · {formatPrice(t.in.priceTenths)} · bank left {formatPrice(t.budgetLeftTenths)}
                       </p>
                       <p className="mt-1">
-                        <span className="text-green-300">+{t.gainHorizon.toFixed(1)} xPts</span> dalam {horizonGw} GW
+                        <span className="text-green-300">+{t.gainHorizon.toFixed(1)} xPts</span> over {horizonGw} GWs
                         <span className="text-[var(--text-muted)]"> · GW{firstGw}: {t.gainNext >= 0 ? "+" : ""}{t.gainNext.toFixed(1)}</span>
                       </p>
                       {t.gainHorizon < 4 && (
-                        <p className="text-xs text-amber-300">Hanya layak dengan free transfer (hit −4 tidak tertutup).</p>
+                        <p className="text-xs text-amber-300">Only worth it with a free transfer (a −4 hit isn&apos;t covered).</p>
                       )}
                     </li>
                   ))}
                 </ol>
               )}
-              <p className="mt-3 text-xs text-[var(--text-muted)]">Harga jual dianggap = harga sekarang; harga jual FPL Anda bisa sedikit lebih rendah.</p>
+              <p className="mt-3 text-xs text-[var(--text-muted)]">Selling price assumed = current price; your FPL selling price may be slightly lower.</p>
             </Panel>
 
             {data.notes.length > 0 && (
-              <Panel title="Catatan pemain" subtitle="Pertimbangkan rangkaian jadwal, bukan satu GW">
+              <Panel title="Player notes" subtitle="Consider the fixture run, not a single GW">
                 <ul className="flex flex-col gap-2 text-sm">
                   {data.notes.map((n) => (
                     <li key={n.player.id}>
-                      <span className={n.kind === "tahan" ? "text-sky-300" : "text-red-300"}>{n.kind === "tahan" ? "Tahan" : "Jual"}:</span>{" "}
+                      <span className={n.kind === "tahan" ? "text-sky-300" : "text-red-300"}>{n.kind === "tahan" ? "Hold" : "Sell"}:</span>{" "}
                       <b>{n.player.name}</b> — {n.reason}
                     </li>
                   ))}
@@ -190,7 +190,7 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
         )}
 
         {data.optimal && (
-          <Panel title="Bangun dari nol (wildcard)" subtitle={`${data.optimal.title} · £${(data.optimal.costTenths / 10).toFixed(1)}m`}>
+          <Panel title="Build from scratch (wildcard)" subtitle={`${data.optimal.title} · £${(data.optimal.costTenths / 10).toFixed(1)}m`}>
             <ul className="flex flex-col gap-1 text-sm">
               {POS_ORDER.flatMap((pos) =>
                 data.optimalPlayers
@@ -201,7 +201,7 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
                         <span className="mr-2 inline-block w-9 text-xs text-[var(--text-muted)]">{pos}</span>
                         <Link href={`/pemain/${p.id}`} className="hover:underline">{p.name}</Link>
                         {p.id === data.optimal?.captain ? " (C)" : ""}
-                        {data.optimal?.starters.includes(p.id) ? "" : <span className="text-xs text-[var(--text-muted)]"> · cadangan</span>}
+                        {data.optimal?.starters.includes(p.id) ? "" : <span className="text-xs text-[var(--text-muted)]"> · bench</span>}
                       </span>
                       <span className="tabular-nums text-[var(--text-muted)]">
                         {p.teamShort} · {formatPrice(p.priceTenths)} · {p.horizon.toFixed(1)}
@@ -211,7 +211,7 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
               )}
             </ul>
             <p className="mt-3 text-xs text-[var(--text-muted)]">
-              Optimasi ILP: budget £100.0m, 2-5-5-3, maks 3 per klub, memaksimalkan xPts {horizonGw} GW.
+              ILP optimisation: £100.0m budget, 2-5-5-3, max 3 per club, maximising {horizonGw}-GW xPts.
             </p>
           </Panel>
         )}

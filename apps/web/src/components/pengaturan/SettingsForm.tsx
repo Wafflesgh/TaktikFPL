@@ -19,7 +19,7 @@ export function SettingsForm({ initial }: { initial: SettingsValues }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
-      <Panel title="Profil" subtitle="Nama yang tampil di top bar">
+      <Panel title="Profile" subtitle="Name shown in the top bar">
         <label htmlFor="displayName" className="text-sm">
           Nama tampilan
         </label>
@@ -35,9 +35,9 @@ export function SettingsForm({ initial }: { initial: SettingsValues }) {
         />
       </Panel>
 
-      <Panel title="Tema" subtitle="Warna aplikasi di semua halaman">
+      <Panel title="Theme" subtitle="App colours on every page">
         <fieldset className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <legend className="sr-only">Tema</legend>
+          <legend className="sr-only">Theme</legend>
           {THEME_OPTIONS.map((o) => (
             <label key={o.value} className={`${optionCard} flex-col`}>
               {/* Pratinjau memakai token tema itu sendiri (tokens.css) lewat data-theme lokal. */}
@@ -65,9 +65,9 @@ export function SettingsForm({ initial }: { initial: SettingsValues }) {
         </fieldset>
       </Panel>
 
-      <Panel title="Profil risiko" subtitle="Dipakai saat menyusun rekomendasi transfer & kapten">
+      <Panel title="Risk profile" subtitle="Used when building transfer & captain recommendations">
         <fieldset className="flex flex-col gap-3">
-          <legend className="sr-only">Profil risiko</legend>
+          <legend className="sr-only">Risk profile</legend>
           {RISK_OPTIONS.map((o) => (
             <label key={o.value} className={`${optionCard} items-start`}>
               <input type="radio" name="riskProfile" value={o.value} defaultChecked={v.riskProfile === o.value} className="mt-1 accent-[var(--accent)]" />
@@ -86,7 +86,7 @@ export function SettingsForm({ initial }: { initial: SettingsValues }) {
           disabled={pending}
           className="rounded-full bg-[var(--accent)] px-6 py-2 font-semibold text-white disabled:opacity-60"
         >
-          {pending ? "Menyimpan…" : "Simpan pengaturan"}
+          {pending ? "Saving…" : "Save settings"}
         </button>
         <p
           role="status"

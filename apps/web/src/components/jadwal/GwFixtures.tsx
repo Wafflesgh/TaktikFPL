@@ -47,7 +47,7 @@ export function describeChange(c: FixtureChange): string {
       return `status ${s(c.oldValue)} → ${s(c.newValue)}`;
     }
     case "created":
-      return "laga baru ditambahkan";
+      return "new fixture added";
     default:
       return c.type;
   }
@@ -95,7 +95,7 @@ export function GwFixtures({ fixtures, gameweeks, selectedGw, hrefFor }: Props) 
 
   const byDay = new Map<string, GwFixture[]>();
   for (const f of fixtures) {
-    const key = f.kickoffUtc ? formatDayWIB(f.kickoffUtc) : "Belum dijadwalkan";
+    const key = f.kickoffUtc ? formatDayWIB(f.kickoffUtc) : "Not scheduled";
     byDay.set(key, [...(byDay.get(key) ?? []), f]);
   }
   const changed = fixtures.filter((f) => f.change).length;
@@ -103,12 +103,12 @@ export function GwFixtures({ fixtures, gameweeks, selectedGw, hrefFor }: Props) 
   const arrow = "grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--glass-border)] bg-white/5";
   return (
     <Panel
-      title={gw ? `Jadwal GW${gw.number}` : "Jadwal"}
-      subtitle={gw ? `Deadline ${formatWIB(gw.deadlineUtc)} · waktu kick-off dalam WIB` : "Data gameweek belum tersedia"}
+      title={gw ? `GW${gw.number} Fixtures` : "Fixtures"}
+      subtitle={gw ? `Deadline ${formatWIB(gw.deadlineUtc)} · kick-off times in WIB` : "Gameweek data not available yet"}
       action={
         changed > 0 ? (
           <span className="flex shrink-0 items-center gap-1 rounded-full bg-amber-400/15 px-3 py-1 text-xs text-amber-300">
-            <AlertIcon size={14} /> {changed} berubah
+            <AlertIcon size={14} /> {changed} changed
           </span>
         ) : undefined
       }
@@ -161,7 +161,7 @@ export function GwFixtures({ fixtures, gameweeks, selectedGw, hrefFor }: Props) 
       )}
 
       {fixtures.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)]">Belum ada fixture untuk GW ini.</p>
+        <p className="text-sm text-[var(--text-muted)]">No fixtures for this GW yet.</p>
       ) : (
         <div className="flex flex-col gap-4">
           {[...byDay.entries()].map(([day, list]) => (
@@ -197,7 +197,7 @@ export function GwFixtures({ fixtures, gameweeks, selectedGw, hrefFor }: Props) 
                     {f.change && (
                       <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" title={`Terdeteksi ${formatWIB(f.change.detectedAt)}`}>
                         <span className="flex items-center gap-1 rounded-full bg-amber-400/15 px-2 py-0.5 font-semibold text-amber-300">
-                          <AlertIcon size={12} /> Jadwal berubah
+                          <AlertIcon size={12} /> Schedule changed
                         </span>
                         <span className="text-[var(--text-muted)]">{describeChange(f.change)}</span>
                       </p>

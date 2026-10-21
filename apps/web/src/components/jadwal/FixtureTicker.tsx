@@ -2,7 +2,7 @@ import Link from "next/link";
 import { FDR_COLOR, Panel, TeamBadge } from "@/components/ui";
 import type { GameweekInfo, TickerFixture, TickerRow } from "@/lib/data/jadwal";
 
-export const TICKER_SORTS = { fdr: "FDR termudah", name: "Nama" } as const;
+export const TICKER_SORTS = { fdr: "Easiest FDR", name: "Name" } as const;
 export type TickerSort = keyof typeof TICKER_SORTS;
 
 // FDR 5 (merah tua) terlalu gelap untuk teks hitam.
@@ -23,7 +23,7 @@ function TickerChip({ f }: { f: TickerFixture }) {
     <span
       className="flex h-7 items-center justify-center gap-1 rounded-md px-1.5 text-xs font-bold text-black"
       style={{ background: FDR_COLOR[fdr] ?? "var(--fdr-3)", color: FDR_TEXT[fdr] }}
-      title={`${f.opponent?.name ?? "?"} (${f.home ? "kandang" : "tandang"}) · FDR ${f.fdr ?? "-"}`}
+      title={`${f.opponent?.name ?? "?"} (${f.home ? "home" : "away"}) · FDR ${f.fdr ?? "-"}`}
     >
       {f.opponent?.short ?? "?"}
       <span className="font-medium opacity-75">{venue}</span>
@@ -46,9 +46,9 @@ export function FixtureTicker({ rows, gws, sort, selectedGw, hrefFor }: Props) {
   return (
     <Panel
       title="Fixture Ticker"
-      subtitle={gws.length ? `GW${gws[0].number}–GW${gws[gws.length - 1].number} · warna = FDR` : "Belum ada gameweek mendatang"}
+      subtitle={gws.length ? `GW${gws[0].number}–GW${gws[gws.length - 1].number} · colour = FDR` : "No upcoming gameweeks"}
       action={
-        <div className="flex shrink-0 gap-1 rounded-full bg-white/5 p-1 text-xs" role="group" aria-label="Urutkan tim">
+        <div className="flex shrink-0 gap-1 rounded-full bg-white/5 p-1 text-xs" role="group" aria-label="Sort teams">
           {(Object.keys(TICKER_SORTS) as TickerSort[]).map((s) => (
             <Link
               key={s}
@@ -64,7 +64,7 @@ export function FixtureTicker({ rows, gws, sort, selectedGw, hrefFor }: Props) {
       }
     >
       {sorted.length === 0 || gws.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)]">Data tim/gameweek musim ini belum tersedia.</p>
+        <p className="text-sm text-[var(--text-muted)]">Team/gameweek data for this season is not available yet.</p>
       ) : (
         <div className="overflow-x-auto pb-1">
           <table className="w-full min-w-[620px] border-separate border-spacing-x-0 border-spacing-y-1 text-sm">
@@ -79,7 +79,7 @@ export function FixtureTicker({ rows, gws, sort, selectedGw, hrefFor }: Props) {
                       href={hrefFor({ gw: String(g.number) })}
                       scroll={false}
                       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 hover:bg-white/10 ${g.number === selectedGw ? "bg-[var(--accent-soft)] text-[var(--text)]" : ""}`}
-                      title={`Lihat jadwal GW${g.number}`}
+                      title={`View GW${g.number} fixtures`}
                     >
                       GW{g.number}
                       {g.isDouble && <span className="text-[10px] text-emerald-300">DGW</span>}
@@ -107,7 +107,7 @@ export function FixtureTicker({ rows, gws, sort, selectedGw, hrefFor }: Props) {
                   {r.cells.map((cell, col) => (
                     <td key={gws[col]?.number ?? col} className="px-0.5 align-middle">
                       {cell.length === 0 ? (
-                        <span className="flex h-7 items-center justify-center rounded-md bg-white/[0.06] text-xs text-[var(--text-muted)]" title="Blank GW — tidak ada laga">
+                        <span className="flex h-7 items-center justify-center rounded-md bg-white/[0.06] text-xs text-[var(--text-muted)]" title="Blank GW — no match">
                           –
                         </span>
                       ) : (
@@ -136,7 +136,7 @@ export function FixtureTicker({ rows, gws, sort, selectedGw, hrefFor }: Props) {
         <span className="ml-2 flex items-center gap-1">
           <span className="h-3 w-3 rounded bg-white/[0.06]" /> blank
         </span>
-        <span>· dua chip bertumpuk = double · H/A = kandang/tandang</span>
+        <span>· two stacked chips = double · H/A = home/away</span>
       </div>
     </Panel>
   );

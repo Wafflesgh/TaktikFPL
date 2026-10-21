@@ -12,15 +12,15 @@ export const DISPLAY_NAME_MAX = 40;
 
 /** Urutan = urutan tampil. Warna pratinjau diambil dari tokens.css lewat data-theme. */
 export const THEME_OPTIONS: { value: Theme; label: string; hint: string }[] = [
-  { value: "violet", label: "Violet", hint: "Gelap dengan cahaya ungu — default" },
-  { value: "ember", label: "Ember", hint: "Gradasi oranye-merah menyala" },
-  { value: "pitch", label: "Pitch", hint: "Hijau lapangan dengan aksen biru" },
+  { value: "violet", label: "Violet", hint: "Dark with a purple glow — default" },
+  { value: "ember", label: "Ember", hint: "Blazing orange-red gradient" },
+  { value: "pitch", label: "Pitch", hint: "Pitch green with blue accents" },
 ];
 
 export const RISK_OPTIONS: { value: RiskProfile; label: string; hint: string }[] = [
-  { value: "safe", label: "Aman", hint: "Utamakan pemain template & menit terjamin, hindari hit transfer." },
-  { value: "balanced", label: "Seimbang", hint: "Campur template dan differential; hit hanya bila jelas menguntungkan." },
-  { value: "aggressive", label: "Agresif", hint: "Kejar differential & upside tinggi, siap ambil hit demi naik rank." },
+  { value: "safe", label: "Safe", hint: "Favour template players & nailed minutes, avoid transfer hits." },
+  { value: "balanced", label: "Balanced", hint: "Mix template and differentials; take hits only when clearly worth it." },
+  { value: "aggressive", label: "Aggressive", hint: "Chase differentials & high upside, ready to take hits to climb." },
 ];
 
 export function parseTheme(value: unknown): Theme | null {

@@ -9,7 +9,7 @@ const anton = Anton({ variable: "--font-anton", subsets: ["latin"], weight: "400
 
 export const metadata: Metadata = {
   title: "TaktikFPL",
-  description: "Asisten analisis & rekomendasi Fantasy Premier League",
+  description: "Fantasy Premier League analysis & recommendation assistant",
   appleWebApp: { capable: true, title: "TaktikFPL", statusBarStyle: "black-translucent" },
   robots: { index: false, follow: false }, // aplikasi pribadi
   icons: {
@@ -39,7 +39,7 @@ async function resolveTheme(): Promise<Theme> {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const theme = await resolveTheme();
   return (
-    <html lang="id" data-theme={theme} className={`${inter.variable} ${anton.variable} antialiased`}>
+    <html lang="en" data-theme={theme} className={`${inter.variable} ${anton.variable} antialiased`}>
       <body>{children}</body>
     </html>
   );

@@ -6,7 +6,7 @@ import type { PlayerRow } from "@/lib/data/dashboard";
 import { formatPrice } from "@/lib/time";
 
 export const POSITIONS = ["GKP", "DEF", "MID", "FWD"] as const;
-export const SORTS = { form: "Form", price: "Harga", owned: "Kepemilikan", xgi: "xGI/90" } as const;
+export const SORTS = { form: "Form", price: "Price", owned: "Ownership", xgi: "xGI/90" } as const;
 export type Sort = keyof typeof SORTS;
 
 const FORM_COLOR: Record<string, string> = {
@@ -20,7 +20,7 @@ const FORM_COLOR: Record<string, string> = {
 /** Daftar form teratas dengan garis progres (ref-02 panel "AI Prediction"). */
 export function FormLeaders({ players }: { players: PlayerRow[] }) {
   return (
-    <Panel title="Form Teratas" subtitle="Skor form vs pemain seposisi">
+    <Panel title="Top Form" subtitle="Form score vs same-position players">
       <ul className="flex flex-col gap-3">
         {players.map((p) => (
           <li key={p.id} className="flex items-center gap-3">
@@ -57,11 +57,11 @@ export function PlayerTable({
     `rounded-full px-3 py-1.5 ${active ? "bg-[var(--accent)] text-white" : "bg-white/5 hover:bg-white/10"}`;
   return (
     <Panel
-      title="Pemain"
-      subtitle={`${players.length} pemain ditampilkan`}
+      title="Players"
+      subtitle={`${players.length} players shown`}
       action={
         <div className="flex flex-wrap justify-end gap-1 text-xs">
-          <Link href={hrefFor({ pos: undefined })} className={chip(!pos)}>Semua</Link>
+          <Link href={hrefFor({ pos: undefined })} className={chip(!pos)}>All</Link>
           {POSITIONS.map((p) => (
             <Link key={p} href={hrefFor({ pos: p })} className={chip(pos === p)}>{p}</Link>
           ))}
@@ -69,14 +69,14 @@ export function PlayerTable({
       }
     >
       <div className="mb-3 flex flex-wrap items-center gap-1 text-xs">
-        <span className="mr-1 text-[var(--text-muted)]">Urutkan:</span>
+        <span className="mr-1 text-[var(--text-muted)]">Sort:</span>
         {(Object.keys(SORTS) as Sort[]).map((s) => (
           <Link key={s} href={hrefFor({ sort: s })} className={chip(sort === s)}>{SORTS[s]}</Link>
         ))}
       </div>
 
       {players.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)]">Belum ada data pemain.</p>
+        <p className="text-sm text-[var(--text-muted)]">No player data yet.</p>
       ) : (
         <>
           {/* Desktop */}
@@ -84,12 +84,12 @@ export function PlayerTable({
             <table className="w-full text-sm">
               <thead className="text-left text-xs text-[var(--text-muted)]">
                 <tr>
-                  <th className="py-2 font-medium">Pemain</th>
+                  <th className="py-2 font-medium">Player</th>
                   <th className="font-medium">Pos</th>
-                  <th className="text-right font-medium">Harga</th>
+                  <th className="text-right font-medium">Price</th>
                   <th className="text-right font-medium">Owned</th>
-                  <th className="text-right font-medium" title="Poin per laga: 4 laga terakhir / musim">Poin/laga</th>
-                  <th className="text-right font-medium" title="xG + xA per 90 menit (4 laga, ter-shrink)">xGI/90</th>
+                  <th className="text-right font-medium" title="Points per match: last 4 / season">Pts/match</th>
+                  <th className="text-right font-medium" title="xG + xA per 90 minutes (last 4, shrunk)">xGI/90</th>
                   <th className="pl-4 font-medium">Form</th>
                 </tr>
               </thead>

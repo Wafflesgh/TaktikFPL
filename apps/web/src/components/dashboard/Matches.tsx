@@ -9,7 +9,7 @@ export function NextMatchCard({ live, next }: { live: FixtureRow[]; next: Fixtur
   const isLive = live.length > 0;
   return (
     <Panel
-      title={isLive ? "Laga Berlangsung" : "Laga Berikutnya"}
+      title={isLive ? "Live Match" : "Next Match"}
       subtitle={match?.gw ? `Gameweek ${match.gw}` : undefined}
       action={
         isLive ? (
@@ -20,7 +20,7 @@ export function NextMatchCard({ live, next }: { live: FixtureRow[]; next: Fixtur
       }
     >
       {!match ? (
-        <p className="text-sm text-[var(--text-muted)]">Belum ada jadwal.</p>
+        <p className="text-sm text-[var(--text-muted)]">No fixtures yet.</p>
       ) : (
         <>
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">
@@ -45,8 +45,8 @@ export function NextMatchCard({ live, next }: { live: FixtureRow[]; next: Fixtur
           </div>
           <p className="mt-3 text-center text-xs text-[var(--text-muted)]">{formatWIB(match.kickoffUtc)}</p>
           <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs">
-            {["Timeline", "Lineup", "Statistik", "Insight"].map((t) => (
-              <span key={t} className="cursor-not-allowed rounded-full bg-white/5 px-3 py-1.5 text-[var(--text-muted)]" title="Live Match Center — Fase 3">
+            {["Timeline", "Lineup", "Stats", "Insight"].map((t) => (
+              <span key={t} className="cursor-not-allowed rounded-full bg-white/5 px-3 py-1.5 text-[var(--text-muted)]" title="Live Match Center — Phase 3">
                 {t}
               </span>
             ))}
@@ -54,10 +54,10 @@ export function NextMatchCard({ live, next }: { live: FixtureRow[]; next: Fixtur
           <button
             type="button"
             disabled
-            title="Live Match Center — Fase 3"
+            title="Live Match Center — Phase 3"
             className="mt-4 w-full rounded-full bg-[var(--accent)] py-3 font-semibold text-white opacity-80"
           >
-            Buka Match Center
+            Open Match Center
           </button>
         </>
       )}
@@ -67,10 +67,10 @@ export function NextMatchCard({ live, next }: { live: FixtureRow[]; next: Fixtur
 
 /** Daftar jadwal GW berikut dikelompokkan per hari WIB (ref-02 "Upcoming Matches"). */
 export function FixtureGrid({ fixtures }: { fixtures: FixtureRow[] }) {
-  if (fixtures.length === 0) return <p className="text-sm text-[var(--text-muted)]">Belum ada fixture.</p>;
+  if (fixtures.length === 0) return <p className="text-sm text-[var(--text-muted)]">No fixtures yet.</p>;
   const byDay = new Map<string, FixtureRow[]>();
   for (const f of fixtures) {
-    const key = f.kickoffUtc ? formatDayWIB(f.kickoffUtc) : "Belum dijadwalkan";
+    const key = f.kickoffUtc ? formatDayWIB(f.kickoffUtc) : "Not scheduled";
     byDay.set(key, [...(byDay.get(key) ?? []), f]);
   }
   return (
@@ -92,8 +92,8 @@ export function FixtureGrid({ fixtures }: { fixtures: FixtureRow[] }) {
                 <div className="text-center">
                   <p className="text-sm font-semibold tabular-nums">{formatTimeWIB(f.kickoffUtc)}</p>
                   {f.recentlyChanged && (
-                    <p className="mt-0.5 flex items-center justify-center gap-1 text-[10px] text-amber-300" title="Jadwal berubah dalam 7 hari terakhir">
-                      <AlertIcon size={12} /> berubah
+                    <p className="mt-0.5 flex items-center justify-center gap-1 text-[10px] text-amber-300" title="Schedule changed in the last 7 days">
+                      <AlertIcon size={12} /> changed
                     </p>
                   )}
                 </div>
@@ -114,15 +114,15 @@ export function FixtureGrid({ fixtures }: { fixtures: FixtureRow[] }) {
 /** Klasemen PL dihitung dari hasil fixture (ref-02 "Group Standing"). */
 export function StandingsTable({ rows }: { rows: StandingRow[] }) {
   return (
-    <Panel title="Klasemen" subtitle="Dihitung dari hasil laga final">
+    <Panel title="Table" subtitle="Computed from final results">
       <table className="w-full text-sm">
         <thead className="text-xs text-[var(--text-muted)]">
           <tr>
             <th className="w-6 py-1 text-left">#</th>
-            <th className="text-left">Tim</th>
-            <th className="text-right">M</th>
-            <th className="text-right">SG</th>
-            <th className="text-right">Poin</th>
+            <th className="text-left">Team</th>
+            <th className="text-right">P</th>
+            <th className="text-right">GD</th>
+            <th className="text-right">Pts</th>
           </tr>
         </thead>
         <tbody>
