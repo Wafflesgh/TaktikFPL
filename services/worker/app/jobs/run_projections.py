@@ -17,6 +17,7 @@ from sqlalchemy.engine import Engine
 
 from app.db import get_engine
 from app.jobs.sync_bootstrap import current_season_id
+from app.lab.live import DEFAULT_MODEL, live_predictions, resolve_active
 from app.models import engine as v1
 from app.models import xpts_v0
 from app.models.reasons import FixtureView, player_reasons
@@ -290,6 +291,32 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
             first_gw,
             tac.to_json() if (tac := ctx.tactics.get(int(p.id))) else None,
         )
+    # Model aktif dari Model Lab: xPts per GW diganti prediksi model itu (dibagi ke laga sesuai porsi v1,
+    # dikali peluang main dari status FPL). Komponen & alasan v1 tetap disimpan sebagai penjelasan.
+    with engine.connect() as conn:
+        active, active_info = resolve_active(conn)
+        lab_preds = (
+            live_predictions(conn, season_id, first_gw, HORIZON_GW, active)
+            if use_v1 and active != DEFAULT_MODEL
+            else None
+        )
+    if lab_preds:
+        status = {int(p.id): (p.status, p.chance_next) for p in players}
+        n_rows: dict[tuple[int, int], int] = defaultdict(int)
+        for row in rows:
+            n_rows[(row["pid"], row["breakdown"]["gw"])] += 1
+        new_gw: dict[int, dict[int, float]] = defaultdict(lambda: defaultdict(float))
+        for row in rows:
+            pid, gw = row["pid"], row["breakdown"]["gw"]
+            st, ch = status.get(pid, (None, None))
+            target = lab_preds.get(pid, {}).get(gw, 0.0) * v1.p_play(st, ch if gw == first_gw else None)
+            v1_total = per_gw[pid].get(gw, 0.0)
+            new = row["xpts"] * target / v1_total if v1_total > 0 else target / n_rows[(pid, gw)]
+            row["breakdown"].update(v1_xpts=row["xpts"], model=active)
+            row["xpts"] = round(new, 3)
+            new_gw[pid][gw] += row["xpts"]
+        per_gw = new_gw
+        model_version = f"lab:{active}"
     for row in rows:
         row["breakdown"] = json.dumps(row["breakdown"])
 
@@ -333,7 +360,15 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
                 "g": gws[first_gw],
                 "t": run_type,
                 "v": model_version,
-                "n": json.dumps({"horizon_gw": HORIZON_GW, "discount": DISCOUNT, "first_gw": first_gw}),
+                "n": json.dumps(
+                    {
+                        "horizon_gw": HORIZON_GW,
+                        "discount": DISCOUNT,
+                        "first_gw": first_gw,
+                        "active_model": active,
+                        "active_info": active_info,
+                    }
+                ),
             },
         ).scalar_one()
         if rows:
@@ -430,6 +465,7 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
     return {
         "season_plan": season,
         "model_run_id": run_id,
+        "active_model": active,
         "first_gw": first_gw,
         "projections": len(rows),
         "players": len(per_gw),

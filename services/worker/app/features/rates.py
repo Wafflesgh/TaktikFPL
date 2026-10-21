@@ -82,8 +82,12 @@ def team_rating(ratings: dict[int, TeamRating], team_id: int) -> TeamRating:
     return ratings.get(team_id) or TeamRating(*PROMOTED_PRIOR, 0)
 
 
-def player_rates(conn: Connection, before: datetime, season_id: int) -> dict[int, dict[str, Any]]:
-    """Rate per 90 (mentah + menit) dan menit harapan untuk semua pemain musim berjalan."""
+def player_rates(
+    conn: Connection, before: datetime, season_id: int, last_apps: int = LAST_APPS, xmins_matches: int = 5
+) -> dict[int, dict[str, Any]]:
+    """Rate per 90 (mentah + menit) dan menit harapan untuk semua pemain musim berjalan.
+
+    last_apps / xmins_matches divariasikan oleh Model Lab (mis. model "hot form", "nailed-first")."""
     stats = conn.execute(
         text(
             """
@@ -107,7 +111,7 @@ def player_rates(conn: Connection, before: datetime, season_id: int) -> dict[int
             from m where rn <= :k group by player_id
             """
         ),
-        {"before": before, "k": LAST_APPS},
+        {"before": before, "k": last_apps},
     ).all()
     xmins = conn.execute(
         text(
@@ -119,10 +123,10 @@ def player_rates(conn: Connection, before: datetime, season_id: int) -> dict[int
               join public.fixtures f on f.id = s.fixture_id
               where f.season_id = :s and f.status = 'finished' and f.kickoff_utc < :before
             )
-            select player_id, avg(minutes) xmins from r where rn <= 5 group by player_id
+            select player_id, avg(minutes) xmins from r where rn <= :n group by player_id
             """
         ),
-        {"s": season_id, "before": before},
+        {"s": season_id, "before": before, "n": xmins_matches},
     ).all()
     out: dict[int, dict[str, Any]] = {int(r.player_id): {"xmins": float(r.xmins or 0)} for r in xmins}
     for r in stats:
@@ -147,7 +151,10 @@ def _per90(total: float, minutes: float) -> float:
 
 
 def shrunk_rates(
-    raw: dict[int, dict[str, Any]], positions: dict[int, str], rules: dict[str, float]
+    raw: dict[int, dict[str, Any]],
+    positions: dict[int, str],
+    rules: dict[str, float],
+    prior_min: float = PLAYER_PRIOR_MIN,
 ) -> dict[int, dict[str, float]]:
     """Per 90 ter-shrink ke rata-rata posisi + peluang DefCon per laga ≥60 menit."""
     keys = {"xg": "xg_mins", "xa": "xg_mins", "bonus": "mins", "saves": "mins", "yc": "mins"}
@@ -170,7 +177,7 @@ def shrunk_rates(
         for k, mk in keys.items():
             mins = float(m.get(mk, 0.0))
             obs = _per90(float(m.get(k, 0.0)), mins)
-            res[f"{k}90"] = (obs * mins + prior[pos][k] * PLAYER_PRIOR_MIN) / (mins + PLAYER_PRIOR_MIN)
+            res[f"{k}90"] = (obs * mins + prior[pos][k] * prior_min) / (mins + prior_min)
         apps = int(m.get("dc_apps", 0))
         thr = rules.get(f"defcon_threshold_{pos}", 12.0)
         hits = int(m.get("dc10" if thr <= 10 else "dc12", 0))

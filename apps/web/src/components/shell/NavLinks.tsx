@@ -12,6 +12,7 @@ export const NAV = [
   { href: "/jadwal", label: "Fixtures", icon: CalendarIcon, ready: true },
   { href: "/tim", label: "My Team", icon: ShirtIcon, ready: true },
   { href: "/rencana", label: "Season Plan", icon: ClockIcon, ready: true },
+  { href: "/model", label: "Models", icon: ChartIcon, ready: true },
 ] as const;
 
 /** Desktop: pill berlabel untuk item aktif, lingkaran ikon untuk lainnya (ref-02). */

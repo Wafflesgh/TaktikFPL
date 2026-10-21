@@ -2,6 +2,23 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.18.0] — 2026-10-21 · Model Lab: 12 model diuji & dibandingkan, model aktif bisa dipilih
+
+### Ditambahkan
+- `app/lab/`: 10 model dasar dengan pertimbangan berbeda — Recent points, Season PPG, FPL official xP,
+  Form × fixture (FDR), xPts v1, v1 + tactics, Hot form (8 laga terakhir), Fixture chaser (efek lawan
+  pangkat 1.6), Minutes first (menit 3 laga terakhir), Crowd (kepemilikan dalam posisi) — plus Ensemble mean
+  dan Ensemble learned (bobot NNLS dari GW sebelumnya saja, tanpa kebocoran data).
+- Simulasi poin akhir: **Season sim** (squad £100m, 1 FT/minggu maks 5, hit −4 bila gain > 5, kapten,
+  autosub) dan **Weekly Free Hit**; metrik MAE, RMSE, Spearman, top-10. Semua point-in-time per deadline.
+- Job `model_lab` (harian 08 UTC, hanya bila ada GW selesai baru; default 2025/26 + musim berjalan — aturan
+  poin sama) → `model_evaluations` (`lab:<model>`) + bobot ensemble.
+- Model aktif: `set_active_model:name=<model>|auto` (auto = juara season sim). `run_projections` memakai
+  prediksi model itu (dibagi ke laga sesuai porsi v1, dikali peluang main); komponen & alasan v1 tetap
+  disimpan (`v1_xpts`). Default tetap v1 + tactics.
+- Engine: parameter varian (`last_apps`, `xmins_matches`, `prior_min`, `tactics`, `fixture_power`).
+- Web `/model` (Models): leaderboard per musim, grafik poin kumulatif, bobot ensemble, model yang dipakai.
+
 ## [0.17.0] — 2026-10-21 · Data taktik Understat: low block, high press, peran pemain
 
 ### Ditambahkan

@@ -20,6 +20,7 @@ from app.jobs import (  # noqa: F401
     deadline_checkpoint,
     evaluate_model,
     gw_finalize,
+    model_lab,
     poll_event_status,
     run_projections,
     sync_bootstrap,

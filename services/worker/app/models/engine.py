@@ -7,7 +7,15 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
-from app.features.rates import TeamRating, player_rates, shrunk_rates, team_rating, team_ratings
+from app.features.rates import (
+    LAST_APPS,
+    PLAYER_PRIOR_MIN,
+    TeamRating,
+    player_rates,
+    shrunk_rates,
+    team_rating,
+    team_ratings,
+)
 from app.features.tactics import PlayerTactics, TeamStyle, player_tactics, team_styles
 from app.models.xpts_v1 import MODEL_VERSION, MatchRates, PlayerRates, project_v1
 
@@ -25,6 +33,8 @@ class Context:
     # Data taktik Understat (kosong bila belum ada → pengali 1, model kembali ke v1 dasar).
     styles: dict[int, TeamStyle] = field(default_factory=dict)
     tactics: dict[int, PlayerTactics] = field(default_factory=dict)
+    # Varian Model Lab: >1 memperkuat efek kekuatan lawan ("fixture chaser").
+    fixture_power: float = 1.0
 
 
 def scoring_rules(conn: Connection, season_id: int) -> dict[str, float]:
@@ -37,17 +47,31 @@ def scoring_rules(conn: Connection, season_id: int) -> dict[str, float]:
     }
 
 
-def build_context(conn: Connection, before: datetime, season_id: int, positions: dict[int, str]) -> Context:
-    rules = scoring_rules(conn, season_id)
+def build_context(
+    conn: Connection,
+    before: datetime,
+    season_id: int,
+    positions: dict[int, str],
+    *,
+    rules: dict[str, float] | None = None,
+    last_apps: int = LAST_APPS,
+    xmins_matches: int = 5,
+    prior_min: float = PLAYER_PRIOR_MIN,
+    tactics: bool = True,
+    fixture_power: float = 1.0,
+) -> Context:
+    """Parameter kata kunci dipakai Model Lab untuk varian model; default = model produksi."""
+    rules = rules if rules is not None else scoring_rules(conn, season_id)
     ratings, league = team_ratings(conn, before)
-    raw = player_rates(conn, before, season_id)
+    raw = player_rates(conn, before, season_id, last_apps=last_apps, xmins_matches=xmins_matches)
     return Context(
         rules,
         ratings,
         league,
-        shrunk_rates(raw, positions, rules),
-        styles=team_styles(conn, before),
-        tactics=player_tactics(conn, before),
+        shrunk_rates(raw, positions, rules, prior_min=prior_min),
+        styles=team_styles(conn, before) if tactics else {},
+        tactics=player_tactics(conn, before) if tactics else {},
+        fixture_power=fixture_power,
     )
 
 
@@ -82,7 +106,8 @@ def project(
     mult = tac.mult(style.bucket) if (style and tac and style.bucket != "mid_block") else 1.0
     if mult != 1.0:
         pr = replace(pr, xg90=pr.xg90 * mult, xa90=pr.xa90 * mult)
-    mr = MatchRates(tr.att, tr.defn, orr.att, orr.defn, is_home, ctx.league_goals)
+    fp = ctx.fixture_power
+    mr = MatchRates(tr.att, tr.defn, orr.att**fp, orr.defn**fp, is_home, ctx.league_goals)
     out: dict[str, Any] = dict(project_v1(pr, mr, ctx.rules))
     out["style_mult"] = round(mult, 3)
     if style:
