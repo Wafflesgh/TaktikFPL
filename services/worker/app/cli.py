@@ -16,6 +16,7 @@ from app.jobs import (  # noqa: F401
     run_projections,
     sync_bootstrap,
     sync_fixtures,
+    sync_managers,
     sync_player_history,
     sync_understat,
 )
