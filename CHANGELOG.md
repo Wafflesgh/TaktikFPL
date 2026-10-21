@@ -14,8 +14,8 @@ Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://k
   snapshot `team_style_profiles` (low_block/high_press/mid_block/territorial/leaky, persentil) dan profil
   taktik pemain (`player_form_features` window `tactical`).
 - `app/features/tactics.py` (point-in-time): gaya tim dari PPDA 19 laga; peran pemain dari 20 start
-  terakhir; xG+xA/90 melawan low block / mid / high press, di-shrink ke rata-rata pemain (prior 5 laga),
-  dibatasi −15%..+20% dan dipakai sebagai pengali xG/xA di xPts v1; porsi xG dari bola mati.
+  terakhir; xG+xA/90 melawan low block / mid / high press, di-shrink ke rata-rata pemain
+  (prior 8 laga), dibatasi −15%..+20%, hanya untuk lawan low block / high press, dan dipakai sebagai pengali xG/xA di xPts v1; porsi xG dari bola mati.
 - Alasan baru: "BUR sits deep: 2nd most passive of 20 (PPDA 15.2). Vs low blocks: 0.71 xG+xA/90 vs 0.55
   overall over 1240 mins → model +20%" dan "Role: right winger (AMR) in 85% of last 20 starts".
 - Web: panel **Tactical profile** di halaman pemain; gaya lawan + penyesuaian di "Full breakdown".

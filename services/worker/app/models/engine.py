@@ -78,7 +78,8 @@ def project(
     # Gaya lawan (low block / high press) × rekam jejak pemain melawan gaya itu (ter-shrink, dibatasi).
     style = ctx.styles.get(opp_id)
     tac = ctx.tactics.get(player_id)
-    mult = tac.mult(style.bucket) if (style and tac) else 1.0
+    # Mid block = kondisi rata-rata → tanpa penyesuaian; hanya gaya ekstrem yang mengubah xG/xA.
+    mult = tac.mult(style.bucket) if (style and tac and style.bucket != "mid_block") else 1.0
     if mult != 1.0:
         pr = replace(pr, xg90=pr.xg90 * mult, xa90=pr.xa90 * mult)
     mr = MatchRates(tr.att, tr.defn, orr.att, orr.defn, is_home, ctx.league_goals)

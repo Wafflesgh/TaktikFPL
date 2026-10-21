@@ -23,7 +23,7 @@ from sqlalchemy.engine import Connection
 TEAM_WINDOW = 19
 LOW_BLOCK_PCT = 2 / 3  # sepertiga tim paling pasif = low block
 HIGH_PRESS_PCT = 1 / 3
-STYLE_PRIOR_90 = 5.0  # prior shrinkage: setara 5 laga penuh
+STYLE_PRIOR_90 = 8.0  # prior shrinkage: setara 8 laga penuh
 ROLE_WINDOW = 20
 STYLE_LOOKBACK_DAYS = 760  # ±2 musim
 MULT_MIN, MULT_MAX = 0.85, 1.2
