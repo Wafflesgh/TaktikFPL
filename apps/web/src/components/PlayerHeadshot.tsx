@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const SIZES = { sm: 40, md: 56, lg: 96, cut: 72, xl: 260 } as const;
+const SIZES = { sm: 40, md: 56, lg: 96, cut: 72, cutSm: 54, xl: 260 } as const;
 const STATUS_RING: Record<string, string> = {
   a: "var(--status-ok)",
   d: "var(--status-doubt)",
@@ -47,7 +47,7 @@ export function PlayerHeadshot({ name, urls, size = "md", status, teamColor }: P
     .toUpperCase();
   const src = urls[index];
 
-  if (size === "cut") {
+  if (size === "cut" || size === "cutSm") {
     return src ? (
       // eslint-disable-next-line @next/next/no-img-element -- URL CDN dinamis + fallback berantai
       <img
@@ -57,11 +57,14 @@ export function PlayerHeadshot({ name, urls, size = "md", status, teamColor }: P
         width={px}
         height={px}
         loading="lazy"
-        className="h-[72px] w-[72px] object-contain object-bottom drop-shadow-[0_6px_10px_rgba(0,0,0,0.55)]"
+        style={{ width: px, height: px }}
+        className="object-contain object-bottom drop-shadow-[0_6px_10px_rgba(0,0,0,0.55)]"
         onError={(e) => advance(e.currentTarget.getAttribute("src"))}
       />
     ) : (
-      <span className="grid h-[72px] w-[72px] place-items-center font-display text-2xl text-white/80">{initials}</span>
+      <span className="grid place-items-center font-display text-xl text-white/80" style={{ width: px, height: px }}>
+        {initials}
+      </span>
     );
   }
 

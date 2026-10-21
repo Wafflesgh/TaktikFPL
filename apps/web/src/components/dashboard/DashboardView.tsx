@@ -64,9 +64,17 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, news, pos, s
       <TopBar displayName={displayName} isAdmin={isAdmin} liveCount={live.length} />
 
       <main className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* Baris penuh: lapangan Best XI + bangku + rincian pemain terpilih */}
-        <div className="min-w-0 lg:col-span-12">
-          <BestXiPanel xi={bestXi} />
+        {/* Baris atas: Top Form (kiri) · Best XI ±45% (tengah) · FPL News (kanan) */}
+        <div className="grid min-w-0 grid-cols-1 gap-6 lg:col-span-12 xl:grid-cols-[minmax(0,27fr)_minmax(0,46fr)_minmax(0,27fr)]">
+          <div className="min-w-0 xl:order-1">
+            <TopForm players={leaders} />
+          </div>
+          <div className="min-w-0 xl:order-2">
+            <BestXiPanel xi={bestXi} />
+          </div>
+          <div className="min-w-0 xl:order-3">
+            <NewsFeed items={news} serverNow={fetchedAt} />
+          </div>
         </div>
 
         {/* Kolom kiri: overview GW */}
@@ -115,7 +123,6 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, news, pos, s
             </div>
           </Panel>
 
-          <TopForm players={leaders} />
 
           {flagged.length > 0 && (
             <Panel title="Watch Out" subtitle="Popular players (≥5% owned) flagged as not fit">
@@ -153,7 +160,6 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, news, pos, s
 
         {/* Kolom kanan: laga + klasemen */}
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-12 lg:grid lg:grid-cols-2 xl:col-span-3 xl:flex">
-          <NewsFeed items={news} serverNow={fetchedAt} />
           <NextMatchCard live={live} next={upcoming} />
           <StandingsTable rows={standings} />
           {spotlight?.form && (

@@ -9,7 +9,7 @@ import { Panel } from "@/components/ui";
 import type { BestXi, XiPlayer } from "@/lib/data/bestxi";
 
 // Lapangan horizontal: kiper di kiri, penyerang di kanan (x dalam %).
-const LINE_X: Record<string, number> = { GKP: 8, DEF: 31, MID: 57, FWD: 83 };
+const LINE_X: Record<string, number> = { GKP: 9, DEF: 33, MID: 59, FWD: 85 };
 
 const price = (t: number) => `£${(t / 10).toFixed(1)}m`;
 const when = (iso: string | null) =>
@@ -23,25 +23,25 @@ function Card({ p, xi, active, onPick, bench = false }: { p: XiPlayer; xi: BestX
       onClick={onPick}
       aria-pressed={active}
       aria-label={`${p.name}, ${p.xpts.toFixed(1)} xPts — show details`}
-      className={`group flex w-[92px] flex-col items-center text-center ${bench ? "opacity-90" : ""}`}
+      className={`group flex w-[78px] flex-col items-center text-center ${bench ? "opacity-90" : ""}`}
     >
       <span className="relative">
-        <PlayerHeadshot name={p.name} urls={p.photos} size="cut" status={p.status} />
+        <PlayerHeadshot name={p.name} urls={p.photos} size="cutSm" status={p.status} />
         {tag && (
           <span className="absolute -right-1 top-0 grid h-5 w-5 place-items-center rounded-full bg-black text-[10px] font-bold text-white ring-2 ring-[var(--accent)]">{tag}</span>
         )}
       </span>
       <span
-        className={`-mt-1 max-w-full truncate rounded-md px-1.5 py-0.5 text-[11px] font-semibold leading-tight text-white ${active ? "bg-[var(--accent)]" : "bg-black/70 group-hover:bg-black/85"}`}
+        className={`-mt-1 max-w-full truncate rounded-md px-1 py-px text-[10px] font-semibold leading-tight text-white ${active ? "bg-[var(--accent)]" : "bg-black/70 group-hover:bg-black/85"}`}
       >
         {p.name}
       </span>
-      <span className="text-[10px] leading-tight text-white/85">
+      <span className="text-[9px] leading-tight text-white/85">
         {p.xpts.toFixed(1)} xPts · {p.opponents[0] ?? "-"}
         {p.opponents.length > 1 ? " +" : ""}
       </span>
       <span
-        className={`mt-1 grid h-7 w-7 place-items-center rounded-full bg-white/95 p-1 shadow transition ${active ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-black/40" : "group-hover:scale-110"}`}
+        className={`mt-0.5 grid h-6 w-6 place-items-center rounded-full bg-white/95 p-0.5 shadow transition ${active ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-black/40" : "group-hover:scale-110"}`}
         title={`${p.teamShort} · click for details`}
       >
         {p.teamBadge ? (
@@ -113,9 +113,9 @@ export function BestXiPanel({ xi }: { xi: BestXi | null }) {
       subtitle={`${xi.formation} · XI ${xi.xpts.toFixed(1)} xPts (captain not doubled) · ${xi.costTenths != null ? `full 15-man squad £${(xi.costTenths / 10).toFixed(1)}m of £100.0m` : "no budget"} · max 3 per club · updated ${when(xi.finishedAt)}`}
     >
       <div className="-mx-1 overflow-x-auto px-1">
-        <div className="flex min-w-[760px] gap-3">
+        <div className="flex min-w-[540px] gap-2">
           <div
-            className="relative h-[460px] flex-1 overflow-hidden rounded-2xl border border-white/10"
+            className="relative h-[480px] flex-1 overflow-hidden rounded-2xl border border-white/10"
             style={{ background: "repeating-linear-gradient(90deg, #166534 0 10%, #15803d 10% 20%)" }}
           >
             <svg viewBox="0 0 160 90" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
@@ -134,7 +134,7 @@ export function BestXiPanel({ xi }: { xi: BestXi | null }) {
                 <div
                   key={p.id}
                   className="absolute -translate-x-1/2 -translate-y-1/2"
-                  style={{ left: `${LINE_X[pos]}%`, top: `${((i + 1) / (ps.length + 1)) * 100}%` }}
+                  style={{ left: `${LINE_X[pos]}%`, top: `${((i + 0.5) / ps.length) * 100}%` }}
                 >
                   <Card p={p} xi={xi} active={sel?.id === p.id} onPick={() => setPicked(p.id)} />
                 </div>
@@ -142,7 +142,7 @@ export function BestXiPanel({ xi }: { xi: BestXi | null }) {
             )}
           </div>
           {xi.bench.length > 0 && (
-            <div className="flex w-[120px] shrink-0 flex-col items-center justify-around rounded-2xl border border-white/10 bg-white/[0.04] py-2">
+            <div className="flex w-[88px] shrink-0 flex-col items-center justify-around rounded-2xl border border-white/10 bg-white/[0.04] py-2">
               <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">Bench</p>
               {xi.bench.map((p) => (
                 <Card key={p.id} p={p} xi={xi} active={sel?.id === p.id} onPick={() => setPicked(p.id)} bench />
