@@ -50,7 +50,15 @@ def lab_champion(conn: Connection) -> tuple[str | None, dict[str, Any]]:
     if not eligible:
         return None, {}
     season = eligible[0]
-    best = max(by_season[season])
+    # Model pembanding (mis. FPL xP) tidak bisa memprediksi live → tidak boleh jadi juara.
+    usable = [
+        x
+        for x in by_season[season]
+        if not SPEC_BY_NAME.get(x[1], SPEC_BY_NAME[DEFAULT_MODEL]).params.get("benchmark")
+    ]
+    if not usable:
+        return None, {}
+    best = max(usable)
     return best[1], {"season": season, "sim_total": best[0], "gws": best[2]}
 
 
@@ -59,7 +67,7 @@ def resolve_active(conn: Connection) -> tuple[str, dict[str, Any]]:
     if name == "auto":
         champ, info = lab_champion(conn)
         return (champ or DEFAULT_MODEL), {"mode": "auto", **info}
-    if name not in SPEC_BY_NAME:
+    if name not in SPEC_BY_NAME or SPEC_BY_NAME[name].params.get("benchmark"):
         return DEFAULT_MODEL, {"mode": "fallback", "requested": name}
     return name, {"mode": "manual"}
 

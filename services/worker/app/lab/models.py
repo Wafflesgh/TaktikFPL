@@ -49,6 +49,7 @@ SPECS: list[ModelSpec] = [
         "FPL's published expected points. Benchmark only: 83% of historical values are 0 and they may be "
         "computed after the gameweek, so it is kept out of both ensembles.",
         "baseline",
+        {"benchmark": True},  # tidak boleh jadi model aktif (data tidak ada untuk prediksi live)
     ),
     ModelSpec(
         "form_fdr",

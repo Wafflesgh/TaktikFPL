@@ -300,6 +300,10 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
             if use_v1 and active != DEFAULT_MODEL
             else None
         )
+    if active != DEFAULT_MODEL and not lab_preds:
+        # Model aktif tidak menghasilkan prediksi live → tercatat jatuh ke model bawaan.
+        active_info = {**active_info, "fallback_from": active}
+        active = DEFAULT_MODEL
     if lab_preds:
         status = {int(p.id): (p.status, p.chance_next) for p in players}
         n_rows: dict[tuple[int, int], int] = defaultdict(int)

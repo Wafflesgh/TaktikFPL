@@ -197,8 +197,8 @@ def model_lab(
 @job("set_active_model")
 def set_active_model(name: str) -> dict[str, Any]:
     """Pilih model untuk proyeksi produksi: nama model lab, 'auto' (juara lab), atau 'v1_tactics' (bawaan)."""
-    if name != "auto" and name not in {s.name for s in SPECS}:
-        raise ValueError(f"model tidak dikenal: {name}")
+    if name != "auto" and name not in {s.name for s in SPECS if not s.params.get("benchmark")}:
+        raise ValueError(f"model tidak dikenal atau hanya pembanding: {name}")
     with get_engine().begin() as conn:
         conn.execute(
             text(

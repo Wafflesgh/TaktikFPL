@@ -72,3 +72,11 @@ def test_season_sim_builds_squad_and_scores():
     pts = sim.step(preds, b)
     assert len(sim.squad) == 15 and sim.bank >= 0
     assert pts == sim.total and pts > 0
+
+
+def test_benchmark_model_cannot_be_active():
+    from app.lab.models import SPEC_BY_NAME
+
+    assert SPEC_BY_NAME["fpl_xp"].params.get("benchmark") is True
+    assert "fpl_xp" not in SPEC_BY_NAME["ensemble_stack"].params["members"]
+    assert "fpl_xp" not in SPEC_BY_NAME["ensemble_mean"].params["members"]
