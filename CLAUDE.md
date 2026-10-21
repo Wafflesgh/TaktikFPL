@@ -5,6 +5,8 @@ satu pengguna utama (Dilan, Indonesia, WIB) menganalisis Fantasy Premier League 
 setiap gameweek, dengan AI Gemini (Flash di mode gratis, Gemini 4 Argon di mode berbayar)
 sebagai lapisan penalaran & narasi.
 
+**Mulai setiap sesi dengan membaca docs/TaktikFPL.md** (status terkini, infrastruktur, tool, backlog).
+
 Spesifikasi lengkap ada di docs/BLUEPRINT.md. Itu sumber kebenaran. Jika ada konflik antara kode
 dan blueprint, ikuti blueprint atau tanyakan.
 
