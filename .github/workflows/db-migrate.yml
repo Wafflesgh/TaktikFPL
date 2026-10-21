@@ -17,6 +17,10 @@ permissions:
 jobs:
   migrate:
     runs-on: ubuntu-latest
+    # Dilewati (bukan gagal) bila secret belum diisi: migrasi produksi saat ini dijalankan manual
+    # dengan `supabase db push`. Isi SUPABASE_ACCESS_TOKEN/SUPABASE_DB_PASSWORD/SUPABASE_PROJECT_REF
+    # untuk mengaktifkan migrasi otomatis lewat persetujuan environment `production`.
+    if: ${{ vars.DB_MIGRATE_ENABLED == 'true' }}
     # Buat environment "production" di GitHub → Settings → Environments,
     # aktifkan "Required reviewers" (Dilan) agar setiap migrasi produksi butuh persetujuan.
     environment: production
