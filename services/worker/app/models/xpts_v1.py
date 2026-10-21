@@ -96,6 +96,11 @@ def project_v1(p: PlayerRates, m: MatchRates, rules: dict[str, float]) -> dict[s
         "lam_opp": round(lam_opp, 3),
         # Kemudahan laga relatif terhadap laga rata-rata tim itu sendiri (dipakai untuk alasan).
         "att_mult": round(attack_mult, 3),
+        # Probabilitas per laga (untuk alasan & rincian di UI).
+        "p60": round(p60, 4),
+        "p_goal": round(1.0 - math.exp(-e_goals), 4),
+        "p_assist": round(1.0 - math.exp(-e_assists), 4),
+        "p_defcon": round(e_defcon, 4),
         "team_cs": round(math.exp(-lam_opp), 4),
         **{f"c_{k}": round(v, 3) for k, v in comps.items()},
     }

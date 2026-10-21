@@ -143,6 +143,13 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
                         out["team_cs"],
                         out["xg"] + out["xa"],
                         out["c_defcon"],
+                        out["xg"],
+                        out["xa"],
+                        out["p60"],
+                        out["p_goal"],
+                        out["p_assist"],
+                        out["p_defcon"],
+                        out["lam_team"],
                     )
                 )
                 if gw == first_gw:

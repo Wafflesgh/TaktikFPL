@@ -1,5 +1,6 @@
 import "server-only";
 import { playerPhotoUrls } from "@/lib/assets";
+import type { XptsBreakdown } from "@/components/XptsDetail";
 import type { Reason } from "@/lib/reco";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,6 +16,8 @@ export type XiPlayer = {
   /** Lawan GW itu, mis. "ARS (H)"; >1 untuk double gameweek. */
   opponents: string[];
   reasons: Reason[];
+  /** component_breakdown per laga GW itu (rincian xPts & probabilitas). */
+  breakdown: XptsBreakdown[];
 };
 
 export type BestXi = {
@@ -89,6 +92,7 @@ export async function getBestXi(): Promise<BestXi | null> {
         return `${short.get(opp) ?? "?"} (${home ? "H" : "A"})`;
       }),
       reasons: reasons ?? [],
+      breakdown: mine.map((r) => (r.component_breakdown ?? {}) as XptsBreakdown),
     };
   });
   const byId = new Map(list.map((p) => [p.id, p]));

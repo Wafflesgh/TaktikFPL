@@ -2,6 +2,15 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.15.0] — 2026-10-21 · Alasan dengan persentase + rincian xPts
+
+### Ditambahkan
+- xPts v1 mengeluarkan probabilitas per laga: main 60+ menit, mencetak gol, assist, bonus defcon.
+- Alasan memuat persentase (mis. "38% to score, 27% to assist (xG 0.48 · xA 0.31)", "92% to play 60+",
+  "top 4% of MIDs", gol yang diharapkan tim vs lawan); maks 6 alasan disimpan.
+- Web: "Full breakdown" per pemain di Best XI — xPts per sumber poin, peluang, menit, model laga
+  (gol diharapkan untuk/lawan), dan semua alasan.
+
 ## [0.14.0] — 2026-10-21 · My Team: tim baru vs tim yang sudah ada
 
 ### Ditambahkan

@@ -52,10 +52,10 @@ def test_double_gameweek_and_blank():
     assert player_reasons("MID", "a", None, None, None, [fx(9)], 8)[0]["tone"] == "bad"
 
 
-def test_max_four_reasons():
+def test_reasons_capped():
     form = {"form_label": "panas", "points_per_match": 9, "pct_underlying_pos": 0.95}
     fixtures = [fx(8, att=1.3), fx(8, att=1.2)] + [fx(g, att=1.3) for g in range(9, 14)]
-    assert len(player_reasons("MID", "d", 75, "knock", form, fixtures, 8)) == 4
+    assert len(player_reasons("MID", "d", 75, "knock", form, fixtures, 8)) == 6
 
 
 def test_best_xi_fits_budget_with_bench():
@@ -77,6 +77,30 @@ def test_best_xi_fits_budget_with_bench():
     d, m, f = (int(x) for x in xi.formation.split("-"))
     assert d + m + f == 10 and 3 <= d <= 5 and 2 <= m <= 5 and 1 <= f <= 3
     assert by[xi.captain].value >= by[xi.vice].value
+
+
+def test_reasons_carry_percentages():
+    f = FixtureView(
+        8,
+        "SHU",
+        True,
+        86.0,
+        1.3,
+        0.3,
+        xgi=0.79,
+        xg=0.48,
+        xa=0.31,
+        p60=0.92,
+        p_goal=0.38,
+        p_assist=0.27,
+        lam_team=2.1,
+    )
+    form = {"form_label": "panas", "points_per_match": 8.2, "pct_points_pos": 0.96}
+    texts = " | ".join(r["text"] for r in player_reasons("MID", "a", None, None, form, [f], 8))
+    assert "38% to score, 27% to assist" in texts
+    assert "expected 2.1 goals" in texts
+    assert "92% to play 60+" in texts
+    assert "top 4% of MIDs" in texts
 
 
 def test_defender_picked_for_defcon_and_threat():

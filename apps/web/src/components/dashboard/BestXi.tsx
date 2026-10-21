@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
 import { Reasons } from "@/components/Reasons";
+import { XptsDetail } from "@/components/XptsDetail";
 import { Panel } from "@/components/ui";
 import type { BestXi, XiPlayer } from "@/lib/data/bestxi";
 import { formatPrice, formatWIB } from "@/lib/time";
@@ -28,6 +29,7 @@ function Row({ p, xi, tag }: { p: XiPlayer; xi: BestXi; tag: string }) {
       <td className="py-2 text-right font-semibold tabular-nums">{p.xpts.toFixed(1)}</td>
       <td className="py-2 pl-4">
         <Reasons reasons={p.reasons} max={3} />
+        <XptsDetail fixtures={p.breakdown} reasons={p.reasons} />
       </td>
     </tr>
   );
