@@ -104,6 +104,14 @@ export function PlanView({ data }: { data: SeasonPlanData | null }) {
         options: c.best,
         margin: c.margin_vs_next,
       }));
+  if (!user) {
+    // Satu chip per GW juga untuk squad acuan: chip dengan nilai terbesar memilih lebih dulu.
+    const taken = new Set<number>();
+    for (const c of [...cards].sort((a, b) => (b.options[0]?.value ?? 0) - (a.options[0]?.value ?? 0))) {
+      c.pick = c.options.find((o) => !taken.has(o.gw)) ?? null;
+      if (c.pick) taken.add(c.pick.gw);
+    }
+  }
   const chipGw = new Map(cards.filter((c) => c.pick && !c.used).map((c) => [c.pick!.gw, c.label]));
   const userByGw = new Map((user?.gws ?? []).map((g) => [g.gw, g]));
 

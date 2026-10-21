@@ -73,7 +73,9 @@ export function ModelLabView({ data, season }: { data: LabData; season: string |
       </Panel>
     );
   }
-  const current = season && data.bySeason[season] ? season : data.seasons[0];
+  // Default: musim dengan GW teruji terbanyak (hasil paling bermakna).
+  const longest = [...data.seasons].sort((a, b) => (data.bySeason[b][0]?.gws ?? 0) - (data.bySeason[a][0]?.gws ?? 0))[0];
+  const current = season && data.bySeason[season] ? season : longest;
   const models = data.bySeason[current];
   const activeName = data.active?.name?.replace(/^lab:/, "") ?? "v1_tactics";
   const top3 = models.slice(0, 3).map((m) => m.model);
