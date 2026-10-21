@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const SIZES = { sm: 40, md: 56, lg: 96, xl: 260 } as const;
+const SIZES = { sm: 40, md: 56, lg: 96, cut: 72, xl: 260 } as const;
 const STATUS_RING: Record<string, string> = {
   a: "var(--status-ok)",
   d: "var(--status-doubt)",
@@ -23,7 +23,8 @@ type Props = {
 
 /**
  * Foto pemain. sm/md/lg: lingkaran (crop kepala & bahu) dengan cincin status FPL.
- * xl: potongan besar tanpa lingkaran untuk hero (ref-02). Fallback: inisial.
+ * xl: potongan besar tanpa lingkaran untuk hero (ref-02); cut: potongan kecil tanpa lingkaran (lapangan Best XI).
+ * Fallback: inisial.
  */
 export function PlayerHeadshot({ name, urls, size = "md", status, teamColor }: Props) {
   const [index, setIndex] = useState(0);
@@ -45,6 +46,24 @@ export function PlayerHeadshot({ name, urls, size = "md", status, teamColor }: P
     .slice(0, 2)
     .toUpperCase();
   const src = urls[index];
+
+  if (size === "cut") {
+    return src ? (
+      // eslint-disable-next-line @next/next/no-img-element -- URL CDN dinamis + fallback berantai
+      <img
+        ref={imgRef}
+        src={src}
+        alt={name}
+        width={px}
+        height={px}
+        loading="lazy"
+        className="h-[72px] w-[72px] object-contain object-bottom drop-shadow-[0_6px_10px_rgba(0,0,0,0.55)]"
+        onError={(e) => advance(e.currentTarget.getAttribute("src"))}
+      />
+    ) : (
+      <span className="grid h-[72px] w-[72px] place-items-center font-display text-2xl text-white/80">{initials}</span>
+    );
+  }
 
   if (size === "xl") {
     return src ? (

@@ -64,6 +64,11 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, news, pos, s
       <TopBar displayName={displayName} isAdmin={isAdmin} liveCount={live.length} />
 
       <main className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Baris penuh: lapangan Best XI + bangku + rincian pemain terpilih */}
+        <div className="min-w-0 lg:col-span-12">
+          <BestXiPanel xi={bestXi} />
+        </div>
+
         {/* Kolom kiri: overview GW */}
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-4 xl:col-span-3">
           <Panel
@@ -136,7 +141,6 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, news, pos, s
 
         {/* Kolom tengah: hero + jadwal + pemain */}
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-8 xl:col-span-6">
-          <BestXiPanel xi={bestXi} />
           <Spotlight player={spotlight} />
           <Panel
             title={next ? `GW${next.number} Fixtures` : "Fixtures"}

@@ -1,5 +1,5 @@
 import "server-only";
-import { playerPhotoUrls } from "@/lib/assets";
+import { playerPhotoUrls, teamBadgeUrl } from "@/lib/assets";
 import type { XptsBreakdown } from "@/components/XptsDetail";
 import type { Reason } from "@/lib/reco";
 import { createClient } from "@/lib/supabase/server";
@@ -9,6 +9,8 @@ export type XiPlayer = {
   name: string;
   position: string;
   teamShort: string;
+  teamId: number | null;
+  teamBadge: string | null;
   priceTenths: number;
   status: string | null;
   photos: string[];
@@ -61,7 +63,7 @@ export async function getBestXi(): Promise<BestXi | null> {
       .from("v_player_current")
       .select("id, web_name, fpl_code, photo_url_resolved, team_id, team_short_name, fpl_position, status, price_tenths")
       .in("id", ids),
-    supabase.from("teams").select("id, short_name"),
+    supabase.from("teams").select("id, short_name, fpl_team_code"),
   ]);
   const gwRows = (proj ?? []).filter((r) => (r.component_breakdown as { gw?: number } | null)?.gw === xi.gw);
   const { data: fixtures } = await supabase
@@ -70,6 +72,7 @@ export async function getBestXi(): Promise<BestXi | null> {
     .in("id", [...new Set(gwRows.map((r) => r.fixture_id))]);
   const fx = new Map((fixtures ?? []).map((f) => [f.id, f]));
   const short = new Map((teams ?? []).map((t) => [t.id, t.short_name ?? "?"]));
+  const badge = new Map((teams ?? []).map((t) => [t.id, teamBadgeUrl(t.fpl_team_code)]));
 
   const list: XiPlayer[] = (players ?? []).map((p) => {
     const mine = gwRows.filter((r) => r.player_id === p.id);
@@ -81,6 +84,8 @@ export async function getBestXi(): Promise<BestXi | null> {
       name: p.web_name ?? "?",
       position: p.fpl_position ?? "?",
       teamShort: p.team_short_name ?? "?",
+      teamId: p.team_id,
+      teamBadge: p.team_id != null ? (badge.get(p.team_id) ?? null) : null,
       priceTenths: p.price_tenths ?? 0,
       status: p.status,
       photos: playerPhotoUrls(p.fpl_code, p.photo_url_resolved),

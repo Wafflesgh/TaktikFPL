@@ -29,12 +29,21 @@ const n = (v: unknown) => (typeof v === "number" ? v : Number(v ?? 0));
 /** Gabungkan laga satu GW (DGW = jumlah xPts; probabilitas ditampilkan per laga pertama). */
 export function XptsDetail({ fixtures, reasons }: { fixtures: XptsBreakdown[]; reasons: Reason[] }) {
   if (!fixtures.length) return null;
-  const sum = (k: string) => fixtures.reduce((s, f) => s + n(f[k]), 0);
-  const first = fixtures[0];
   return (
     <details className="mt-1 text-xs">
       <summary className="cursor-pointer text-[var(--text-muted)] hover:text-white">Full breakdown</summary>
-      <div className="mt-2 grid gap-3 rounded-xl bg-black/20 p-3 sm:grid-cols-3">
+      <XptsBreakdownBody fixtures={fixtures} reasons={reasons} className="mt-2" />
+    </details>
+  );
+}
+
+/** Isi rincian (tanpa expand): sumber xPts, peluang, model laga, dan semua alasan. */
+export function XptsBreakdownBody({ fixtures, reasons, className = "" }: { fixtures: XptsBreakdown[]; reasons: Reason[]; className?: string }) {
+  if (!fixtures.length) return null;
+  const sum = (k: string) => fixtures.reduce((s, f) => s + n(f[k]), 0);
+  const first = fixtures[0];
+  return (
+      <div className={`grid gap-3 rounded-xl bg-black/20 p-3 text-xs sm:grid-cols-3 ${className}`}>
         <div>
           <p className="mb-1 font-semibold">xPts by source</p>
           <table className="w-full tabular-nums">
@@ -114,6 +123,5 @@ export function XptsDetail({ fixtures, reasons }: { fixtures: XptsBreakdown[]; r
           </div>
         )}
       </div>
-    </details>
   );
 }
