@@ -2,6 +2,17 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.9.0] — 2026-10-21 · Tanpa login (keputusan Dilan)
+
+### Diubah
+- Login magic link dihapus: halaman `/login`, rute `/auth/*`, `proxy.ts` dan tombol Keluar.
+  Migrasi `20261021000300_public_read.sql`: role `anon` boleh MEMBACA data FPL/analisis, view, dan status
+  worker (`job_runs`, `api_usage`); data milik pengguna & tabel privat/biaya AI tetap tertutup.
+  Test pgTAP disesuaikan (anon membaca players, tidak membaca watchlist).
+- Preferensi (nama, tema, profil risiko) disimpan di cookie browser; `/admin/health` tanpa cek login.
+- `DATABASE_URL` diperbaiki otomatis (password berkarakter khusus/kurung siku); `db-migrate` hanya jalan
+  bila variabel `DB_MIGRATE_ENABLED=true`.
+
 ## [0.8.0] — 2026-10-21 · Pengaturan, Analisis harga, diagnostik worker
 
 ### Ditambahkan (diagnostik)

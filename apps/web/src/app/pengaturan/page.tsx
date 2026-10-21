@@ -13,7 +13,7 @@ async function getLiveCount(): Promise<number> {
   return count ?? 0;
 }
 
-/** Pengaturan akun: nama tampilan, tema, profil risiko (kolom preferensi public.users). */
+/** Pengaturan: nama tampilan, tema, profil risiko (cookie browser). */
 export default async function PengaturanPage() {
   const [viewer, liveCount] = await Promise.all([getViewer(), getLiveCount()]);
 
@@ -24,7 +24,7 @@ export default async function PengaturanPage() {
       <main className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-6">
         <div>
           <h1 className="font-display text-4xl uppercase lg:text-5xl">Pengaturan</h1>
-          <p className="text-sm text-[var(--text-muted)]">Preferensi tampilan dan gaya bermain. Tersimpan di akun Anda.</p>
+          <p className="text-sm text-[var(--text-muted)]">Preferensi tampilan dan gaya bermain. Tersimpan di browser ini.</p>
         </div>
         <SettingsForm
           initial={{

@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { BottomNav } from "@/components/shell/NavLinks";
 import { TopBar } from "@/components/shell/TopBar";
-import { redirect } from "next/navigation";
+import { getViewer } from "@/lib/data/viewer";
 import { createClient } from "@/lib/supabase/server";
 import { formatWIB, minutesSince } from "@/lib/time";
 import { workerFetch } from "@/lib/worker";
@@ -26,21 +25,9 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default async function AdminHealthPage() {
   const supabase = await createClient();
-  const { data: claims } = await supabase.auth.getClaims();
-  const userId = claims?.claims?.sub;
-  if (!userId) redirect("/login");
+  const viewer = await getViewer();
 
-  const { data: me } = await supabase.from("users").select("is_admin, display_name").eq("id", userId).maybeSingle();
-  if (!me?.is_admin) {
-    return (
-      <main className="mx-auto max-w-3xl px-4 py-10">
-        <p>Halaman ini khusus admin.</p>
-        <Link href="/" className="underline">Kembali</Link>
-      </main>
-    );
-  }
-
-  // RLS: job_runs hanya bisa dibaca admin.
+  // Status worker (job_runs) terbaca publik; tidak memuat rahasia.
   const [{ data: jobs }, worker] = await Promise.all([
     supabase.from("job_runs").select("id, job_name, status, started_at, finished_at, error").order("id", { ascending: false }).limit(40),
     workerFetch<WorkerHealth>("/v1/health"),
@@ -48,7 +35,7 @@ export default async function AdminHealthPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
-      <TopBar displayName={me.display_name ?? "Admin"} isAdmin liveCount={0} />
+      <TopBar displayName={viewer.displayName} isAdmin liveCount={0} />
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <h1 className="font-display text-3xl uppercase">Admin · Health</h1>
 

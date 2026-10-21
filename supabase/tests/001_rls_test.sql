@@ -24,9 +24,11 @@ select is((select is_admin from public.users where id = '00000000-0000-0000-0000
 select is((select is_admin from public.users where id = '00000000-0000-0000-0000-0000000000b2'), false,
   'pengguna kedua bukan admin');
 
--- Anonim: tidak bisa membaca apa pun
+-- Anonim (aplikasi tanpa login): boleh membaca data FPL, tidak boleh membaca data pengguna
 set local role anon;
-select is((select count(*) from public.players)::int, 0, 'anon tidak bisa membaca players');
+select ok((select count(*) from public.players where web_name = 'TestP')::int = 1
+          and (select count(*) from public.user_watchlist)::int = 0,
+  'anon membaca players tetapi tidak watchlist');
 reset role;
 
 -- Pengguna biasa
