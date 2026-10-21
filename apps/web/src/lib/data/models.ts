@@ -8,6 +8,7 @@ export type ModelSeason = {
   label: string;
   idea: string;
   kind: string;
+  benchmark: boolean;
   gws: number;
   simTotal: number;
   simPerGw: number;
@@ -77,6 +78,7 @@ export async function getLabData(): Promise<LabData> {
         label: String(meta.label ?? model),
         idea: String(meta.idea ?? ""),
         kind: String(meta.kind ?? ""),
+        benchmark: Boolean(meta.benchmark) || model === "fpl_xp",
         gws: totals.length,
         simTotal: last.value,
         simPerGw: last.value / totals.length,

@@ -72,8 +72,14 @@ def model_lab(
     learner = StackLearner(stack_members)
     # Label & pertimbangan tiap model ikut disimpan (web membaca model_evaluations, bukan app_config).
     meta = {
-        s.name: {"label": s.label, "idea": s.idea, "kind": s.kind} for s in SPECS
-    }  # bobot dipelajari lintas musim, berurutan waktu
+        s.name: {
+            "label": s.label,
+            "idea": s.idea,
+            "kind": s.kind,
+            "benchmark": bool(s.params.get("benchmark")),
+        }
+        for s in SPECS
+    }
     summary: dict[str, dict[str, float]] = {}
     started = time.monotonic()
     weights: dict[str, float] | None = None

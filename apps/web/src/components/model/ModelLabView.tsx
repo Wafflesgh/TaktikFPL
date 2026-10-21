@@ -78,9 +78,9 @@ export function ModelLabView({ data, season }: { data: LabData; season: string |
   const current = season && data.bySeason[season] ? season : longest;
   const models = data.bySeason[current];
   const activeName = data.active?.name?.replace(/^lab:/, "") ?? "v1_tactics";
-  const top3 = models.slice(0, 3).map((m) => m.model);
+  const top3 = models.filter((m) => !m.benchmark).slice(0, 3).map((m) => m.model);
   const highlight = top3.includes(activeName) ? top3 : [...top3, activeName];
-  const best = models[0];
+  const best = models.find((m) => !m.benchmark) ?? models[0];
   const bestBy = (key: keyof ModelSeason, dir: 1 | -1) =>
     models.reduce<ModelSeason | null>((b, m) => (m[key] == null ? b : !b || dir * ((m[key] as number) - (b[key] as number)) > 0 ? m : b), null)?.model;
   const bestFh = bestBy("fhTotal", 1);
@@ -144,6 +144,7 @@ export function ModelLabView({ data, season }: { data: LabData; season: string |
                       {m.label}
                       {m.model === activeName && <span className="ml-2 rounded-full bg-[var(--accent)] px-2 text-[10px] text-white">in use</span>}
                       {m.kind === "ensemble" && <span className="ml-2 rounded-full bg-white/10 px-2 text-[10px]">ensemble</span>}
+                      {m.benchmark && <span className="ml-2 rounded-full bg-amber-500/20 px-2 text-[10px] text-amber-200">benchmark only</span>}
                     </p>
                     <p className="text-xs text-[var(--text-muted)]">{m.idea}</p>
                   </td>
