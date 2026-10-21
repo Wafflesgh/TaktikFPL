@@ -1,8 +1,8 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { playerPhotoUrls } from "@/lib/assets";
-import { getEntry, getPicks } from "@/lib/fpl";
-import { bestTransfers, holdNotes, horizonOf, type ProjPlayer, type Reason } from "@/lib/reco";
+import { getEntry, getHistory, getPicks } from "@/lib/fpl";
+import { estimateFreeTransfers, holdNotes, horizonOf, MAX_FREE_TRANSFERS, planTransfers, type ProjPlayer, type Reason } from "@/lib/reco";
 import { createClient } from "@/lib/supabase/server";
 
 export const ENTRY_COOKIE = "tfpl_entry";
@@ -102,7 +102,8 @@ export async function getEntryId(): Promise<number | null> {
   return Number.isInteger(n) && n > 0 ? n : null;
 }
 
-export async function getTimData(entryId: number | null) {
+/** ftOverride: jumlah free transfer yang diisi pengguna (menimpa estimasi dari riwayat). */
+export async function getTimData(entryId: number | null, ftOverride: number | null = null) {
   const proj = await loadProjections();
   if (!proj) return { status: "no_projections" as const };
   const pool = await loadPool(proj.byPlayer, proj.firstGw, proj.reasons);
@@ -131,7 +132,7 @@ export async function getTimData(entryId: number | null) {
   const entry = await getEntry(entryId);
   if (!entry) return { status: "entry_not_found" as const, entryId, ...base };
   const gw = entry.current_event;
-  const picks = gw ? await getPicks(entryId, gw) : null;
+  const [picks, history] = await Promise.all([gw ? getPicks(entryId, gw) : null, getHistory(entryId)]);
   if (!picks) return { status: "no_picks" as const, entry, ...base };
 
   const byElement = new Map(pool.filter((p) => p.elementId != null).map((p) => [p.elementId as number, p]));
@@ -146,7 +147,11 @@ export async function getTimData(entryId: number | null) {
     .sort((a, b) => a.slot - b.slot);
 
   const bank = picks.entry_history.bank;
-  const transfers = bestTransfers(squad, pool, bank);
+  const ftEstimate = estimateFreeTransfers(entry.started_event, proj.firstGw, history?.current ?? [], history?.chips ?? []);
+  // Tim baru yang belum melewati deadline pertama: perubahan bebas → anggap transfer gratis tak terbatas.
+  const freeTransfers = ftOverride ?? ftEstimate ?? 15;
+  const plans = planTransfers(squad, pool, bank, freeTransfers, Math.min(15, Math.max(3, freeTransfers + 1)));
+  const bestPlan = plans.reduce((a, b) => (b.net > a.net + 0.5 ? b : a), plans[0]);
   const notes = holdNotes(squad, proj.firstGw);
   const starters = squad.filter((p) => p.isStarter).sort((a, b) => b.next - a.next);
 
@@ -157,7 +162,12 @@ export async function getTimData(entryId: number | null) {
     picksGw: gw,
     bankTenths: bank,
     squad,
-    transfers,
+    plans,
+    bestPlan,
+    freeTransfers,
+    ftEstimate,
+    ftOverridden: ftOverride != null,
+    maxFreeTransfers: MAX_FREE_TRANSFERS,
     notes,
     captain: starters[0] ?? null,
     vice: starters[1] ?? null,

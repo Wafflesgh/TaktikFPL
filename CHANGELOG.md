@@ -2,6 +2,16 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.14.0] — 2026-10-21 · My Team: tim baru vs tim yang sudah ada
+
+### Ditambahkan
+- `/tim` punya dua mode: **Start a new team** (15 pemain gratis, tanpa hit; squad 6 GW + alternatif) dan
+  **I already have a team** (Team ID → squad, kapten, rencana transfer, catatan, opsi Wildcard).
+- Rencana transfer multi-transfer (greedy, budget + bank + maks 3/klub): opsi 0..N transfer dengan gain 6 GW,
+  hit −4 untuk transfer di luar free transfer, dan net; opsi terbaik ditandai.
+- Free transfer diestimasi dari riwayat entry FPL (+1/GW, maks 5, Wildcard/Free Hit tidak mengubah; tim baru
+  sebelum deadline pertama = tak terbatas) dan bisa dikoreksi pengguna (`?ft=`).
+
 ## [0.13.0] — 2026-10-21 · Alasan pemilihan, Best XI di Beranda, proyeksi ulang saat berita cedera
 
 ### Ditambahkan

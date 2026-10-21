@@ -22,6 +22,7 @@ export type FplEntry = {
   summary_overall_points: number | null;
   summary_overall_rank: number | null;
   current_event: number | null;
+  started_event: number | null;
 };
 
 export type FplPick = { element: number; position: number; multiplier: number; is_captain: boolean; is_vice_captain: boolean };
@@ -31,5 +32,11 @@ export type FplPicks = {
   picks: FplPick[];
 };
 
+export type FplHistory = {
+  current: { event: number; event_transfers: number; event_transfers_cost: number }[];
+  chips: { name: string; event: number }[];
+};
+
 export const getEntry = (id: number) => get<FplEntry>(`entry/${id}/`);
 export const getPicks = (id: number, gw: number) => get<FplPicks>(`entry/${id}/event/${gw}/picks/`);
+export const getHistory = (id: number) => get<FplHistory>(`entry/${id}/history/`);

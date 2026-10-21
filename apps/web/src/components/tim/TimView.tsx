@@ -158,26 +158,174 @@ function Alternatives({ data }: { data: Ready }) {
   );
 }
 
-export function TimView({ data, entryId }: { data: TimData; entryId: number | null }) {
+export type TimMode = "new" | "existing";
+
+function ModeTabs({ mode }: { mode: TimMode }) {
+  const tab = (m: TimMode, label: string, hint: string) => (
+    <Link
+      href={`/tim?mode=${m}`}
+      className={`flex-1 rounded-2xl px-4 py-3 ${mode === m ? "bg-[var(--accent)] text-white" : "bg-white/5 hover:bg-white/10"}`}
+    >
+      <p className="font-semibold">{label}</p>
+      <p className={`text-xs ${mode === m ? "text-white/80" : "text-[var(--text-muted)]"}`}>{hint}</p>
+    </Link>
+  );
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row">
+      {tab("new", "Start a new team", "Pick all 15 players at once: free, no transfer cost")}
+      {tab("existing", "I already have a team", "Transfers use your free transfers; extra ones cost −4")}
+    </div>
+  );
+}
+
+type Ok = Extract<TimData, { status: "ok" }>;
+
+function TransferPlanPanel({ data }: { data: Ok }) {
+  const { firstGw, horizonGw, plans, bestPlan, freeTransfers, ftEstimate } = data;
+  const unlimited = ftEstimate == null && !data.ftOverridden;
+  return (
+    <Panel
+      title="Transfer plan"
+      subtitle={`GW${firstGw} · gain = xPts over ${horizonGw} GWs (0.85 weight per GW) · each transfer beyond your free ones costs −4`}
+    >
+      <form method="get" action="/tim" className="mb-3 flex flex-wrap items-end gap-2 text-sm">
+        <input type="hidden" name="mode" value="existing" />
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-[var(--text-muted)]">
+            Free transfers{" "}
+            {unlimited ? "(new team: unlimited before its first deadline)" : ftEstimate != null ? `(estimated ${ftEstimate} from your history)` : ""}
+          </span>
+          <input
+            name="ft"
+            type="number"
+            min={0}
+            max={data.maxFreeTransfers}
+            defaultValue={unlimited ? "" : freeTransfers}
+            placeholder={unlimited ? "∞" : undefined}
+            className="w-24 rounded-xl border border-[var(--glass-border)] bg-black/30 px-3 py-1.5"
+          />
+        </label>
+        <button type="submit" className="rounded-full bg-white/10 px-4 py-1.5 hover:bg-white/20">
+          Update
+        </button>
+      </form>
+
+      <table className="mb-3 w-full text-sm">
+        <thead className="text-xs text-[var(--text-muted)]">
+          <tr>
+            <th className="py-1 text-left">Option</th>
+            <th className="text-right">Gain</th>
+            <th className="text-right">Hit</th>
+            <th className="text-right">Net</th>
+          </tr>
+        </thead>
+        <tbody>
+          {plans.map((p) => {
+            const best = p === bestPlan;
+            const n = p.transfers.length;
+            return (
+              <tr key={n} className={`border-t border-white/5 tabular-nums ${best ? "font-semibold text-green-300" : ""}`}>
+                <td className="py-1">
+                  {n === 0 ? "Roll (no transfer)" : `${n} transfer${n > 1 ? "s" : ""}`}
+                  {best ? " ← best" : ""}
+                </td>
+                <td className="text-right">+{p.gainHorizon.toFixed(1)}</td>
+                <td className="text-right">{p.hits ? `−${p.hits * 4}` : "0"}</td>
+                <td className="text-right">
+                  {p.net >= 0 ? "+" : ""}
+                  {p.net.toFixed(1)}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {bestPlan.transfers.length === 0 ? (
+        <p className="text-sm text-[var(--text-muted)]">No transfer clearly beats rolling: save your free transfer.</p>
+      ) : (
+        <ol className="flex flex-col gap-3 text-sm">
+          {bestPlan.transfers.map((t, i) => (
+            <li key={t.out.id} className="rounded-xl bg-white/5 p-3">
+              <p className="font-semibold">
+                {i + 1}. {t.out.name} →{" "}
+                <Link href={`/pemain/${t.in.id}`} className="text-[var(--accent)] hover:underline">
+                  {t.in.name}
+                </Link>
+                {i >= freeTransfers && <span className="ml-2 rounded-full bg-red-500/20 px-2 text-xs text-red-200">−4 hit</span>}
+              </p>
+              <p className="text-xs text-[var(--text-muted)]">
+                {t.in.teamShort} · {formatPrice(t.in.priceTenths)} · bank after {formatPrice(t.budgetLeftTenths)}
+              </p>
+              <p className="mt-1">
+                <span className="text-green-300">+{t.gainHorizon.toFixed(1)} xPts</span> over {horizonGw} GWs
+                <span className="text-[var(--text-muted)]">
+                  {" "}
+                  · GW{firstGw}: {t.gainNext >= 0 ? "+" : ""}
+                  {t.gainNext.toFixed(1)}
+                </span>
+              </p>
+              <Reasons reasons={t.in.reasons} max={3} className="mt-2" />
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="mt-3 text-xs text-[var(--text-muted)]">
+        FPL&apos;s public API doesn&apos;t show free transfers, so the number is estimated from your transfer history. Correct it above if
+        needed. Selling price assumed = current price.
+      </p>
+    </Panel>
+  );
+}
+
+export function TimView({ data, entryId, mode }: { data: TimData; entryId: number | null; mode: TimMode }) {
   if (data.status === "no_projections") {
     return (
       <Panel title="My Team">
-        <p className="text-sm text-[var(--text-muted)]">Projections not available yet — the worker computes them daily (run_projections job).</p>
+        <p className="text-sm text-[var(--text-muted)]">Projections not available yet. The worker computes them daily (run_projections job).</p>
       </Panel>
     );
   }
   const { firstGw, horizonGw } = data;
   const lastGw = firstGw + horizonGw - 1;
 
+  if (mode === "new") {
+    return (
+      <main className="flex flex-col gap-6">
+        <ModeTabs mode={mode} />
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+          <div className="flex min-w-0 flex-col gap-6 xl:col-span-8">
+            <StartingSquad data={data} />
+          </div>
+          <div className="flex min-w-0 flex-col gap-6 xl:col-span-4">
+            <Panel title="How a new team works" subtitle="Different from transferring in an existing team">
+              <ul className="list-disc space-y-1 pl-5 text-sm text-[var(--text-muted)]">
+                <li>You pick all 15 players at once for free: no transfer cost, no −4 hits.</li>
+                <li>Until your first deadline (GW{firstGw}) you can change them as often as you like.</li>
+                <li>After that you get free transfers each gameweek; extra transfers cost −4 points each.</li>
+                <li>
+                  This squad is optimised for GW{firstGw}–{lastGw}, not just one week. The Best XI on Home is for GW{firstGw} only.
+                </li>
+              </ul>
+            </Panel>
+            <Alternatives data={data} />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <main className="flex flex-col gap-6">
+      <ModeTabs mode={mode} />
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
       <div className="flex min-w-0 flex-col gap-6 xl:col-span-8">
         <Panel
           title={data.status === "ok" ? data.entry.name : "My Team"}
           subtitle={
             data.status === "ok"
               ? `${data.entry.player_first_name} ${data.entry.player_last_name} · squad GW${data.picksGw} · bank ${formatPrice(data.bankTenths)} · rank ${data.entry.summary_overall_rank?.toLocaleString("en-GB") ?? "-"}`
-              : "Enter your FPL Team ID to see your squad and recommendations"
+              : "Enter your FPL Team ID to see your squad and transfer plan"
           }
         >
           <EntryForm
@@ -191,8 +339,6 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
             }
           />
         </Panel>
-
-        {data.status !== "ok" && <StartingSquad data={data} />}
 
         {data.status === "ok" && (
           <Panel
@@ -253,33 +399,7 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
               )}
             </Panel>
 
-            <Panel title="Transfer recommendations" subtitle={`Based on total xPts for GW${firstGw}–${lastGw} (0.85 weight per GW), not just next GW`}>
-              {data.transfers.length === 0 ? (
-                <p className="text-sm text-[var(--text-muted)]">No clearly better transfer — save your free transfer.</p>
-              ) : (
-                <ol className="flex flex-col gap-3 text-sm">
-                  {data.transfers.map((t, i) => (
-                    <li key={t.out.id} className="rounded-xl bg-white/5 p-3">
-                      <p className="font-semibold">
-                        {i + 1}. {t.out.name} → <Link href={`/pemain/${t.in.id}`} className="text-[var(--accent)] hover:underline">{t.in.name}</Link>
-                      </p>
-                      <p className="text-xs text-[var(--text-muted)]">
-                        {t.in.teamShort} · {formatPrice(t.in.priceTenths)} · bank left {formatPrice(t.budgetLeftTenths)}
-                      </p>
-                      <p className="mt-1">
-                        <span className="text-green-300">+{t.gainHorizon.toFixed(1)} xPts</span> over {horizonGw} GWs
-                        <span className="text-[var(--text-muted)]"> · GW{firstGw}: {t.gainNext >= 0 ? "+" : ""}{t.gainNext.toFixed(1)}</span>
-                      </p>
-                      <Reasons reasons={t.in.reasons} max={3} className="mt-2" />
-                      {t.gainHorizon < 4 && (
-                        <p className="text-xs text-amber-300">Only worth it with a free transfer (a −4 hit isn&apos;t covered).</p>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              )}
-              <p className="mt-3 text-xs text-[var(--text-muted)]">Selling price assumed = current price; your FPL selling price may be slightly lower.</p>
-            </Panel>
+            <TransferPlanPanel data={data} />
 
             {data.notes.length > 0 && (
               <Panel title="Player notes" subtitle="Consider the fixture run, not a single GW">
@@ -296,10 +416,8 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
           </>
         )}
 
-        {data.status !== "ok" && <Alternatives data={data} />}
-
         {data.status === "ok" && data.optimal && (
-          <Panel title="Build from scratch (wildcard)" subtitle={`${data.optimal.title} · £${(data.optimal.costTenths / 10).toFixed(1)}m`}>
+          <Panel title="If you play your Wildcard" subtitle={`${data.optimal.title} · £${(data.optimal.costTenths / 10).toFixed(1)}m`}>
             <ul className="flex flex-col gap-1 text-sm">
               {POS_ORDER.flatMap((pos) =>
                 data.optimalPlayers
@@ -320,10 +438,11 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
               )}
             </ul>
             <p className="mt-3 text-xs text-[var(--text-muted)]">
-              ILP optimisation: £100.0m budget, 2-5-5-3, max 3 per club, maximising {horizonGw}-GW xPts.
+              All 15 changed for free with the Wildcard chip. Your real budget is squad value + bank, not exactly £100.0m.
             </p>
           </Panel>
         )}
+      </div>
       </div>
     </main>
   );

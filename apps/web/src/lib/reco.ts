@@ -100,3 +100,84 @@ export function holdNotes(squad: ProjPlayer[], firstGw: number): HoldNote[] {
   }
   return notes;
 }
+
+// Aturan transfer FPL (musim 2024/25+). API publik tidak menyediakan jumlah free transfer,
+// jadi ini hanya untuk ESTIMASI — pengguna bisa mengoreksi angkanya di UI.
+export const MAX_FREE_TRANSFERS = 5;
+export const HIT_COST = 4;
+const KEEP_FT_CHIPS = new Set(["wildcard", "freehit"]);
+
+/**
+ * Estimasi free transfer untuk GW `nextGw` dari riwayat entry: +1 per GW (maks 5), dikurangi transfer
+ * yang dipakai; GW dengan Wildcard/Free Hit tidak mengubah jumlahnya. null = tim baru yang belum
+ * melewati deadline pertamanya (squad bisa diubah bebas tanpa biaya).
+ */
+export function estimateFreeTransfers(
+  startedEvent: number | null,
+  nextGw: number,
+  history: { event: number; event_transfers: number }[],
+  chips: { name: string; event: number }[],
+): number | null {
+  if (startedEvent == null || startedEvent >= nextGw) return null;
+  const used = new Map(history.map((h) => [h.event, h.event_transfers]));
+  const chipGw = new Set(chips.filter((c) => KEEP_FT_CHIPS.has(c.name)).map((c) => c.event));
+  let ft = 1;
+  for (let gw = startedEvent + 1; gw < nextGw; gw++) {
+    if (chipGw.has(gw)) continue;
+    ft = Math.min(MAX_FREE_TRANSFERS, Math.max(0, ft - (used.get(gw) ?? 0)) + 1);
+  }
+  return ft;
+}
+
+export type TransferPlan = {
+  transfers: TransferIdea[];
+  hits: number;
+  gainHorizon: number;
+  gainNext: number;
+  /** gain horizon − biaya hit. */
+  net: number;
+};
+
+/**
+ * Rencana 0..maxTransfers transfer (greedy: transfer terbaik satu per satu, squad & bank diperbarui).
+ * Transfer ke-(FT+1) dst. kena hit −4; rencana terbaik = net tertinggi.
+ */
+export function planTransfers(
+  squad: ProjPlayer[],
+  pool: ProjPlayer[],
+  bankTenths: number,
+  freeTransfers: number,
+  maxTransfers = Math.max(3, freeTransfers + 1),
+): TransferPlan[] {
+  const plans: TransferPlan[] = [{ transfers: [], hits: 0, gainHorizon: 0, gainNext: 0, net: 0 }];
+  let current = [...squad];
+  let bank = bankTenths;
+  const sold = new Set<number>();
+  const done: TransferIdea[] = [];
+  for (let k = 1; k <= maxTransfers; k++) {
+    const bought = new Set(done.map((t) => t.in.id));
+    const next = bestTransfers(
+      current.filter((p) => !bought.has(p.id)),
+      pool.filter((p) => !sold.has(p.id)),
+      bank,
+    ).find((t) => !current.some((p) => p.id === t.in.id));
+    if (!next) break;
+    // bestTransfers hanya melihat squad tanpa pemain yang baru dibeli → cek ulang batas klub & budget.
+    const clubAfter = current.filter((p) => p.teamId === next.in.teamId && p.id !== next.out.id).length + 1;
+    if (clubAfter > 3) break;
+    done.push(next);
+    sold.add(next.out.id);
+    current = current.map((p) => (p.id === next.out.id ? next.in : p));
+    bank = bank + next.out.priceTenths - next.in.priceTenths;
+    const hits = Math.max(0, k - freeTransfers);
+    const gainHorizon = done.reduce((s, t) => s + t.gainHorizon, 0);
+    plans.push({
+      transfers: [...done],
+      hits,
+      gainHorizon,
+      gainNext: done.reduce((s, t) => s + t.gainNext, 0),
+      net: gainHorizon - hits * HIT_COST,
+    });
+  }
+  return plans;
+}
