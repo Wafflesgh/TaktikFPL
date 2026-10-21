@@ -1,6 +1,6 @@
 import { FormBadge } from "@/components/FormBadge";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
-import { TeamBadge } from "@/components/ui";
+import { TeamBadge, TeamLink } from "@/components/ui";
 import type { ProfilePlayer, SeasonSummary } from "@/lib/data/player";
 import { formatPrice, formatWIB } from "@/lib/time";
 
@@ -56,7 +56,7 @@ export function PlayerHero({
 
             <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
               {player.team && <TeamBadge url={player.team.badge} short={player.team.short} size={32} />}
-              <span className="font-medium">{player.team?.name ?? "Tanpa klub"}</span>
+              <TeamLink team={player.team} className="font-medium">{player.team?.name ?? "No club"}</TeamLink>
               {[player.position, formatPrice(player.priceTenths), player.ownedPct != null ? `${player.ownedPct}% owned` : "owned -"]
                 .filter(Boolean)
                 .map((v) => (

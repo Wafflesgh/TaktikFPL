@@ -9,3 +9,6 @@ export const FORM_LABELS: Record<string, { text: string; className: string }> = 
 };
 
 export const FORM_ORDER = ["panas", "bagus", "stabil", "menurun", "dingin", "minim_menit"];
+
+/** Label form dari worker (kunci internal) → teks UI English, huruf kecil untuk kalimat. */
+export const formText = (label: string | null | undefined): string | null => (label ? (FORM_LABELS[label]?.text ?? label).toLowerCase() : null);

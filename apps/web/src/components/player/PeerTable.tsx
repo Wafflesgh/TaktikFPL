@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { FormBadge } from "@/components/FormBadge";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
+import { TeamLink } from "@/components/ui";
 import type { Peer } from "@/lib/data/playerDetail";
 
 type Col = {
@@ -80,7 +81,7 @@ export function PeerTable({ peers, playerId, position }: { peers: Peer[]; player
                           {p.webName}
                         </Link>
                         <span className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
-                          {p.team?.short ?? "-"} <FormBadge label={p.formLabel} />
+                          <TeamLink team={p.team}>{p.team?.short ?? "-"}</TeamLink> <FormBadge label={p.formLabel} />
                         </span>
                       </div>
                     </div>

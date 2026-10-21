@@ -291,8 +291,79 @@ export type Database = {
           },
         ]
       >;
+      team_match_stats: Table<{
+        fixture_id: number;
+        team_id: number;
+        source: string;
+        xg: number | null;
+        xga: number | null;
+        ppda: number | null;
+        deep_completions: number | null;
+        extra: Json | null;
+      }>;
+      team_style_profiles: Table<{
+        team_id: number;
+        as_of: string;
+        window_label: string;
+        metrics: Json;
+        style_tags: Json;
+      }>;
+      shots: Table<{
+        id: number;
+        fixture_id: number;
+        player_id: number | null;
+        team_id: number | null;
+        minute: number | null;
+        xg: number | null;
+        result: string | null;
+        situation: string | null;
+        shot_type: string | null;
+        last_action: string | null;
+        assist_player_id: number | null;
+      }>;
+      managers: Table<{
+        id: number;
+        full_name: string;
+        nationality: string | null;
+        birth_date: string | null;
+        wikidata_id: string | null;
+        photo_url: string | null;
+      }>;
+      manager_tenures: Table<
+        {
+          id: number;
+          manager_id: number;
+          team_id: number;
+          start_date: string;
+          end_date: string | null;
+          role: string;
+          source_url: string | null;
+        },
+        [
+          {
+            foreignKeyName: "manager_tenures_manager_id_fkey";
+            columns: ["manager_id"];
+            isOneToOne: false;
+            referencedRelation: "managers";
+            referencedColumns: ["id"];
+          },
+        ]
+      >;
     };
     Views: {
+      v_latest_projections: {
+        Row: {
+          player_id: number | null;
+          fixture_id: number | null;
+          xmins: number | null;
+          xpts: number | null;
+          p_60: number | null;
+          p_cs: number | null;
+          run_type: string | null;
+          run_finished_at: string | null;
+        };
+        Relationships: [];
+      };
       v_player_current: {
         Row: {
           id: number | null;

@@ -47,6 +47,7 @@ def test_intervals_respected():
         run_projections=20,
         evaluate_model=10,
         sync_understat=10,
+        sync_managers=10,
         model_lab=10,
     )
     last = {**daily, **fresh(sync_bootstrap=14, sync_fixtures=14, poll_event_status=14)}

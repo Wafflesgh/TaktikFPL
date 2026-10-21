@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AlertIcon, ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
-import { FdrChip, Panel, TeamBadge } from "@/components/ui";
+import { FdrChip, Panel, TeamBadge, TeamLink } from "@/components/ui";
 import type { Json } from "@/lib/database.types";
 import type { FixtureChange, GameweekInfo, GwFixture } from "@/lib/data/jadwal";
 import { formatDayWIB, formatTimeWIB, formatWIB } from "@/lib/time";
@@ -178,17 +178,17 @@ export function GwFixtures({ fixtures, gameweeks, selectedGw, hrefFor }: Props) 
                         <span className="hidden sm:block">
                           <TeamBadge url={f.home?.badge ?? null} short={f.home?.short ?? null} size={32} />
                         </span>
-                        <span className="truncate font-semibold" title={f.home?.name}>
-                          {f.home?.short}
-                        </span>
+                        <TeamLink team={f.home} className="truncate font-semibold">
+                          <span title={f.home?.name}>{f.home?.short}</span>
+                        </TeamLink>
                         <FdrChip value={f.fdrHome} />
                       </div>
                       <Center f={f} />
                       <div className="flex min-w-0 items-center justify-end gap-2">
                         <FdrChip value={f.fdrAway} />
-                        <span className="truncate font-semibold" title={f.away?.name}>
-                          {f.away?.short}
-                        </span>
+                        <TeamLink team={f.away} className="truncate font-semibold">
+                          <span title={f.away?.name}>{f.away?.short}</span>
+                        </TeamLink>
                         <span className="hidden sm:block">
                           <TeamBadge url={f.away?.badge ?? null} short={f.away?.short ?? null} size={32} />
                         </span>

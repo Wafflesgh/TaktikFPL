@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FormBadge } from "@/components/FormBadge";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
-import { TeamBadge } from "@/components/ui";
+import { TeamBadge, TeamLink } from "@/components/ui";
 import type { PlayerRow } from "@/lib/data/dashboard";
 import { formatPrice } from "@/lib/time";
 
@@ -53,7 +53,7 @@ export function Spotlight({ player }: { player: PlayerRow | null }) {
             </h2>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
               <TeamBadge url={player.team?.badge ?? null} short={player.team?.short ?? null} size={28} />
-              <span>{player.team?.name}</span>
+              <TeamLink team={player.team}>{player.team?.name}</TeamLink>
               <span className="text-[var(--text-muted)]">·</span>
               <span>{player.position}</span>
               <span className="text-[var(--text-muted)]">·</span>

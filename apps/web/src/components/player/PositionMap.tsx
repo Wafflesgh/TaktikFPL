@@ -10,7 +10,7 @@ function merge(seasons: PositionSeason[]): PositionStat[] {
   const out = new Map<string, PositionStat>();
   for (const s of seasons) {
     for (const p of s.positions) {
-      const m = out.get(p.pos) ?? { pos: p.pos, apps: 0, minutes: 0, goals: 0, assists: 0, xg: 0, xa: 0 };
+      const m = out.get(p.pos) ?? { pos: p.pos, apps: 0, minutes: 0, goals: 0, assists: 0, xg: 0, xa: 0, points: 0 };
       out.set(p.pos, {
         pos: p.pos,
         apps: m.apps + p.apps,
@@ -19,6 +19,7 @@ function merge(seasons: PositionSeason[]): PositionStat[] {
         assists: m.assists + p.assists,
         xg: m.xg + p.xg,
         xa: m.xa + p.xa,
+        points: m.points + p.points,
       });
     }
   }
@@ -26,6 +27,7 @@ function merge(seasons: PositionSeason[]): PositionStat[] {
 }
 
 const per90 = (v: number, mins: number) => (mins > 0 ? ((v * 90) / mins).toFixed(2) : "-");
+const avgPts = (r: PositionStat) => (r.apps > 0 ? (r.points / r.apps).toFixed(1) : "-");
 
 /**
  * Peta posisi ala Football Manager: satu lingkaran per slot posisi yang pernah dimainkan
@@ -107,7 +109,7 @@ export function PositionMap({ seasons, currentLabel }: { seasons: PositionSeason
                 onClick={() => setPicked(pos)}
                 className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center ${active ? "z-10" : ""}`}
                 style={{ left: `${x}%`, top: `${y}%` }}
-                aria-label={`${POSITION_NAME[pos] ?? pos}: ${r.apps} apps, ${r.goals} goals, ${r.assists} assists`}
+                aria-label={`${POSITION_NAME[pos] ?? pos}: ${r.apps} apps, ${avgPts(r)} avg points, ${r.goals} goals, ${r.assists} assists`}
               >
                 <span
                   className={`grid place-items-center rounded-full font-semibold text-white shadow-lg ${active ? "ring-2 ring-white" : ""}`}
@@ -119,7 +121,9 @@ export function PositionMap({ seasons, currentLabel }: { seasons: PositionSeason
                 >
                   {r.apps}
                 </span>
-                <span className="mt-0.5 rounded bg-black/50 px-1 text-[10px] leading-tight text-white">{pos}</span>
+                <span className="mt-0.5 rounded bg-black/50 px-1 text-[10px] leading-tight text-white">
+                  {pos} · {avgPts(r)} pts
+                </span>
               </button>
             );
           })}
@@ -130,7 +134,8 @@ export function PositionMap({ seasons, currentLabel }: { seasons: PositionSeason
             <div className="rounded-2xl border border-[var(--glass-border)] bg-white/[0.04] p-4">
               <p className="text-xs uppercase tracking-wider text-[var(--text-muted)]">{sel.pos}</p>
               <p className="text-lg font-semibold">{POSITION_NAME[sel.pos] ?? sel.pos}</p>
-              <div className="mt-3 grid grid-cols-3 gap-3 text-sm sm:grid-cols-6">
+              <div className="mt-3 grid grid-cols-3 gap-3 text-sm sm:grid-cols-7">
+                <Stat label="Avg pts" value={avgPts(sel)} />
                 <Stat label="Apps" value={sel.apps} />
                 <Stat label="Of total" value={`${Math.round((sel.apps / Math.max(1, total)) * 100)}%`} />
                 <Stat label="Minutes" value={sel.minutes.toLocaleString("en-GB")} />
@@ -147,6 +152,7 @@ export function PositionMap({ seasons, currentLabel }: { seasons: PositionSeason
                 <tr>
                   <th className="py-1 text-left">Position</th>
                   <th className="text-right">Apps</th>
+                  <th className="text-right" title="Average FPL points per match in this position">Avg pts</th>
                   <th className="text-right">%</th>
                   <th className="text-right">Mins</th>
                   <th className="text-right">G</th>
@@ -167,6 +173,7 @@ export function PositionMap({ seasons, currentLabel }: { seasons: PositionSeason
                       {POSITION_NAME[r.pos] ?? r.pos} <span className="text-xs text-[var(--text-muted)]">{r.pos}</span>
                     </td>
                     <td className="text-right tabular-nums">{r.apps}</td>
+                    <td className="text-right font-semibold tabular-nums">{avgPts(r)}</td>
                     <td className="text-right tabular-nums">{Math.round((r.apps / Math.max(1, total)) * 100)}%</td>
                     <td className="text-right tabular-nums">{r.minutes.toLocaleString("en-GB")}</td>
                     <td className="text-right tabular-nums">{r.goals}</td>

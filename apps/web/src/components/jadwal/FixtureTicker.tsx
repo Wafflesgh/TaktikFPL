@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FDR_COLOR, Panel, TeamBadge } from "@/components/ui";
+import { FDR_COLOR, Panel, TeamBadge, TeamLink } from "@/components/ui";
 import type { GameweekInfo, TickerFixture, TickerRow } from "@/lib/data/jadwal";
 
 export const TICKER_SORTS = { fdr: "Easiest FDR", name: "Name" } as const;
@@ -99,9 +99,9 @@ export function FixtureTicker({ rows, gws, sort, selectedGw, hrefFor }: Props) {
                     <span className="flex items-center gap-2">
                       <span className="w-4 text-right text-xs tabular-nums text-[var(--text-muted)]">{i + 1}</span>
                       <TeamBadge url={r.team.badge} short={r.team.short} size={24} />
-                      <span className="font-semibold" title={r.team.name}>
-                        {r.team.short}
-                      </span>
+                      <TeamLink team={r.team} className="font-semibold">
+                        <span title={r.team.name}>{r.team.short}</span>
+                      </TeamLink>
                     </span>
                   </th>
                   {r.cells.map((cell, col) => (

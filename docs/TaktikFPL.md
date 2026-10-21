@@ -67,7 +67,7 @@
 - Memori Claude: `C:\Users\alfia\.claude\projects\D--Claude-Project-Taktik-FPL\memory\` (`MEMORY.md`,
   `project-state.md`, `user-preferences.md`).
 
-## 5. Database (20 migrasi, semua SUDAH diterapkan ke produksi)
+## 5. Database (21 migrasi; `20261021000500_manager_sources` = managers.wikidata_id/photo_url — cek sudah di-push)
 
 `supabase/migrations/`: base, master (teams/players/external ids/unmatched_entities), calendar (seasons, gameweeks,
 fixtures — kolom `understat_match_id`), match_data (lineups, player_match_stats, team_match_stats, match_events,
@@ -102,14 +102,14 @@ Kunci penyimpanan penting:
 Jadwal tick (`app/tick.py`): `sync_bootstrap` tiap 30 menit (tiap tick dalam 24 jam sebelum deadline),
 `sync_fixtures` 15 menit, `poll_event_status` 30 menit, checkpoint deadline T-48j/T-24j/T-6j/T-2j/T-60m/T-15m
 (`deadline_checkpoint` → sync + `run_projections` run_type tN; t60 disimpan permanen). Harian (UTC):
-`cleanup_retention` 03, `sync_player_history` 05 → `build_form` → `run_projections`, `sync_understat` 06,
+`cleanup_retention` 03, `sync_managers` 04 (pelatih dari Wikidata), `sync_player_history` 05 → `build_form` → `run_projections`, `sync_understat` 06,
 `evaluate_model` 07, `model_lab` 08 (`only_new`: hanya bila ada GW selesai baru). **Follow-up**: bila
 `sync_bootstrap` menemukan perubahan status/berita pemain → `run_projections` ulang (maks tiap 30 menit).
 
 Jobs (`app/jobs/`): sync_bootstrap (pemain/tim/GW/harga/status, aturan poin, chip & game_settings, arsip),
 sync_fixtures (+ deteksi perubahan jadwal), poll_event_status, sync_player_history, build_form (label form:
 panas/bagus/stabil/menurun/dingin/minim_menit), backfill_history (vaastav), gw_finalize, deadline_checkpoint,
-cleanup_retention, run_projections, evaluate_model, sync_understat, model_lab, set_active_model.
+cleanup_retention, run_projections, evaluate_model, sync_understat, sync_managers, model_lab, set_active_model.
 CLI manual: `python -m app.cli job[:k=v,...] ...`.
 
 Sumber (`app/sources/`): `fpl.py` (API publik, tanpa login), `vaastav.py` (dataset historis), `understat.py`
@@ -143,7 +143,12 @@ Model & optimasi:
 **Model accuracy**), `/jadwal` (fixtures, FDR, perubahan jadwal), `/pemain/[id]` (hero, poin per GW, form,
 **Positions played** (lapangan ala FM dari slot posisi lineup Understat, mulai 2025/26: apps, %, G/A, xG/xA per
 posisi), **Detailed stats** (total, per 90, persentil vs posisi sama), **Compare** (tabel pemain se-posisi,
-bisa diurutkan), **Tactical profile**, statistik; nama pemain di Home/Plan bisa diklik), `/tim` (My Team: mode **Start a new team** vs **I already have a team** —
+bisa diurutkan), **Upcoming fixtures** (kesulitan 1–5 per lawan + alasan fundamental/teknis: kekuatan & form
+lawan, kandang, gaya lawan vs split pemain, duel zona vs pemain lawan di sisi berhadapan), avg poin per posisi,
+posisi per laga GW1→38, **Tactical profile**, statistik; nama pemain di Home/Plan bisa diklik), `/klub/[id]`
+(profil klub: XI utama & formasi dari lineup, "How they play", pelatih (Wikidata), rekor overall/home/away,
+next/last matches, **Match reviews** dengan vonis xG & alasan). Analisis = fungsi murni di `lib/analysis/*`
+(deterministik, angka dari data; bukan LLM). Nama klub di seluruh UI → `/klub/[id]`, `/tim` (My Team: mode **Start a new team** vs **I already have a team** —
 Team ID via cookie `tfpl_entry`, squad dari API FPL server-side, rencana transfer multi-transfer dengan
 estimasi free transfer `?ft=` & hit −4, kapten, catatan Hold/Sell, Wildcard), `/rencana` (Season Plan: kartu chip
 per jendela untuk squad pengguna/acuan, tabel GW-per-GW, Weekly baseline), `/model` (Model Lab: leaderboard per

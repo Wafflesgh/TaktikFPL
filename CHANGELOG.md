@@ -2,6 +2,26 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.21.0] — 2026-10-21 · Analisis lawan per pemain + profil klub
+
+### Ditambahkan
+- Halaman pemain — **Upcoming fixtures**: 6 laga ke depan dengan tingkat kesulitan 1–5 khusus pemain itu dan
+  alasan yang bisa dibuka. Fundamental: kekuatan lawan (xGA untuk MID/FWD, xG untuk GKP/DEF, peringkat liga),
+  form 5 laga lawan, kandang/tandang. Teknis: gaya lawan (low block / high press dari PPDA) vs xGI/90 pemain
+  melawan gaya itu, dan **duel zona** — pemain lawan yang paling sering start di slot berhadapan dengan posisi
+  utama pemain (mis. AMR ↔ DL lawan) beserta form keduanya. xPts engine per laga ikut ditampilkan.
+- **Positions played**: rata-rata poin FPL per posisi (per musim / semua musim). **This Season's Matches**:
+  GW1→GW38 (jadwal sisa + FDR), kolom posisi yang dimainkan tiap laga.
+- Halaman **klub** `/klub/[id]`: XI utama & formasi (dari lineup 8 laga terakhir, lapangan ala FM), "How they
+  play" (bentuk, pressing/blok, wilayah, kualitas peluang, bola mati, umpan silang — semua dari data), kartu
+  pelatih (foto kecil, rekor & xG/xGA sejak menjabat, pembanding pendahulu), ringkasan overall/home/away, tabel
+  next & last matches, dan **Match reviews**: vonis dari selisih xG (mis. "Unlucky defeat") + alasan
+  fundamental (lawan, pemain inti absen, kartu merah, venue) dan teknis (peluang, blok lebih dalam dari norma,
+  wilayah, bola mati, penyelesaian, jalannya laga).
+- Worker: adapter `wikidata.py` + job harian `sync_managers` (pelatih kepala & riwayat masa jabatan, gratis/CC0;
+  klub dicocokkan lewat pencarian, bukan nama hardcode). Migrasi `20261021000500_manager_sources`.
+- Nama klub di seluruh UI bisa diklik ke profil klub.
+
 ## [0.20.0] — 2026-10-21 · v1 mengalahkan Season PPG + halaman pemain detail
 
 ### Diubah

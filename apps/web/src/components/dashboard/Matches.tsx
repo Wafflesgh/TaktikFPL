@@ -1,5 +1,5 @@
 import { AlertIcon } from "@/components/icons";
-import { FdrChip, Panel, TeamBadge } from "@/components/ui";
+import { FdrChip, Panel, TeamBadge, TeamLink } from "@/components/ui";
 import type { FixtureRow, StandingRow } from "@/lib/data/dashboard";
 import { formatDayWIB, formatTimeWIB, formatWIB } from "@/lib/time";
 
@@ -26,7 +26,7 @@ export function NextMatchCard({ live, next }: { live: FixtureRow[]; next: Fixtur
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">
             <div className="flex flex-col items-center gap-2">
               <TeamBadge url={match.home?.badge ?? null} short={match.home?.short ?? null} size={64} />
-              <span className="font-semibold">{match.home?.name}</span>
+              <TeamLink team={match.home} className="font-semibold">{match.home?.name}</TeamLink>
             </div>
             <div>
               {isLive ? (
@@ -40,7 +40,7 @@ export function NextMatchCard({ live, next }: { live: FixtureRow[]; next: Fixtur
             </div>
             <div className="flex flex-col items-center gap-2">
               <TeamBadge url={match.away?.badge ?? null} short={match.away?.short ?? null} size={64} />
-              <span className="font-semibold">{match.away?.name}</span>
+              <TeamLink team={match.away} className="font-semibold">{match.away?.name}</TeamLink>
             </div>
           </div>
           <p className="mt-3 text-center text-xs text-[var(--text-muted)]">{formatWIB(match.kickoffUtc)}</p>
@@ -86,7 +86,7 @@ export function FixtureGrid({ fixtures }: { fixtures: FixtureRow[] }) {
               >
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   <TeamBadge url={f.home?.badge ?? null} short={f.home?.short ?? null} size={32} />
-                  <span className="font-semibold">{f.home?.short}</span>
+                  <TeamLink team={f.home} className="font-semibold">{f.home?.short}</TeamLink>
                   <FdrChip value={f.fdrHome} />
                 </div>
                 <div className="text-center">
@@ -99,7 +99,7 @@ export function FixtureGrid({ fixtures }: { fixtures: FixtureRow[] }) {
                 </div>
                 <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
                   <FdrChip value={f.fdrAway} />
-                  <span className="font-semibold">{f.away?.short}</span>
+                  <TeamLink team={f.away} className="font-semibold">{f.away?.short}</TeamLink>
                   <TeamBadge url={f.away?.badge ?? null} short={f.away?.short ?? null} size={32} />
                 </div>
               </article>
@@ -132,7 +132,7 @@ export function StandingsTable({ rows }: { rows: StandingRow[] }) {
               <td>
                 <span className="flex items-center gap-2">
                   <TeamBadge url={r.team.badge} short={r.team.short} size={22} />
-                  {r.team.short}
+                  <TeamLink team={r.team}>{r.team.short}</TeamLink>
                 </span>
               </td>
               <td className="text-right tabular-nums">{r.played}</td>

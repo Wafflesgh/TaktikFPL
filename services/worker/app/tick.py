@@ -30,6 +30,7 @@ from app.jobs import (
     run_projections,
     sync_bootstrap,
     sync_fixtures,
+    sync_managers,
     sync_player_history,
     sync_understat,
 )
@@ -46,6 +47,8 @@ SLACK = timedelta(minutes=3)
 # sync_understat sebelum proyeksi harian (data taktik) — Understat diperbarui beberapa jam setelah laga.
 DAILY_AFTER_UTC = {
     "cleanup_retention": 3,
+    # Pelatih (Wikidata): pergantian pelatih jarang, cukup harian.
+    "sync_managers": 4,
     "sync_player_history": 5,
     "sync_understat": 6,
     "evaluate_model": 7,
@@ -202,6 +205,7 @@ JOBS: dict[str, Callable[..., Any]] = {
     "run_projections": run_projections.run_projections,
     "evaluate_model": evaluate_model.evaluate_model,
     "sync_understat": sync_understat.sync_understat,
+    "sync_managers": sync_managers.sync_managers,
     "model_lab": model_lab.model_lab,
 }
 

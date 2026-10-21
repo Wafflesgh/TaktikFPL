@@ -12,6 +12,8 @@ export type PositionStat = {
   assists: number;
   xg: number;
   xa: number;
+  /** Poin FPL total di laga-laga pada posisi ini (rata-rata = points / apps). */
+  points: number;
 };
 
 export type PositionSeason = { seasonId: number; label: string; positions: PositionStat[] };
@@ -20,25 +22,30 @@ export type PositionSeason = { seasonId: number; label: string; positions: Posit
  * Posisi per laga dari lineups Understat (2025/26 →), digabung dengan G/A/xG/xA laga itu.
  * Satu baris lineups = satu penampilan (Understat hanya mencatat pemain yang bermain).
  */
-export async function getPlayerPositions(playerId: number): Promise<PositionSeason[]> {
+export async function getPlayerPositions(playerId: number): Promise<{ seasons: PositionSeason[]; byFixture: Map<number, string> }> {
   const supabase = await createClient();
-  const [luRes, stRes, seasonRes] = await Promise.all([
+  const [luRes, stRes, seasonRes, ptsRes] = await Promise.all([
     supabase.from("lineups").select("fixture_id, position_label, fixtures(season_id)").eq("player_id", playerId).limit(1000),
     supabase.from("player_match_stats").select("fixture_id, minutes, goals, assists, xg, xa").eq("player_id", playerId).limit(1000),
     supabase.from("seasons").select("id, label"),
+    supabase.from("player_fpl_gw_stats").select("fixture_id, total_points").eq("player_id", playerId).limit(2000),
   ]);
   const stats = new Map((stRes.data ?? []).map((s) => [s.fixture_id, s]));
+  const points = new Map((ptsRes.data ?? []).map((p) => [p.fixture_id, p.total_points ?? 0]));
+  const byFixture = new Map<number, string>();
   const labels = new Map((seasonRes.data ?? []).map((s) => [s.id, s.label]));
   const bySeason = new Map<number, Map<string, PositionStat>>();
   for (const l of luRes.data ?? []) {
     const sid = l.fixtures?.season_id;
     const pos = l.position_label;
     if (sid == null || !pos) continue;
+    byFixture.set(l.fixture_id, pos);
     const s = stats.get(l.fixture_id);
     const slots = bySeason.get(sid) ?? new Map<string, PositionStat>();
     bySeason.set(sid, slots);
-    const p = slots.get(pos) ?? { pos, apps: 0, minutes: 0, goals: 0, assists: 0, xg: 0, xa: 0 };
+    const p = slots.get(pos) ?? { pos, apps: 0, minutes: 0, goals: 0, assists: 0, xg: 0, xa: 0, points: 0 };
     p.apps += 1;
+    p.points += points.get(l.fixture_id) ?? 0;
     p.minutes += s?.minutes ?? 0;
     p.goals += s?.goals ?? 0;
     p.assists += s?.assists ?? 0;
@@ -46,13 +53,14 @@ export async function getPlayerPositions(playerId: number): Promise<PositionSeas
     p.xa += num(s?.xa) ?? 0;
     slots.set(pos, p);
   }
-  return [...bySeason.entries()]
+  const seasons = [...bySeason.entries()]
     .map(([seasonId, slots]) => ({
       seasonId,
       label: labels.get(seasonId) ?? String(seasonId),
       positions: [...slots.values()].sort((a, b) => b.apps - a.apps),
     }))
     .sort((a, b) => b.label.localeCompare(a.label));
+  return { seasons, byFixture };
 }
 
 /** Total musim berjalan: statistik FPL + Understat (tembakan, key pass, npxG, xGChain, xGBuildup). */

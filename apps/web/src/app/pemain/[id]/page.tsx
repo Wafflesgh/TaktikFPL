@@ -3,15 +3,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRightIcon } from "@/components/icons";
 import { DetailedStats } from "@/components/player/DetailedStats";
+import { FixtureOutlook } from "@/components/player/FixtureOutlook";
 import { PeerTable } from "@/components/player/PeerTable";
 import { PlayerHero } from "@/components/player/PlayerHero";
 import { PointsChart } from "@/components/player/PointsChart";
 import { PositionMap } from "@/components/player/PositionMap";
-import { GwTable, SeasonTable } from "@/components/player/StatTables";
+import { GwTable, SeasonTable, type UpcomingRow } from "@/components/player/StatTables";
 import { TacticalProfile } from "@/components/player/TacticalProfile";
 import { BottomNav } from "@/components/shell/NavLinks";
 import { TopBar } from "@/components/shell/TopBar";
 import { Panel, StatTile } from "@/components/ui";
+import { getLeague, teamOf, teamRows } from "@/lib/data/league";
+import { getPlayerOutlook } from "@/lib/data/outlook";
 import { getPlayerProfile, parsePlayerId } from "@/lib/data/player";
 import { getPlayerPositions, getPositionPeers, getSeasonDetail } from "@/lib/data/playerDetail";
 import { getPlayerTactics } from "@/lib/data/tactics";
@@ -34,13 +37,32 @@ export async function generateMetadata({ params }: PageProps<"/pemain/[id]">): P
 export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) {
   const [profile, viewer] = await Promise.all([load(params), getViewer()]);
   const { player, gws, bars, lastFour, seasons, thisSeason, seasonLabel, seasonId, liveCount } = profile;
-  const [tactics, positions, peers, detail] = await Promise.all([
+  const f = player.form;
+  const teamId = player.inCurrentSeason ? (player.team?.id ?? null) : null;
+  const [tactics, positions, peers, detail, league] = await Promise.all([
     getPlayerTactics(player.id),
     getPlayerPositions(player.id),
     player.position ? getPositionPeers(player.position) : Promise.resolve([]),
     seasonId != null ? getSeasonDetail(player.id, seasonId) : Promise.resolve(null),
+    getLeague(),
   ]);
-  const f = player.form;
+  const outlook =
+    teamId != null
+      ? await getPlayerOutlook({
+          playerId: player.id,
+          playerName: player.webName,
+          teamId,
+          position: player.position,
+          form: f ? { label: f.label, score: f.score, last4Ppm: f.last4Ppm } : null,
+          tactics: tactics?.t ?? null,
+        })
+      : [];
+  const upcoming: UpcomingRow[] =
+    teamId != null
+      ? teamRows(league, teamId)
+          .filter((r) => r.fx.seasonId === seasonId && r.fx.status !== "finished")
+          .map((r) => ({ fixtureId: r.fx.id, gw: r.fx.gw, kickoffUtc: r.fx.kickoffUtc, opponent: teamOf(league, r.oppId), home: r.home, fdr: r.fdr }))
+      : [];
   const pct = (v: number | null | undefined) => (v != null ? `${Math.round(v * 100)}%` : "-");
   const signed = (v: number | null | undefined) => (v != null ? `${v > 0 ? "+" : ""}${v.toFixed(2)}` : "-");
 
@@ -92,11 +114,20 @@ export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) 
           </Panel>
         </div>
 
+        {outlook.length > 0 && (
+          <Panel
+            title="Upcoming fixtures"
+            subtitle={`How hard each opponent is for ${player.webName} — fundamental (opponent strength, form, venue) and technical (style, zone duel)`}
+          >
+            <FixtureOutlook rows={outlook} />
+          </Panel>
+        )}
+
         <Panel
           title="Positions played"
           subtitle="Each circle is a position the player has played (size = share of appearances) · tap a circle or row for details"
         >
-          <PositionMap seasons={positions} currentLabel={seasonLabel} />
+          <PositionMap seasons={positions.seasons} currentLabel={seasonLabel} />
         </Panel>
 
         {detail && detail.matches > 0 && (
@@ -117,9 +148,9 @@ export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) 
           <Panel
             className="min-w-0"
             title="This Season's Matches"
-            subtitle="Newest first · highlighted rows = last 4 GWs · * = points not final"
+            subtitle="GW1 → GW38 · position played and points · highlighted rows = last 4 GWs · * = points not final"
           >
-            <GwTable rows={gws} highlight={lastFour} />
+            <GwTable rows={gws} highlight={lastFour} positions={positions.byFixture} upcoming={upcoming} />
           </Panel>
           <Panel className="min-w-0" title="Season History" subtitle="Since 2016/17 · xGI available from 2022/23">
             <SeasonTable rows={seasons} />

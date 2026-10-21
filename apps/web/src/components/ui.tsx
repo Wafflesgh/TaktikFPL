@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 /** Panel kaca dengan judul (ref-02). */
@@ -67,6 +68,16 @@ export function ProgressLine({ value, color = "var(--accent)" }: { value: number
         style={{ left: `${pct}%`, background: color }}
       />
     </div>
+  );
+}
+
+/** Nama klub yang bisa diklik → profil klub. */
+export function TeamLink({ team, children, className = "" }: { team: { id: number } | null | undefined; children: ReactNode; className?: string }) {
+  if (!team) return <span className={className}>{children}</span>;
+  return (
+    <Link href={`/klub/${team.id}`} className={`hover:text-[var(--accent)] hover:underline ${className}`}>
+      {children}
+    </Link>
   );
 }
 

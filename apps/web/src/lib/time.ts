@@ -49,3 +49,8 @@ export function minutesSince(iso: string, now: Date = new Date()): number {
 export function formatSnapshotDay(day: string): string {
   return formatInTimeZone(new Date(`${day}T00:00:00Z`), "UTC", "d MMM", { locale: enGB });
 }
+
+export function formatDateWIB(iso: string | null | undefined): string {
+  if (!iso) return "-";
+  return formatInTimeZone(new Date(iso), WIB, "d MMM yyyy", { locale: enGB });
+}
