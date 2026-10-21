@@ -39,7 +39,7 @@
   (tidak ada `python` global; pakai `uv run python ...`, untuk skrip non-proyek `uv run --no-project python`).
 - pnpm/npx: tambahkan `/c/Users/alfia/AppData/Roaming/npm` ke PATH.
 - Worker: `cd services/worker && uv run ruff check . && uv run ruff format app tests && uv run mypy app && uv run pytest -q`
-  (106 test lolos). `PYTHONIOENCODING=utf-8` untuk output non-ASCII. Batas baris ruff 110.
+  (107 test lolos). `PYTHONIOENCODING=utf-8` untuk output non-ASCII. Batas baris ruff 110.
 - Web: `cd apps/web && pnpm -s typecheck && pnpm -s lint` (tidak ada test runner web; logika murni diuji ad-hoc
   dengan `node --experimental-strip-types` di scratchpad).
 - Supabase CLI (sudah login & ter-link): dari root repo `node_modules/.bin/supabase db query --linked "<sql>"`;
@@ -48,6 +48,10 @@
   `C:/Users/alfia/AppData/Local/Temp/claude/D--Claude-Project-Taktik-FPL/a735dfc6-6cfa-433a-849b-1899e89e376e/scratchpad/pgenv/harness.py <repo> <datadir>`
   (jalankan `uv run --with pgserver python harness.py ...`, gunakan datadir baru; mencetak URI).
   Lalu `DATABASE_URL=postgresql+psycopg://postgres:@127.0.0.1:<port>/taktik ARCHIVE_BACKEND=local ARCHIVE_DIR=<dir> uv run python -m app.cli <jobs>`.
+- **Backtest offline Model Lab** (tanpa DB, untuk tuning model): dari root `bash services/worker/scripts/lab_offline/export.sh`
+  (CSV ke `.data/`, gitignored), lalu dari `services/worker`:
+  `uv run python -m scripts.lab_offline.offline 2019/20,2020/21,2021/22,2022/23,2023/24,2024/25,2025/26 season_ppg,points_plus [--cand file.py]`
+  (hanya model baseline; ±1 menit untuk 7 musim, cache bundle di `.data/cache`).
 - Next.js 16: baca `node_modules/next/dist/docs` sebelum menulis kode web (API berubah dari versi lama).
 
 ## 4. MCP & tool Claude yang dipakai
@@ -126,9 +130,9 @@ Model & optimasi:
 - `optimize/season.py`: rencana musim — XI/bench/kapten per GW untuk squad acuan, Free Hit (ILP per GW),
   Wildcard (squad 6 GW terbaik − squad acuan − nilai free transfer), DGW/BGW, GW terbaik tiap chip dalam
   jendelanya; matriks xPts semua GW tersisa (±53 dtk).
-- `lab/`: **Model Lab** — `data.py` (GwBundle point-in-time), `models.py` (12 model: recent4, season_ppg,
-  fpl_xp [benchmark only], form_fdr, v1, v1_tactics, hot_form, fixture_chaser, minutes_first, crowd,
-  ensemble_mean, ensemble_stack [NNLS dari GW sebelumnya]), `simulate.py` (weekly Free Hit; season sim:
+- `lab/`: **Model Lab** — `data.py` (GwBundle point-in-time), `models.py` (13 model: recent4, season_ppg,
+  points_plus, fpl_xp [benchmark only], form_fdr, v1, v1_tactics, hot_form, fixture_chaser, minutes_first,
+  crowd, ensemble_mean, ensemble_stack [NNLS dari GW sebelumnya]), `simulate.py` (weekly Free Hit; season sim:
   £100m, 1 FT/minggu maks 5, hit −4 bila gain > 5, kapten, autosub; tanpa chip; harga jual = harga kini),
   `live.py` (model aktif: `app_config.active_model` = nama | `auto` = juara season sim musim terbaru ≥10 GW,
   benchmark dikecualikan; fallback tercatat ke v1_tactics).
@@ -152,13 +156,18 @@ Model Lab 2025/26 (GW4–38, 35 GW) season sim: FPL xP 2015 (benchmark; data boc
 (juara → model aktif via auto)**, Hot form 1908, Ensemble learned 1890, Ensemble mean/Minutes first 1881,
 Crowd 1843, v1+tactics 1806, Form×fixture 1793, v1 1766, Fixture chaser 1725, Recent points 1720.
 MAE terbaik Season PPG 1.77 vs v1 1.95. **v1 kalah dari baseline sederhana** → prioritas perbaikan.
+**Points+** (0.19.0, backtest offline): 2025/26 season sim 2024 (> Season PPG 1994); 7 musim 2019/20–2025/26
++865 sim & +1008 Free Hit vs Season PPG, menang 6/7 musim → akan jadi juara `auto` setelah `model_lab` penuh
+dijalankan ulang. Pelajaran: poin realisasi per penampilan + prior harga + peluang main dari menit > model
+komponen xG; pengali FDR ringan (±10%/tingkat) & kandang ±6% membantu; riwayat musim lalu untuk rate merugikan.
 Musim 2026/27 baru 4 GW (Hot form 262 teratas). Catatan: dengan Season PPG, xPts absolut lebih optimis (tanpa
 shrinkage; Best XI ±77 vs ±57 di v1) — ranking yang divalidasi, bukan level poin.
 
 ## 9. Backlog (belum dikerjakan), kira-kira urut prioritas
 
-1. **Perbaiki v1 agar mengalahkan Season PPG** di Model Lab: gabungkan poin realisasi (bonus/CS) dengan xG/xA,
-   sinyal ketersediaan historis (menit 0 berturut-turut), kalibrasi level; model baru sebagai entri lab baru.
+1. ~~Model baru yang mengalahkan Season PPG~~ → Points+ (0.19.0). Lanjutan: v1 komponen masih kalah; coba
+   pengali komponen v1 (CS untuk DEF/GKP vs serangan) sebagai pengganti FDR tunggal di Points+, atau model
+   learned (LightGBM, latih musim sebelumnya) dengan fitur Points+.
 2. Kalibrasi Season PPG (shrink ke rata-rata posisi) agar xPts absolut tidak terlalu optimis; atau ensemble
    yang dipelajari ulang secara bergulir lintas musim.
 3. Backup Google Drive: isi secret `RCLONE_CONFIG` (workflow sudah ada).

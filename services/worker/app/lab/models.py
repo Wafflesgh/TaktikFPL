@@ -52,6 +52,13 @@ SPECS: list[ModelSpec] = [
         {"benchmark": True},  # tidak boleh jadi model aktif (data tidak ada untuk prediksi live)
     ),
     ModelSpec(
+        "points_plus",
+        "Points+",
+        "Points per appearance this season (recent matches weigh more) shrunk to a price-based prior, "
+        "× chance of playing from recent minutes, × fixture difficulty and home advantage.",
+        "baseline",
+    ),
+    ModelSpec(
         "form_fdr",
         "Form × fixture",
         "Recent points per 90 × expected minutes × FPL fixture difficulty (FDR).",
@@ -115,6 +122,7 @@ SPECS: list[ModelSpec] = [
             "members": [
                 "recent4",
                 "season_ppg",
+                "points_plus",
                 "form_fdr",
                 "v1",
                 "v1_tactics",
@@ -129,6 +137,16 @@ SPECS: list[ModelSpec] = [
 SPEC_BY_NAME = {s.name: s for s in SPECS}
 BASE_MODELS = [s.name for s in SPECS if s.kind != "ensemble"]
 FDR_MULT = {1: 1.25, 2: 1.12, 3: 1.0, 4: 0.88, 5: 0.75}
+
+# Points+ — dituning offline pada 7 musim (2019/20–2025/26): season sim +865 & weekly Free Hit +1008 poin
+# total vs Season PPG, menang di 6 dari 7 musim. Perbedaan antar varian di sekitar nilai ini ±100 (noise).
+PP_DECAY = 0.97  # bobot laga ke-i ke belakang = PP_DECAY**i (hanya laga musim ini)
+PP_PRIOR_APPS = 2.0  # pseudo-penampilan menuju prior harga × posisi
+PP_AVAIL_ROWS = 6  # laga terakhir (lintas musim) untuk peluang main
+PP_AVAIL_DECAY = 0.6
+PP_AVAIL_PRIOR = 0.8  # peluang main prior, berbobot 1 laga
+PP_FDR = 0.10  # pengali laga = 1 + PP_FDR × (3 − FDR)
+PP_HOME = 0.06  # kandang +6%, tandang −6%
 
 
 def _per_fixture(b: GwBundle, per_match: dict[int, float]) -> Preds:
@@ -152,6 +170,51 @@ def season_ppg(b: GwBundle) -> Preds:
         if rows:
             vals[pid] = mean(rows)
     return _per_fixture(b, vals)
+
+
+def _price_prior(rates: dict[int, tuple[float, float]], b: GwBundle) -> dict[str, tuple[float, float]]:
+    """Per posisi: poin per penampilan ≈ a + c × harga (kuadrat terkecil berbobot jumlah penampilan)."""
+    out: dict[str, tuple[float, float]] = {}
+    for pos in {p.position for p in b.players.values()}:
+        ids = [pid for pid, (_, n) in rates.items() if b.players[pid].position == pos and n > 1]
+        if len(ids) < 5:
+            continue
+        x = np.array([b.players[pid].price for pid in ids], dtype=float)
+        y = np.array([rates[pid][0] / rates[pid][1] for pid in ids])
+        sw = np.sqrt([min(rates[pid][1], 10.0) for pid in ids])
+        coef, *_ = np.linalg.lstsq(np.vstack([np.ones_like(x), x]).T * sw[:, None], y * sw, rcond=None)
+        out[pos] = (float(coef[0]), float(coef[1]))
+    return out
+
+
+def points_plus(b: GwBundle) -> Preds:
+    rates: dict[int, tuple[float, float]] = {}  # pemain → (Σ bobot × poin, Σ bobot) laga main musim ini
+    avail: dict[int, float] = {}
+    for pid, h in b.history.items():
+        if pid not in b.players or not h:
+            continue
+        s = n = 0.0
+        for i, (pts, mins, cur) in enumerate(h):
+            if cur and mins > 0:
+                w = PP_DECAY**i
+                s += w * pts
+                n += w
+        rates[pid] = (s, n)
+        aw = [PP_AVAIL_DECAY**i for i in range(min(PP_AVAIL_ROWS, len(h)))]
+        played = sum(w for w, (_, mins, _) in zip(aw, h, strict=False) if mins > 0)
+        avail[pid] = (played + PP_AVAIL_PRIOR) / (sum(aw) + 1.0)
+    prior = _price_prior(rates, b)
+    out: Preds = {}
+    for pid, info in b.players.items():
+        per = 0.0
+        if pid in rates:
+            s, n = rates[pid]
+            a, c = prior.get(info.position, (2.0, 0.0))
+            per = max(0.0, (s + PP_PRIOR_APPS * (a + c * info.price)) / (n + PP_PRIOR_APPS) * avail[pid])
+        out[pid] = {g: 0.0 for g in b.gws}
+        for f in b.fixtures.get(info.team, []):
+            out[pid][f.gw] += per * (1 + PP_FDR * (3 - f.fdr)) * (1 + (PP_HOME if f.home else -PP_HOME))
+    return out
 
 
 def fpl_xp(b: GwBundle) -> Preds | None:
@@ -254,6 +317,7 @@ def _crowd_mult(b: GwBundle) -> dict[int, float]:
 BASELINES: dict[str, Callable[[GwBundle], Preds | None]] = {
     "recent4": recent4,
     "season_ppg": season_ppg,
+    "points_plus": points_plus,
     "fpl_xp": fpl_xp,
     "form_fdr": form_fdr,
 }

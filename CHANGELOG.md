@@ -2,6 +2,19 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.19.0] — 2026-10-21 · Model Lab: Points+ mengalahkan Season PPG
+
+### Ditambahkan
+- Model lab **Points+** (`points_plus`): poin per penampilan musim ini (bobot laga terbaru 0.97^i), di-shrink
+  2 pseudo-penampilan ke prior harga × posisi (regresi per GW), × peluang main dari menit 6 laga terakhir,
+  × FDR (±10% per tingkat) × kandang/tandang (±6%). Ikut anggota Ensemble learned.
+- Backtest offline 7 musim (2019/20–2025/26, GW4–38) vs Season PPG: season sim **+865** (14.633 vs 13.768),
+  weekly Free Hit **+1008**, menang di 6 dari 7 musim; 2025/26: 2024 vs 1994. Prediksi top-30 per GW lebih
+  terkalibrasi (≈5.0 vs aktual 4.3–4.5; Season PPG ≈5.3 vs 3.9–4.2).
+- `services/worker/scripts/lab_offline/`: `export.sh` (ekspor data produksi read-only ke CSV) + `offline.py`
+  (bangun ulang GwBundle tanpa DB, backtest paralel, `--cand` untuk model kandidat). Hasil model baseline
+  identik dengan job `model_lab` produksi.
+
 ## [0.18.1] — 2026-10-21 · Model Lab: FPL xP dikeluarkan dari ensemble
 
 ### Diubah

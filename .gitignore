@@ -39,3 +39,6 @@ apps/web/public/workbox-*.js
 # Arsip lokal (dev) — produksi memakai bucket Supabase `archive`
 .archive/
 .backup/
+
+# Backtest offline Model Lab (data & cache lokal)
+services/worker/scripts/lab_offline/.data/

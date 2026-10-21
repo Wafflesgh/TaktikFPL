@@ -3,7 +3,15 @@
 from datetime import UTC, datetime
 
 from app.lab.data import Fx, GwBundle, PInfo
-from app.lab.models import StackLearner, _crowd_mult, ensemble_mean, ensemble_weighted, recent4, season_ppg
+from app.lab.models import (
+    StackLearner,
+    _crowd_mult,
+    ensemble_mean,
+    ensemble_weighted,
+    points_plus,
+    recent4,
+    season_ppg,
+)
 from app.lab.simulate import SeasonSim, score_xi
 
 POS = ["GKP", "GKP"] + ["DEF"] * 5 + ["MID"] * 5 + ["FWD"] * 3
@@ -63,6 +71,21 @@ def test_baselines_and_crowd():
     assert season_ppg(b)[3][10] == 3.0
     mult = _crowd_mult(b)
     assert 0.9 <= min(mult.values()) and max(mult.values()) <= 1.15
+
+
+def test_points_plus_availability_fixtures_and_prior():
+    b = bundle(n_players=30)
+    b.history[1] = [(0, 0, True)] * 6  # tidak main 6 laga terakhir → peluang main kecil
+    b.history[2] = [(8, 90, True)] * 6
+    b.history[3] = [(8, 90, False)] * 6  # hanya musim lalu → rate = prior harga × posisi
+    single = points_plus(b)[4][10]  # tim 4: satu laga kandang FDR 3 → ×1.06
+    b.fixtures[4] = [Fx(10, 20, True, 2), Fx(10, 21, False, 4)]  # DGW
+    p = points_plus(b)
+    assert p[1][10] < 0.25 * p[2][10]
+    assert 0 < p[3][10] < p[2][10]
+    # DGW: laga mudah kandang (×1.10×1.06) + laga sulit tandang (×0.90×0.94)
+    assert abs(p[4][10] - single / 1.06 * (1.10 * 1.06 + 0.90 * 0.94)) < 1e-9
+    assert set(p) == set(b.players)
 
 
 def test_season_sim_builds_squad_and_scores():
