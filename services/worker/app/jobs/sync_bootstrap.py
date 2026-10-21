@@ -304,12 +304,44 @@ def _upsert_gameweeks(conn: Connection, season_id: int, data: dict[str, Any]) ->
     }
 
 
+def scoring_rules(data: dict[str, Any]) -> dict[str, float]:
+    """game_config.scoring → {rule_key: nilai}; nilai per posisi → 'kunci_POS' (mis. goals_scored_MID)."""
+    out: dict[str, float] = {}
+    for key, val in ((data.get("game_config") or {}).get("scoring") or {}).items():
+        if key.startswith("mng_"):
+            continue  # poin manajer (chip Assistant Manager), tidak relevan untuk pemain
+        if isinstance(val, dict):
+            for pos, v in val.items():
+                if isinstance(v, (int, float)):
+                    out[f"{key}_{pos}"] = float(v)
+        elif isinstance(val, (int, float)):
+            out[key] = float(val)
+    return out
+
+
+def _upsert_scoring(conn: Connection, season_id: int, data: dict[str, Any]) -> int:
+    rules = scoring_rules(data)
+    if rules:
+        conn.execute(
+            text(
+                """
+                insert into public.fpl_scoring_rules (season_id, rule_key, value, notes)
+                values (:s, :k, :v, 'bootstrap-static game_config.scoring')
+                on conflict (season_id, rule_key) do update set value = excluded.value
+                """
+            ),
+            [{"s": season_id, "k": k, "v": v} for k, v in rules.items()],
+        )
+    return len(rules)
+
+
 def apply_bootstrap(conn: Connection, data: dict[str, Any], today: date) -> dict[str, Any]:
     season_id = current_season_id(conn)
     fpl_to_team = _upsert_teams(conn, season_id, data)
     stats: dict[str, Any] = {"teams": len(fpl_to_team)}
     stats.update(_upsert_players(conn, season_id, data, fpl_to_team, today))
     stats.update(_upsert_gameweeks(conn, season_id, data))
+    stats["scoring_rules"] = _upsert_scoring(conn, season_id, data)
     return stats
 
 

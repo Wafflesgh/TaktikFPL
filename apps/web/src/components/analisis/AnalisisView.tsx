@@ -1,4 +1,6 @@
 import { PriceChanges, TransferTrends } from "@/components/analisis/HargaTransfer";
+import { ModelAccuracy } from "@/components/analisis/ModelAccuracy";
+import type { GwAccuracy } from "@/lib/data/accuracy";
 import { BottomNav } from "@/components/shell/NavLinks";
 import { TopBar } from "@/components/shell/TopBar";
 import type { AnalisisData } from "@/lib/data/analisis";
@@ -9,13 +11,17 @@ type Props = {
   isAdmin: boolean;
   data: AnalisisData;
   pos: string | undefined;
+  accuracy: GwAccuracy[];
 };
 
 // Bagian hub Analisis; bagian berikutnya ditambahkan di sini.
-const SECTIONS = [{ id: "harga-transfer", label: "Prices & Transfers" }] as const;
+const SECTIONS = [
+  { id: "harga-transfer", label: "Prices & Transfers" },
+  { id: "akurasi", label: "Model accuracy" },
+] as const;
 
 /** Hub Analisis desktop-first. Bagian pertama: Prices & Transfers (BLUEPRINT fitur #13 Price watch). */
-export function AnalisisView({ displayName, isAdmin, data, pos }: Props) {
+export function AnalisisView({ displayName, isAdmin, data, pos, accuracy }: Props) {
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
       <TopBar displayName={displayName} isAdmin={isAdmin} liveCount={data.liveCount} />
@@ -46,6 +52,11 @@ export function AnalisisView({ displayName, isAdmin, data, pos }: Props) {
             <PriceChanges data={data} />
             <TransferTrends data={data} pos={pos} />
           </div>
+        </section>
+
+        <section id="akurasi" className="flex min-w-0 scroll-mt-4 flex-col gap-4">
+          <h2 className="font-display text-2xl uppercase leading-none">Model accuracy</h2>
+          <ModelAccuracy rows={accuracy} />
         </section>
       </main>
 

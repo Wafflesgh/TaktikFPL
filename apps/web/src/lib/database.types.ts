@@ -107,6 +107,14 @@ export type Database = {
         league_code: string;
         is_promoted: boolean;
       }>;
+      model_evaluations: Table<{
+        gameweek_id: number;
+        model_version: string;
+        metric: string;
+        value: number;
+        detail: Json | null;
+        created_at: string;
+      }>;
       model_runs: Table<{
         id: number;
         gameweek_id: number;

@@ -18,6 +18,7 @@ from app.jobs import (  # noqa: F401
     build_form,
     cleanup_retention,
     deadline_checkpoint,
+    evaluate_model,
     gw_finalize,
     poll_event_status,
     run_projections,
