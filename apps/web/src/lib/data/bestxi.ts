@@ -24,14 +24,17 @@ export type BestXi = {
   captain: number;
   vice: number;
   players: XiPlayer[];
+  /** Cadangan sesuai urutan FPL (kiper dulu); kosong untuk laporan lama tanpa budget. */
+  bench: XiPlayer[];
+  costTenths: number | null;
   finishedAt: string | null;
 };
 
 const POS_ORDER = ["GKP", "DEF", "MID", "FWD"];
 
-type BestXiJson = { gw: number; starters: number[]; captain: number; vice: number; formation: string; xpts: number };
+type BestXiJson = { gw: number; starters: number[]; bench?: number[]; cost_tenths?: number; captain: number; vice: number; formation: string; xpts: number };
 
-/** XI terbaik GW berikutnya (ILP worker, tanpa budget, maks 3 per klub) + alasan per pemain. */
+/** Squad terbaik GW berikutnya (ILP worker, budget £100m, maks 3 per klub): XI + cadangan + alasan. */
 export async function getBestXi(): Promise<BestXi | null> {
   const supabase = await createClient();
   const { data: report } = await supabase
@@ -43,17 +46,18 @@ export async function getBestXi(): Promise<BestXi | null> {
     .maybeSingle();
   const xi = (report?.content_json as { best_xi?: BestXiJson } | null)?.best_xi;
   if (!report?.model_run_id || !xi?.starters?.length) return null;
+  const ids = [...xi.starters, ...(xi.bench ?? [])];
 
   const [{ data: proj }, { data: players }, { data: teams }] = await Promise.all([
     supabase
       .from("projections")
       .select("player_id, fixture_id, xpts, component_breakdown")
       .eq("model_run_id", report.model_run_id)
-      .in("player_id", xi.starters),
+      .in("player_id", ids),
     supabase
       .from("v_player_current")
       .select("id, web_name, fpl_code, photo_url_resolved, team_id, team_short_name, fpl_position, status, price_tenths")
-      .in("id", xi.starters),
+      .in("id", ids),
     supabase.from("teams").select("id, short_name"),
   ]);
   const gwRows = (proj ?? []).filter((r) => (r.component_breakdown as { gw?: number } | null)?.gw === xi.gw);
@@ -87,6 +91,19 @@ export async function getBestXi(): Promise<BestXi | null> {
       reasons: reasons ?? [],
     };
   });
-  list.sort((a, b) => POS_ORDER.indexOf(a.position) - POS_ORDER.indexOf(b.position) || b.xpts - a.xpts);
-  return { gw: xi.gw, formation: xi.formation, xpts: xi.xpts, captain: xi.captain, vice: xi.vice, players: list, finishedAt: report.created_at };
+  const byId = new Map(list.map((p) => [p.id, p]));
+  const starters = list.filter((p) => xi.starters.includes(p.id));
+  starters.sort((a, b) => POS_ORDER.indexOf(a.position) - POS_ORDER.indexOf(b.position) || b.xpts - a.xpts);
+  const bench = (xi.bench ?? []).map((id) => byId.get(id)).filter((p): p is XiPlayer => Boolean(p));
+  return {
+    gw: xi.gw,
+    formation: xi.formation,
+    xpts: xi.xpts,
+    captain: xi.captain,
+    vice: xi.vice,
+    players: starters,
+    bench,
+    costTenths: xi.cost_tenths ?? null,
+    finishedAt: report.created_at,
+  };
 }

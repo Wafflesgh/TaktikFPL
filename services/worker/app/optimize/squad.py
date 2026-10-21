@@ -82,35 +82,31 @@ def optimize_squad(
 @dataclass(frozen=True)
 class XIPlan:
     starters: list[int]
+    bench: list[int]  # urutan cadangan FPL: kiper dulu, lalu outfield dari xPts tertinggi
     captain: int
     vice: int
     formation: str  # mis. "3-4-3"
     value: float
+    cost_tenths: int
     status: str
 
 
-def best_xi(candidates: list[Candidate], max_per_team: int = 3) -> XIPlan:
-    """XI terbaik satu GW (tanpa budget): formasi valid + maks pemain per klub. `value` = xPts GW itu."""
-    prob = pulp.LpProblem("xi", pulp.LpMaximize)
-    start = {c.player_id: prob.add_variable(f"x_{c.player_id}", cat="Binary") for c in candidates}
-    prob += pulp.lpSum(c.value * start[c.player_id] for c in candidates)
-    prob += pulp.lpSum(start.values()) == 11
-    for pos in XI_MIN:
-        n = pulp.lpSum(start[c.player_id] for c in candidates if c.position == pos)
-        prob += n >= XI_MIN[pos]
-        prob += n <= XI_MAX[pos]
-    for team in {c.team_id for c in candidates}:
-        prob += pulp.lpSum(start[c.player_id] for c in candidates if c.team_id == team) <= max_per_team
-    stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=30))
+def best_xi(candidates: list[Candidate], budget_tenths: int = 1000, max_per_team: int = 3) -> XIPlan:
+    """Squad 15 pemain terbaik untuk SATU GW (`value` = xPts GW itu) yang muat budget — XI + cadangan
+    bisa langsung disalin ke FPL. Cadangan berbobot kecil sehingga optimizer memilih yang murah tapi main."""
+    plan = optimize_squad(candidates, budget_tenths=budget_tenths, max_per_team=max_per_team)
     by_id = {c.player_id: c for c in candidates}
-    starters = [pid for pid, v in start.items() if (v.value() or 0) > 0.5]
-    ranked = sorted(starters, key=lambda pid: by_id[pid].value, reverse=True)
-    count = {pos: sum(1 for p in starters if by_id[p].position == pos) for pos in ("DEF", "MID", "FWD")}
+    ranked = sorted(plan.starters, key=lambda pid: by_id[pid].value, reverse=True)
+    rest = [p for p in plan.squad if p not in plan.starters]
+    bench = sorted(rest, key=lambda pid: (by_id[pid].position != "GKP", -by_id[pid].value))
+    count = {pos: sum(1 for p in plan.starters if by_id[p].position == pos) for pos in ("DEF", "MID", "FWD")}
     return XIPlan(
-        starters=starters,
+        starters=plan.starters,
+        bench=bench,
         captain=ranked[0] if ranked else 0,
         vice=ranked[1] if len(ranked) > 1 else 0,
         formation=f"{count['DEF']}-{count['MID']}-{count['FWD']}",
-        value=round(sum(by_id[p].value for p in starters), 2),
-        status=stats.status.name,
+        value=plan.value_xi,
+        cost_tenths=plan.cost_tenths,
+        status=plan.status,
     )

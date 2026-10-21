@@ -188,7 +188,7 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
         if info[pid].fpl_position and info[pid].price_tenths
     ]
     plan = optimize_squad(candidates)
-    # XI terbaik GW terdekat saja (tanpa budget) — panel "Team of the week" di Home.
+    # Squad terbaik untuk GW terdekat saja (budget £100.0m, XI + cadangan) — panel "Best XI" di Home.
     xi = best_xi(
         [
             Candidate(
@@ -257,6 +257,8 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
                         "best_xi": {
                             "gw": first_gw,
                             "starters": xi.starters,
+                            "bench": xi.bench,
+                            "cost_tenths": xi.cost_tenths,
                             "captain": xi.captain,
                             "vice": xi.vice,
                             "formation": xi.formation,

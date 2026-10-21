@@ -9,7 +9,8 @@ Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://k
   (status + % peluang main + berita FPL), double/blank GW, laga mudah/sulit (pengali serangan vs laga rata-rata
   tim; peluang clean sheet untuk bek/kiper), label form 4 laga, statistik dasar top-% posisi, rangkaian 5 laga
   sesudahnya ("Easier run after this GW"), menit (nailed / rotasi). Disimpan di `component_breakdown.reasons`.
-- `best_xi` (ILP): XI terbaik GW berikutnya tanpa budget, formasi valid, maks 3/klub → `best_xi` di laporan
+- `best_xi` (ILP): squad 15 pemain terbaik untuk GW berikutnya (budget £100m, XI + cadangan berurutan FPL,
+  maks 3/klub) → `best_xi` di laporan
   `weekly_draft`. Web: panel **Best XI** di Beranda (lawan, xPts, alasan, kapten/vice).
 - Web `/tim`: chip alasan di squad awal, squad sendiri, dan rekomendasi transfer.
 
