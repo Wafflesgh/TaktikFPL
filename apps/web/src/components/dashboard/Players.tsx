@@ -1,45 +1,13 @@
 import Link from "next/link";
 import { FormBadge } from "@/components/FormBadge";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
-import { Panel, ProgressLine } from "@/components/ui";
+import { Panel } from "@/components/ui";
 import type { PlayerRow } from "@/lib/data/dashboard";
 import { formatPrice } from "@/lib/time";
 
 export const POSITIONS = ["GKP", "DEF", "MID", "FWD"] as const;
 export const SORTS = { form: "Form", price: "Price", owned: "Ownership", xgi: "xGI/90" } as const;
 export type Sort = keyof typeof SORTS;
-
-const FORM_COLOR: Record<string, string> = {
-  panas: "#F87171",
-  bagus: "#4ADE80",
-  stabil: "var(--accent)",
-  menurun: "#FBBF24",
-  dingin: "#38BDF8",
-};
-
-/** Daftar form teratas dengan garis progres (ref-02 panel "AI Prediction"). */
-export function FormLeaders({ players }: { players: PlayerRow[] }) {
-  return (
-    <Panel title="Top Form" subtitle="Form score vs same-position players">
-      <ul className="flex flex-col gap-3">
-        {players.map((p) => (
-          <li key={p.id} className="flex items-center gap-3">
-            <PlayerHeadshot name={p.webName} urls={p.photos} size="sm" status={p.status} />
-            <div className="min-w-0 flex-1">
-              <div className="mb-1.5 flex items-center justify-between gap-2 text-sm">
-                <Link href={`/pemain/${p.id}`} className="truncate font-medium hover:text-[var(--accent)] hover:underline">
-                  {p.webName}
-                </Link>
-                <span className="tabular-nums text-[var(--text-muted)]">{Math.round((p.form?.score ?? 0) * 100)}%</span>
-              </div>
-              <ProgressLine value={p.form?.score ?? 0} color={FORM_COLOR[p.form?.label ?? ""] ?? "var(--accent)"} />
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Panel>
-  );
-}
 
 /** Tabel pemain (desktop) / kartu (mobile) dengan filter posisi & urutan. */
 export function PlayerTable({

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BellIcon, SearchIcon, SettingsIcon } from "@/components/icons";
+import { AutoRefresh } from "@/components/shell/AutoRefresh";
 import { TopNav } from "@/components/shell/NavLinks";
 
 type Props = {
@@ -27,6 +28,7 @@ export function TopBar({ displayName, isAdmin, liveCount }: Props) {
       </div>
 
       <div className="flex items-center gap-1">
+        <AutoRefresh />
         <span
           className="mr-2 hidden items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm md:flex"
           title={liveCount > 0 ? `${liveCount} matches in progress` : "No matches in progress"}

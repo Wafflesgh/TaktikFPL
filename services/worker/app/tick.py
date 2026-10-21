@@ -31,6 +31,7 @@ from app.jobs import (
     sync_bootstrap,
     sync_fixtures,
     sync_managers,
+    sync_news,
     sync_player_history,
     sync_understat,
 )
@@ -41,6 +42,8 @@ INTERVALS = {
     "sync_bootstrap": timedelta(minutes=30),
     "sync_fixtures": timedelta(minutes=15),
     "poll_event_status": timedelta(minutes=30),
+    # Berita RSS: setiap tick (cron 15 menit) → masuk ke Home lewat Realtime.
+    "sync_news": timedelta(minutes=15),
 }
 # Toleransi agar tick yang datang sedikit lebih awal dari interval tetap menjalankan job.
 SLACK = timedelta(minutes=3)
@@ -206,6 +209,7 @@ JOBS: dict[str, Callable[..., Any]] = {
     "evaluate_model": evaluate_model.evaluate_model,
     "sync_understat": sync_understat.sync_understat,
     "sync_managers": sync_managers.sync_managers,
+    "sync_news": sync_news.sync_news,
     "model_lab": model_lab.model_lab,
 }
 

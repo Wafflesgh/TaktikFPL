@@ -72,6 +72,8 @@ class Settings(BaseSettings):
     odds_api_key: str = ""
     gnews_api_key: str = ""
     newsapi_key: str = ""
+    # Feed RSS berita: "kode|url,kode|url" (kosong = default di app/sources/news.py)
+    news_feeds: str = ""
     experimental_sources: bool = False
 
     # AI

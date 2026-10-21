@@ -4,14 +4,17 @@ import { PlayerHeadshot } from "@/components/PlayerHeadshot";
 import { BestXiPanel } from "@/components/dashboard/BestXi";
 import { DeadlineTile } from "@/components/dashboard/DeadlineTile";
 import { FixtureGrid, NextMatchCard, StandingsTable } from "@/components/dashboard/Matches";
-import { FormLeaders, PlayerTable, type Sort } from "@/components/dashboard/Players";
+import { NewsFeed } from "@/components/dashboard/NewsFeed";
+import { PlayerTable, type Sort } from "@/components/dashboard/Players";
 import { Spotlight } from "@/components/dashboard/Spotlight";
+import { TopForm } from "@/components/dashboard/TopForm";
 import { AlertIcon, CalendarIcon, ClockIcon, FlameIcon } from "@/components/icons";
 import { BottomNav } from "@/components/shell/NavLinks";
 import { TopBar } from "@/components/shell/TopBar";
 import { Panel, StatTile } from "@/components/ui";
 import type { BestXi } from "@/lib/data/bestxi";
 import type { DashboardData, PlayerRow } from "@/lib/data/dashboard";
+import type { NewsEntry } from "@/lib/data/news";
 import { FORM_ORDER } from "@/lib/form";
 import { formatWIB } from "@/lib/time";
 
@@ -31,17 +34,18 @@ type Props = {
   isAdmin: boolean;
   data: DashboardData;
   bestXi: BestXi | null;
+  news: NewsEntry[];
   pos: string | undefined;
   sort: Sort;
 };
 
 /** Beranda desktop-first (ref-02): top bar + 3 kolom; mobile: kolom bertumpuk + bottom nav. */
-export function DashboardView({ displayName, isAdmin, data, bestXi, pos, sort }: Props) {
+export function DashboardView({ displayName, isAdmin, data, bestXi, news, pos, sort }: Props) {
   const { next, fixtures, live, players, standings, fetchedAt } = data;
 
   const byForm = sortPlayers(players, "form");
   const spotlight = byForm.find((p) => p.form?.label === "panas" || p.form?.label === "bagus") ?? null;
-  const leaders = byForm.filter((p) => p.form?.label && p.form.label !== "minim_menit").slice(0, 6);
+  const leaders = byForm.filter((p) => p.form?.label && p.form.label !== "minim_menit");
   const hotCount = players.filter((p) => p.form?.label === "panas").length;
   const changedCount = fixtures.filter((f) => f.recentlyChanged).length;
   const flagged = players.filter((p) => p.status && p.status !== "a" && (p.ownedPct ?? 0) >= 5).slice(0, 4);
@@ -106,7 +110,7 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, pos, sort }:
             </div>
           </Panel>
 
-          <FormLeaders players={leaders} />
+          <TopForm players={leaders} />
 
           {flagged.length > 0 && (
             <Panel title="Watch Out" subtitle="Popular players (≥5% owned) flagged as not fit">
@@ -145,6 +149,7 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, pos, sort }:
 
         {/* Kolom kanan: laga + klasemen */}
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-12 lg:grid lg:grid-cols-2 xl:col-span-3 xl:flex">
+          <NewsFeed items={news} serverNow={fetchedAt} />
           <NextMatchCard live={live} next={upcoming} />
           <StandingsTable rows={standings} />
           {spotlight?.form && (

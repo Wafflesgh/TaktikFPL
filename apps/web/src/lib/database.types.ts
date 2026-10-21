@@ -321,6 +321,43 @@ export type Database = {
         last_action: string | null;
         assist_player_id: number | null;
       }>;
+      news_items: Table<{
+        id: number;
+        url: string | null;
+        source: string;
+        title: string | null;
+        published_at: string | null;
+        fetched_at: string;
+        raw_text: string | null;
+      }>;
+      news_entities: Table<
+        {
+          id: number;
+          news_id: number;
+          player_id: number | null;
+          team_id: number | null;
+          signal_type: string;
+          extracted_by: string;
+        },
+        [
+          {
+            foreignKeyName: "news_entities_news_id_fkey";
+            columns: ["news_id"];
+            isOneToOne: false;
+            referencedRelation: "news_items";
+            referencedColumns: ["id"];
+          },
+        ]
+      >;
+      player_status_snapshots: Table<{
+        id: number;
+        player_id: number;
+        captured_at: string;
+        status: string | null;
+        chance_next: number | null;
+        news: string | null;
+        news_added_utc: string | null;
+      }>;
       managers: Table<{
         id: number;
         full_name: string;

@@ -85,15 +85,21 @@ export function TeamLink({ team, children, className = "" }: { team: { id: numbe
 export function TeamBadge({ url, short, size = 40 }: { url: string | null; short: string | null; size?: number }) {
   return (
     <span
-      className="grid shrink-0 place-items-center overflow-hidden rounded-full bg-white/90 p-1.5"
+      className={`grid shrink-0 place-items-center ${url ? "" : "rounded-full bg-white/10"}`}
       style={{ width: size, height: size }}
       title={short ?? undefined}
     >
       {url ? (
+        // Badge melayang tanpa lingkaran; bayangan tipis menjaga kontras badge gelap di tema gelap.
         // eslint-disable-next-line @next/next/no-img-element -- badge dari CDN yang dikonfigurasi
-        <img src={url} alt={short ?? "badge"} className="h-full w-full object-contain" loading="lazy" />
+        <img
+          src={url}
+          alt={short ?? "badge"}
+          className="h-full w-full object-contain [filter:drop-shadow(0_0_1px_rgba(255,255,255,0.55))_drop-shadow(0_1px_2px_rgba(0,0,0,0.6))]"
+          loading="lazy"
+        />
       ) : (
-        <span className="text-xs font-bold text-black">{short}</span>
+        <span className="text-[10px] font-bold">{short}</span>
       )}
     </span>
   );

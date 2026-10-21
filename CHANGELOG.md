@@ -2,6 +2,27 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.22.0] — 2026-10-21 · Berita FPL realtime, auto-update, logo & badge
+
+### Ditambahkan
+- **FPL News** di Home: perubahan status/berita pemain dari FPL (cedera, ragu, skorsing + % peluang main) dan
+  artikel RSS gratis (BBC Sport, The Guardian, Sky Sports, Fantasy Football Scout) — judul, sumber, waktu,
+  tautan, chip pemain yang disebut, label sinyal (Injury, Suspension, Transfer, Team news…). Realtime: baris
+  baru di `news_items`/`player_status_snapshots` langsung muncul tanpa reload (ditandai "New").
+- Worker: adapter `news.py` (feedparser; feed via env `NEWS_FEEDS`) + job `sync_news` tiap tick (±15 menit);
+  pemain dikenali dengan aturan nama (nama lengkap / web_name unik, huruf besar persis), sinyal dari kata kunci
+  → `news_entities` (extracted_by 'rules'). `SourceClient.get_text` untuk respons non-JSON. Migrasi
+  `20261021000600_news_realtime` (news_items ke publikasi Realtime).
+- **Auto-update** di top bar: Auto (30 menit dalam 24 jam sebelum deadline, selain itu 1 jam) / 30 menit /
+  1 jam / 12 jam / Off, tersimpan per perangkat; "Refresh now" dan waktu sinkron FPL terakhir.
+- **Top Form**: semua pemain (bukan 6), filter All/FWD/MID/DEF/GK, "Show all".
+- Logo TaktikFPL (singa bermahkota) untuk top bar, favicon, dan ikon PWA.
+
+### Diubah
+- Badge klub tampil melayang tanpa lingkaran putih (bayangan tipis menjaga kontras badge gelap).
+- Wikidata: klub dicocokkan ke entitas utama (sitelinks terbanyak), bukan tim akademi; klub tanpa pelatih
+  aktif dicocokkan ulang. Job `sync_managers` terdaftar di CLI manual.
+
 ## [0.21.0] — 2026-10-21 · Analisis lawan per pemain + profil klub
 
 ### Ditambahkan

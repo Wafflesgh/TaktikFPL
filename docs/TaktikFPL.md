@@ -67,7 +67,7 @@
 - Memori Claude: `C:\Users\alfia\.claude\projects\D--Claude-Project-Taktik-FPL\memory\` (`MEMORY.md`,
   `project-state.md`, `user-preferences.md`).
 
-## 5. Database (21 migrasi; `20261021000500_manager_sources` = managers.wikidata_id/photo_url — cek sudah di-push)
+## 5. Database (22 migrasi; terakhir `20261021000600_news_realtime` — cek sudah di-push)
 
 `supabase/migrations/`: base, master (teams/players/external ids/unmatched_entities), calendar (seasons, gameweeks,
 fixtures — kolom `understat_match_id`), match_data (lineups, player_match_stats, team_match_stats, match_events,
@@ -100,7 +100,7 @@ Kunci penyimpanan penting:
 ## 6. Worker (`services/worker/app`)
 
 Jadwal tick (`app/tick.py`): `sync_bootstrap` tiap 30 menit (tiap tick dalam 24 jam sebelum deadline),
-`sync_fixtures` 15 menit, `poll_event_status` 30 menit, checkpoint deadline T-48j/T-24j/T-6j/T-2j/T-60m/T-15m
+`sync_fixtures` 15 menit, `sync_news` 15 menit (RSS → news_items, Realtime ke Home), `poll_event_status` 30 menit, checkpoint deadline T-48j/T-24j/T-6j/T-2j/T-60m/T-15m
 (`deadline_checkpoint` → sync + `run_projections` run_type tN; t60 disimpan permanen). Harian (UTC):
 `cleanup_retention` 03, `sync_managers` 04 (pelatih dari Wikidata), `sync_player_history` 05 → `build_form` → `run_projections`, `sync_understat` 06,
 `evaluate_model` 07, `model_lab` 08 (`only_new`: hanya bila ada GW selesai baru). **Follow-up**: bila
@@ -109,7 +109,8 @@ Jadwal tick (`app/tick.py`): `sync_bootstrap` tiap 30 menit (tiap tick dalam 24 
 Jobs (`app/jobs/`): sync_bootstrap (pemain/tim/GW/harga/status, aturan poin, chip & game_settings, arsip),
 sync_fixtures (+ deteksi perubahan jadwal), poll_event_status, sync_player_history, build_form (label form:
 panas/bagus/stabil/menurun/dingin/minim_menit), backfill_history (vaastav), gw_finalize, deadline_checkpoint,
-cleanup_retention, run_projections, evaluate_model, sync_understat, sync_managers, model_lab, set_active_model.
+cleanup_retention, run_projections, evaluate_model, sync_understat, sync_managers, sync_news, model_lab,
+set_active_model. Job baru WAJIB di-import juga di `app/cli.py` (registry manual) selain `app/tick.py`.
 CLI manual: `python -m app.cli job[:k=v,...] ...`.
 
 Sumber (`app/sources/`): `fpl.py` (API publik, tanpa login), `vaastav.py` (dataset historis), `understat.py`
@@ -139,7 +140,8 @@ Model & optimasi:
 
 ## 7. Web (`apps/web/src/app`) — https://taktik-fpl.vercel.app
 
-`/` Home (overview GW, **Best XI** 15 pemain + bench + alasan + "Full breakdown"), `/analisis` (harga & transfer,
+`/` Home (overview GW, **Best XI** 15 pemain + bench + alasan + "Full breakdown", **FPL News** realtime,
+Top Form dengan filter posisi; top bar: toggle **Auto-update** per perangkat), `/analisis` (harga & transfer,
 **Model accuracy**), `/jadwal` (fixtures, FDR, perubahan jadwal), `/pemain/[id]` (hero, poin per GW, form,
 **Positions played** (lapangan ala FM dari slot posisi lineup Understat, mulai 2025/26: apps, %, G/A, xG/xA per
 posisi), **Detailed stats** (total, per 90, persentil vs posisi sama), **Compare** (tabel pemain se-posisi,

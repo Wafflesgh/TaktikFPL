@@ -50,7 +50,7 @@ def test_intervals_respected():
         sync_managers=10,
         model_lab=10,
     )
-    last = {**daily, **fresh(sync_bootstrap=14, sync_fixtures=14, poll_event_status=14)}
+    last = {**daily, **fresh(sync_bootstrap=14, sync_fixtures=14, poll_event_status=14, sync_news=5)}
     assert jobs(plan(state(last), CPS)) == ["sync_fixtures"]  # 14 + slack 3 ≥ 15
 
 

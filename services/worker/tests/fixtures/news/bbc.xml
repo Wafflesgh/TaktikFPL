@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+<channel>
+<title>Test Sport - Premier League</title>
+<link>https://www.example.com/sport/football/premier-league</link>
+<description>Synthetic feed for parser tests (structure mirrors BBC Sport RSS)</description>
+<item>
+  <title><![CDATA[Forward ruled out for three weeks with hamstring injury]]></title>
+  <description><![CDATA[<p>The club confirmed the <b>striker</b> will miss the next three matches &amp; return after the international break.</p>]]></description>
+  <link>https://www.example.com/sport/football/articles/abc123?at_medium=RSS&amp;at_campaign=rss</link>
+  <guid isPermaLink="false">https://www.example.com/sport/football/articles/abc123#0</guid>
+  <pubDate>Wed, 21 Oct 2026 06:26:58 GMT</pubDate>
+</item>
+<item>
+  <title><![CDATA[Midfielder back in training ahead of weekend derby]]></title>
+  <description><![CDATA[Good news for the manager as a key player returns.]]></description>
+  <link>https://www.example.com/sport/football/articles/def456</link>
+  <pubDate>Tue, 20 Oct 2026 18:00:00 GMT</pubDate>
+</item>
+<item>
+  <title><![CDATA[Item without a link is skipped]]></title>
+  <pubDate>Tue, 20 Oct 2026 17:00:00 GMT</pubDate>
+</item>
+</channel>
+</rss>

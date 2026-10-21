@@ -108,7 +108,28 @@ class SourceClient:
         self._check_quota()
         return self._get_with_retry(endpoint, params, store_raw)
 
+    def get_text(self, endpoint: str, params: dict[str, Any] | None = None) -> str:
+        """Respons non-JSON (RSS/XML). Raw disimpan terpotong 5000 karakter (dedup per interval)."""
+        self._check_quota()
+        return self._get_text_with_retry(endpoint, params)
+
     # ---------------------------------------------------------------- internal
+    @retry(
+        retry=retry_if_exception(_is_retryable),
+        wait=wait_exponential_jitter(initial=1, max=30),
+        stop=stop_after_attempt(5),
+        reraise=True,
+    )
+    def _get_text_with_retry(self, endpoint: str, params: dict[str, Any] | None) -> str:
+        self._limiter.wait()
+        resp = self._http.get(endpoint, params=params)
+        self._record_usage()
+        self._store_raw(endpoint, params, resp.status_code, None, resp.text)
+        if resp.status_code != 200:
+            log.warning("source.http_error", source=self.name, endpoint=endpoint, status=resp.status_code)
+            raise SourceHTTPError(self.name, str(resp.url), resp.status_code, resp.text[:500])
+        return resp.text
+
     @retry(
         retry=retry_if_exception(_is_retryable),
         wait=wait_exponential_jitter(initial=1, max=30),
