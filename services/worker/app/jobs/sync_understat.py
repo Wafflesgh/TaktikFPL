@@ -445,8 +445,8 @@ def sync_understat(seasons: str | None = None, max_matches: int = 40) -> dict[st
                 **agg,
             }
             log.info("understat.season", season=label, **out[label])
-    if not seasons:
-        out["snapshot"] = snapshot_tactics()
+    # Snapshot selalu diambil (juga setelah backfill) agar profil taktik langsung tersedia di web.
+    out["snapshot"] = snapshot_tactics()
     return out
 
 

@@ -28,8 +28,8 @@ export function PlayerHero({
   const status = player.status ? STATUS[player.status] : null;
   const stats = [
     { label: "Season points", value: season?.points ?? "-" },
-    { label: "Menit", value: season?.minutes ?? "-" },
-    { label: "Gol · Assist", value: season ? `${season.goals} · ${season.assists}` : "-" },
+    { label: "Minutes", value: season?.minutes ?? "-" },
+    { label: "Goals · Assists", value: season ? `${season.goals} · ${season.assists}` : "-" },
     { label: "Season xGI", value: season?.xgi != null ? season.xgi.toFixed(2) : "-" },
     { label: "Pts/match (last 4)", value: f?.last4Ppm?.toFixed(1) ?? "-" },
     { label: "Points per 90", value: season?.pointsPer90 != null ? season.pointsPer90.toFixed(1) : "-" },
@@ -93,7 +93,7 @@ export function PlayerHero({
 
           {f && f.reasons.length > 0 && (
             <div>
-              <p className="mb-1.5 text-xs uppercase tracking-wider text-[var(--text-muted)]">Kenapa form-nya begini</p>
+              <p className="mb-1.5 text-xs uppercase tracking-wider text-[var(--text-muted)]">Why the form looks like this</p>
               <ul className="flex flex-col gap-1 text-sm">
                 {f.reasons.map((r) => (
                   <li key={r} className="flex gap-2">

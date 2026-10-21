@@ -23,7 +23,7 @@ export function GwTable({ rows, highlight }: { rows: GwRow[]; highlight: Set<num
             <th className="px-2 py-2 text-center font-medium" title="Home (H) / away (A)">H/A</th>
             <th className={th}>Mins</th>
             <th className={th}>Pts</th>
-            <th className={th} title="Gol">G</th>
+            <th className={th} title="Goals">G</th>
             <th className={th} title="Assist">A</th>
             <th className={th}>Bonus</th>
             <th className={th}>xG</th>
@@ -89,7 +89,7 @@ export function SeasonTable({ rows }: { rows: SeasonSummary[] }) {
             <th className={th}>Pts</th>
             <th className={th}>Mins</th>
             <th className={th} title="Matches with minutes > 0">Apps</th>
-            <th className={th} title="Gol">G</th>
+            <th className={th} title="Goals">G</th>
             <th className={th} title="Assist">A</th>
             <th className={th} title="Points per 90 minutes">Pts/90</th>
             <th className={`${th} pr-0`} title="xG + xA (available since 2022/23)">xGI</th>
