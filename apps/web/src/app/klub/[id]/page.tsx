@@ -50,7 +50,7 @@ export default async function ClubPage({ params }: PageProps<"/klub/[id]">) {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
+    <div className="mx-auto flex w-full max-w-[1880px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
       <TopBar displayName={viewer.displayName} isAdmin={viewer.isAdmin} liveCount={0} />
       <main className="flex min-w-0 flex-col gap-6">
         <Link href="/" className="inline-flex w-fit items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)]">

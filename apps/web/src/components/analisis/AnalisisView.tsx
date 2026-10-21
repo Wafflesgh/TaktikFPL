@@ -23,7 +23,7 @@ const SECTIONS = [
 /** Hub Analisis desktop-first. Bagian pertama: Prices & Transfers (BLUEPRINT fitur #13 Price watch). */
 export function AnalisisView({ displayName, isAdmin, data, pos, accuracy }: Props) {
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
+    <div className="mx-auto flex w-full max-w-[1880px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
       <TopBar displayName={displayName} isAdmin={isAdmin} liveCount={data.liveCount} />
 
       <main className="flex min-w-0 flex-col gap-6">

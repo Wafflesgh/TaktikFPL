@@ -67,7 +67,7 @@ export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) 
   const signed = (v: number | null | undefined) => (v != null ? `${v > 0 ? "+" : ""}${v.toFixed(2)}` : "-");
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
+    <div className="mx-auto flex w-full max-w-[1880px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
       <TopBar displayName={viewer.displayName} isAdmin={viewer.isAdmin} liveCount={liveCount} />
 
       <main className="flex min-w-0 flex-col gap-6">

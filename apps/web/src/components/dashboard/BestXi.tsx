@@ -23,10 +23,10 @@ function Card({ p, xi, active, onPick, bench = false }: { p: XiPlayer; xi: BestX
       onClick={onPick}
       aria-pressed={active}
       aria-label={`${p.name}, ${p.xpts.toFixed(1)} xPts — show details`}
-      className={`group flex w-[78px] flex-col items-center text-center ${bench ? "opacity-90" : ""}`}
+      className={`group flex w-[90px] flex-col items-center text-center ${bench ? "opacity-90" : ""}`}
     >
       <span className="relative">
-        <PlayerHeadshot name={p.name} urls={p.photos} size="cutSm" status={p.status} />
+        <PlayerHeadshot name={p.name} urls={p.photos} size="cut" status={p.status} />
         {tag && (
           <span className="absolute -right-1 top-0 grid h-5 w-5 place-items-center rounded-full bg-black text-[10px] font-bold text-white ring-2 ring-[var(--accent)]">{tag}</span>
         )}
@@ -115,7 +115,7 @@ export function BestXiPanel({ xi }: { xi: BestXi | null }) {
       <div className="-mx-1 overflow-x-auto px-1">
         <div className="flex min-w-[540px] gap-2">
           <div
-            className="relative h-[480px] flex-1 overflow-hidden rounded-2xl border border-white/10"
+            className="relative aspect-[105/68] min-h-[500px] flex-1 overflow-hidden rounded-2xl border border-white/10"
             style={{ background: "repeating-linear-gradient(90deg, #166534 0 10%, #15803d 10% 20%)" }}
           >
             <svg viewBox="0 0 160 90" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
@@ -142,7 +142,7 @@ export function BestXiPanel({ xi }: { xi: BestXi | null }) {
             )}
           </div>
           {xi.bench.length > 0 && (
-            <div className="flex w-[88px] shrink-0 flex-col items-center justify-around rounded-2xl border border-white/10 bg-white/[0.04] py-2">
+            <div className="flex w-[100px] shrink-0 flex-col items-center justify-around rounded-2xl border border-white/10 bg-white/[0.04] py-2">
               <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">Bench</p>
               {xi.bench.map((p) => (
                 <Card key={p.id} p={p} xi={xi} active={sel?.id === p.id} onPick={() => setPicked(p.id)} bench />

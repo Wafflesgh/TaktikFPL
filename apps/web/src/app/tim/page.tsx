@@ -16,7 +16,7 @@ export default async function TimPage({ searchParams }: PageProps<"/tim">) {
   const ft = ftRaw && Number.isInteger(Number(ftRaw)) ? Math.max(0, Math.min(15, Number(ftRaw))) : null;
   const [viewer, data] = await Promise.all([getViewer(), getTimData(entryId, ft)]);
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
+    <div className="mx-auto flex w-full max-w-[1880px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
       <TopBar displayName={viewer.displayName} isAdmin={viewer.isAdmin} liveCount={0} />
       <TimView data={data} entryId={entryId} mode={mode} />
       <BottomNav />

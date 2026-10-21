@@ -60,7 +60,7 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, news, pos, s
   const upcoming = fixtures.find((f) => f.kickoffUtc && new Date(f.kickoffUtc) > new Date()) ?? fixtures[0] ?? null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
+    <div className="mx-auto flex w-full max-w-[1880px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
       <TopBar displayName={displayName} isAdmin={isAdmin} liveCount={live.length} />
 
       <main className="grid grid-cols-1 gap-6 lg:grid-cols-12">

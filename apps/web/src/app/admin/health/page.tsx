@@ -34,7 +34,7 @@ export default async function AdminHealthPage() {
   ]);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
+    <div className="mx-auto flex w-full max-w-[1880px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
       <TopBar displayName={viewer.displayName} isAdmin liveCount={0} />
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <h1 className="font-display text-3xl uppercase">Admin · Health</h1>

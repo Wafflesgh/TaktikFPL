@@ -5,7 +5,7 @@ function Block({ className = "" }: { className?: string }) {
 
 export default function Loading() {
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10" aria-busy="true">
+    <div className="mx-auto flex w-full max-w-[1880px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10" aria-busy="true">
       <span className="sr-only">Loading data…</span>
       <Block className="h-16" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
