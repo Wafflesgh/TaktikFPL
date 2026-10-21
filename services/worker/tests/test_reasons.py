@@ -74,3 +74,10 @@ def test_best_xi_valid_formation_and_club_limit():
     d, m, f = (int(x) for x in xi.formation.split("-"))
     assert d + m + f == 10 and 3 <= d <= 5 and 2 <= m <= 5 and 1 <= f <= 3
     assert by[xi.captain].value >= by[xi.vice].value
+
+
+def test_defender_picked_for_defcon_and_threat():
+    f = FixtureView(8, "NEW", True, 90.0, 1.0, 0.2, xgi=0.3, defcon_pts=1.2)
+    rs = player_reasons("DEF", "a", None, None, None, [f], 8)
+    ks = [r["kind"] for r in rs]
+    assert "defcon" in ks and "threat" in ks

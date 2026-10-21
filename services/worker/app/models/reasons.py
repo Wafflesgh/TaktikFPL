@@ -1,6 +1,7 @@
 """Alasan pemilihan pemain — template deterministik dari angka engine (bukan LLM).
 
-Setiap alasan: {"kind", "tone", "text"}. kind ∈ availability | dgw | fixture | form | run | minutes;
+Setiap alasan: {"kind", "tone", "text"}. kind ∈ availability | dgw | fixture | threat | defcon |
+form | run | minutes;
 tone ∈ good | warn | bad. Teks UI dalam bahasa Inggris (CLAUDE.md aturan 7).
 """
 
@@ -13,6 +14,9 @@ UNAVAILABLE = {"i", "s", "u", "n"}
 ATT_EASY, ATT_TOUGH = 1.15, 0.85
 CS_EASY, CS_TOUGH = 0.40, 0.20
 NAILED_MINS, ROTATION_MINS = 80.0, 55.0
+# Sumber poin di luar form/lawan: bonus defcon & ancaman serang (xG+xA laga itu).
+DEFCON_PTS = 0.8
+XGI_ATTACK = {"GKP": 9.9, "DEF": 0.25, "MID": 0.5, "FWD": 0.6}
 RUN_LENGTH = 5
 MAX_REASONS = 4
 
@@ -32,6 +36,8 @@ class FixtureView:
     xmins: float
     att_mult: float
     team_cs: float
+    xgi: float = 0.0  # xG + xA laga itu
+    defcon_pts: float = 0.0  # poin defcon yang diharapkan
 
 
 def _label(f: FixtureView) -> str:
@@ -89,6 +95,14 @@ def player_reasons(
         add("fixture", "good", "Easy fixture: " + _fixture_text(position, now[now_ease.index(1)]))
     elif now and min(now_ease) == -1 and len(now) == 1:
         add("fixture", "warn", "Tough fixture: " + _fixture_text(position, now[0]))
+
+    if now:
+        xgi = sum(f.xgi for f in now)
+        dc = sum(f.defcon_pts for f in now)
+        if xgi >= XGI_ATTACK.get(position, 9.9):
+            add("threat", "good", f"Attacking threat: {xgi:.2f} xG+xA expected")
+        if dc >= DEFCON_PTS:
+            add("defcon", "good", f"Defensive contributions: ~{dc:.1f} pts expected")
 
     if form:
         label = form.get("form_label")

@@ -135,7 +135,14 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
             if use_v1:
                 views[int(p.id)].append(
                     FixtureView(
-                        gw, team_short.get(opp, "?"), is_home, out["xmins"], out["att_mult"], out["team_cs"]
+                        gw,
+                        team_short.get(opp, "?"),
+                        is_home,
+                        out["xmins"],
+                        out["att_mult"],
+                        out["team_cs"],
+                        out["xg"] + out["xa"],
+                        out["c_defcon"],
                     )
                 )
                 if gw == first_gw:
