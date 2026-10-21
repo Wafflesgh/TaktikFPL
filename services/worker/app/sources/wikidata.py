@@ -63,6 +63,12 @@ class WikidataClient(SourceClient):
             },
         )
 
+    def sitelinks(self, qids: list[str]) -> dict[str, Any]:
+        return self.get_json(
+            "w/api.php",
+            {"action": "wbgetentities", "ids": "|".join(qids[:50]), "props": "sitelinks", "format": "json"},
+        )
+
     def coaches(self, club_qids: list[str]) -> dict[str, Any]:
         values = " ".join(f"wd:{q}" for q in club_qids)
         return self.get_json(SPARQL_URL, {"query": COACHES_QUERY % values, "format": "json"})
@@ -86,6 +92,19 @@ class CoachTenure:
 def parse_search(payload: dict[str, Any]) -> list[str]:
     """QID hasil pencarian, urut relevansi."""
     return [h["title"] for h in (payload.get("query") or {}).get("search") or [] if "title" in h]
+
+
+def parse_sitelinks(payload: dict[str, Any]) -> dict[str, int]:
+    """QID → jumlah artikel Wikipedia (sitelinks)."""
+    return {q: len(e.get("sitelinks") or {}) for q, e in (payload.get("entities") or {}).items()}
+
+
+def pick_club(hits: list[str], sitelinks: dict[str, int]) -> str | None:
+    """Klub utama = kandidat dengan sitelinks terbanyak (tim akademi/wanita/cadangan jauh lebih sedikit);
+    seri → urutan relevansi pencarian."""
+    if not hits:
+        return None
+    return max(hits, key=lambda q: (sitelinks.get(q, 0), -hits.index(q)))
 
 
 def _qid(uri: str) -> str:

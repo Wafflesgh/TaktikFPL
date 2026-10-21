@@ -16,7 +16,14 @@ from app.archive.store import archive_payload
 from app.db import get_engine
 from app.scheduler.runner import JobSkipped, job
 from app.sources.understat import UnderstatClient, parse_team_history, season_year
-from app.sources.wikidata import CoachTenure, WikidataClient, parse_coaches, parse_search
+from app.sources.wikidata import (
+    CoachTenure,
+    WikidataClient,
+    parse_coaches,
+    parse_search,
+    parse_sitelinks,
+    pick_club,
+)
 
 log = structlog.get_logger()
 
@@ -53,7 +60,9 @@ def sync_managers() -> dict[str, Any]:
                        (select e.external_id from public.team_external_ids e
                         where e.team_id = t.id and e.source = 'understat' limit 1) understat_id,
                        (select e.external_id from public.team_external_ids e
-                        where e.team_id = t.id and e.source = 'wikidata' limit 1) wikidata_id
+                        where e.team_id = t.id and e.source = 'wikidata' limit 1) wikidata_id,
+                       exists (select 1 from public.manager_tenures mt
+                               where mt.team_id = t.id and mt.end_date is null) has_coach
                 from public.teams t join public.team_seasons ts on ts.team_id = t.id
                 where ts.season_id = :s
                 """
@@ -62,7 +71,8 @@ def sync_managers() -> dict[str, Any]:
         ).all()
 
     qid_of = {int(t.id): t.wikidata_id for t in teams if t.wikidata_id}
-    missing = [t for t in teams if not t.wikidata_id]
+    # Belum dipetakan, atau dipetakan tapi tanpa pelatih aktif (kemungkinan entitas salah) → cari ulang.
+    missing = [t for t in teams if not t.wikidata_id or not t.has_coach]
     unmatched: list[str] = []
     if missing:
         titles: dict[str, str] = {}
@@ -72,13 +82,24 @@ def sync_managers() -> dict[str, Any]:
         with WikidataClient(engine=engine) as wd:
             for t in missing:
                 names = [n for n in (titles.get(str(t.understat_id)), t.name) if n]
-                qid = next((h[0] for n in names if (h := parse_search(wd.search_club(n)))), None)
+                hits = list(dict.fromkeys(q for n in names for q in parse_search(wd.search_club(n))))
+                qid = pick_club(hits, parse_sitelinks(wd.sitelinks(hits)) if hits else {})
                 if qid:
                     qid_of[int(t.id)] = qid
                 else:
                     unmatched.append(t.name)
         with engine.begin() as conn:
             for tid, qid in qid_of.items():
+                # Pemetaan id (operasional, bukan fakta) boleh diganti bila hasil pencarian berubah.
+                conn.execute(
+                    text(
+                        """
+                        delete from public.team_external_ids
+                        where team_id = :t and source = 'wikidata' and external_id <> :q
+                        """
+                    ),
+                    {"t": tid, "q": qid},
+                )
                 conn.execute(
                     text(
                         """

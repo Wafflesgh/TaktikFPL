@@ -5,7 +5,14 @@ from datetime import date
 from pathlib import Path
 
 from app.jobs.sync_managers import close_superseded
-from app.sources.wikidata import CoachTenure, current_tenures, parse_coaches, parse_search
+from app.sources.wikidata import (
+    CoachTenure,
+    current_tenures,
+    parse_coaches,
+    parse_search,
+    parse_sitelinks,
+    pick_club,
+)
 
 FX = Path(__file__).parent / "fixtures" / "wikidata"
 
@@ -38,3 +45,16 @@ def test_close_superseded_closes_stale_open_tenure():
     b = next(x for x in out if x.coach_qid == "B")
     assert a.end == date(2026, 1, 13) and b.end is None
     assert current_tenures(out, date(2026, 10, 1))["Q1"].coach_qid == "B"
+
+
+def test_pick_club_prefers_main_club_over_academy():
+    links = parse_sitelinks(
+        {
+            "entities": {
+                "Q2669653": {"sitelinks": {"enwiki": {}}},
+                "Q9616": {"sitelinks": {"enwiki": {}, "idwiki": {}}},
+            }
+        }
+    )
+    assert pick_club(["Q2669653", "Q9616"], links) == "Q9616"
+    assert pick_club([], {}) is None
