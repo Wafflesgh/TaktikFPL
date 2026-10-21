@@ -106,7 +106,22 @@ export async function getTimData(entryId: number | null) {
   const optimal = await loadOptimalSquad();
   const optimalPlayers = optimal ? optimal.squad.map((id) => byId.get(id)).filter((p): p is (typeof pool)[number] => Boolean(p)) : [];
 
-  const base = { firstGw: proj.firstGw, horizonGw: proj.horizonGw, modelVersion: proj.modelVersion, finishedAt: proj.finishedAt, optimal, optimalPlayers };
+  // Alternatif per posisi (di luar squad optimal): 3 nilai horizon tertinggi + 2 opsi hemat (nilai/£ terbaik).
+  const inOptimal = new Set(optimal?.squad ?? []);
+  const alternatives = Object.fromEntries(
+    ["GKP", "DEF", "MID", "FWD"].map((pos) => {
+      const rest = pool.filter((p) => p.position === pos && !inOptimal.has(p.id) && p.horizon > 0);
+      const top = [...rest].sort((a, b) => b.horizon - a.horizon).slice(0, 3);
+      const topIds = new Set(top.map((p) => p.id));
+      const value = rest
+        .filter((p) => !topIds.has(p.id))
+        .sort((a, b) => b.horizon / b.priceTenths - a.horizon / a.priceTenths)
+        .slice(0, 2);
+      return [pos, { top, value }];
+    }),
+  ) as Record<string, { top: typeof pool; value: typeof pool }>;
+
+  const base = { firstGw: proj.firstGw, horizonGw: proj.horizonGw, modelVersion: proj.modelVersion, finishedAt: proj.finishedAt, optimal, optimalPlayers, alternatives };
   if (!entryId) return { status: "no_entry" as const, ...base };
 
   const entry = await getEntry(entryId);

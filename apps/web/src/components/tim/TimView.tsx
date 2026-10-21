@@ -55,6 +55,107 @@ function EntryForm({ entryId, message }: { entryId: number | null; message?: str
   );
 }
 
+type Ready = Exclude<TimData, { status: "no_projections" }>;
+
+/** Squad awal yang direkomendasikan (ILP) — untuk yang belum punya tim di FPL. */
+function StartingSquad({ data }: { data: Ready }) {
+  const opt = data.optimal;
+  if (!opt) return null;
+  const { firstGw, horizonGw } = data;
+  const xi = data.optimalPlayers.filter((p) => opt.starters.includes(p.id));
+  const xiNext = xi.reduce((s, p) => s + (p.byGw[firstGw] ?? 0), 0);
+  const captain = data.optimalPlayers.find((p) => p.id === opt.captain);
+  return (
+    <Panel
+      title="Recommended starting squad"
+      subtitle={`No team yet? Build this on FPL. £${(opt.costTenths / 10).toFixed(1)}m of £100.0m · £${((1000 - opt.costTenths) / 10).toFixed(1)}m left in the bank`}
+    >
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: `XI xPts GW${firstGw}`, value: xiNext.toFixed(1) },
+          { label: `XI xPts ${horizonGw} GWs`, value: xi.reduce((s, p) => s + p.horizon, 0).toFixed(1) },
+          { label: "Captain", value: captain?.name ?? "-" },
+          { label: "Formation", value: ["DEF", "MID", "FWD"].map((pos) => xi.filter((p) => p.position === pos).length).join("-") },
+        ].map((t) => (
+          <div key={t.label} className="rounded-2xl bg-white/5 p-3">
+            <p className="text-xs text-[var(--text-muted)]">{t.label}</p>
+            <p className="mt-1 truncate font-display text-2xl leading-none">{t.value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-col gap-4">
+        {POS_ORDER.map((pos) => (
+          <div key={pos}>
+            <p className="mb-1 text-xs uppercase tracking-wider text-[var(--text-muted)]">{pos}</p>
+            <ul className="flex flex-col gap-1">
+              {data.optimalPlayers
+                .filter((p) => p.position === pos)
+                .sort((a, b) => Number(opt.starters.includes(b.id)) - Number(opt.starters.includes(a.id)) || b.horizon - a.horizon)
+                .map((p) => {
+                  const starter = opt.starters.includes(p.id);
+                  return (
+                    <li key={p.id} className={`flex flex-wrap items-center gap-3 rounded-xl px-2 py-1.5 ${starter ? "bg-white/5" : "bg-white/[0.02] opacity-70"}`}>
+                      <PlayerHeadshot name={p.name} urls={p.photos} size="sm" status={p.status} />
+                      <div className="min-w-[9rem] flex-1">
+                        <Link href={`/pemain/${p.id}`} className="font-medium hover:underline">
+                          {p.name}
+                          {p.id === opt.captain ? " (C)" : ""}
+                        </Link>
+                        <p className="text-xs text-[var(--text-muted)]">
+                          {p.teamShort} · {formatPrice(p.priceTenths)} {starter ? "" : "· bench"}
+                        </p>
+                      </div>
+                      <GwStrip p={p} firstGw={firstGw} n={horizonGw} />
+                      <span className="w-16 text-right text-sm font-semibold tabular-nums" title="Total 6-GW xPts (discounted)">
+                        {p.horizon.toFixed(1)}
+                      </span>
+                    </li>
+                  );
+                })}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <ol className="mt-4 list-decimal space-y-1 pl-5 text-xs text-[var(--text-muted)]">
+        <li>On fantasy.premierleague.com choose <b>Pick Team</b> and add these 15 players (prices may move a little).</li>
+        <li>Set the XI and captain as shown above, then save. Your Team ID appears in the Points page URL.</li>
+        <li>Enter that Team ID above to get weekly transfer advice for your own squad.</li>
+      </ol>
+    </Panel>
+  );
+}
+
+function Alternatives({ data }: { data: Ready }) {
+  return (
+    <Panel title="Alternatives by position" subtitle={`Best ${data.horizonGw}-GW xPts outside the recommended squad · value = xPts per £`}>
+      <div className="flex flex-col gap-3 text-sm">
+        {POS_ORDER.map((pos) => {
+          const alt = data.alternatives[pos];
+          if (!alt) return null;
+          return (
+            <div key={pos}>
+              <p className="mb-1 text-xs uppercase tracking-wider text-[var(--text-muted)]">{pos}</p>
+              <ul className="flex flex-col gap-0.5">
+                {[...alt.top.map((p) => ({ p, tag: "" })), ...alt.value.map((p) => ({ p, tag: "value" }))].map(({ p, tag }) => (
+                  <li key={p.id} className="flex items-center justify-between gap-2">
+                    <Link href={`/pemain/${p.id}`} className="truncate hover:underline">
+                      {p.name}
+                      {tag && <span className="ml-1 rounded-full bg-green-500/15 px-1.5 text-[10px] text-green-300">{tag}</span>}
+                    </Link>
+                    <span className="shrink-0 tabular-nums text-[var(--text-muted)]">
+                      {p.teamShort} · {formatPrice(p.priceTenths)} · {p.horizon.toFixed(1)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
 export function TimView({ data, entryId }: { data: TimData; entryId: number | null }) {
   if (data.status === "no_projections") {
     return (
@@ -88,6 +189,8 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
             }
           />
         </Panel>
+
+        {data.status !== "ok" && <StartingSquad data={data} />}
 
         {data.status === "ok" && (
           <Panel
@@ -189,7 +292,9 @@ export function TimView({ data, entryId }: { data: TimData; entryId: number | nu
           </>
         )}
 
-        {data.optimal && (
+        {data.status !== "ok" && <Alternatives data={data} />}
+
+        {data.status === "ok" && data.optimal && (
           <Panel title="Build from scratch (wildcard)" subtitle={`${data.optimal.title} · £${(data.optimal.costTenths / 10).toFixed(1)}m`}>
             <ul className="flex flex-col gap-1 text-sm">
               {POS_ORDER.flatMap((pos) =>
