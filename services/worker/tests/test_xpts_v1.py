@@ -1,5 +1,6 @@
 """xPts v1: komponen mengikuti kekuatan laga dan aturan poin dari data."""
 
+from app.features.rates import RateParams, calibrate_xmins, rate_totals
 from app.jobs.evaluate_model import metrics, spearman
 from app.jobs.sync_bootstrap import scoring_rules
 from app.models.xpts_v1 import MatchRates, PlayerRates, p_sixty, project_v1
@@ -53,6 +54,34 @@ def test_unavailable_player_scores_zero_and_rules_drive_points():
 
 def test_p_sixty_curve():
     assert p_sixty(0) == 0 and p_sixty(90) == 1 and 0 < p_sixty(50) < 1
+
+
+def test_calibrated_minutes_curve_is_less_optimistic():
+    raw = PlayerRates("MID", 84, 1.0, 0.3, 0.2, 0.3, 0.0, 0.1, 0.2)
+    cal = PlayerRates("MID", 84, 1.0, 0.3, 0.2, 0.3, 0.0, 0.1, 0.2, calibrated=True)
+    assert project_v1(cal, m(), RULES)["xpts"] < project_v1(raw, m(), RULES)["xpts"]
+
+
+def test_rate_params_defaults_and_helpers():
+    plain = RateParams(xmins_base=0.0, xmins_scale=1.0)
+    assert calibrate_xmins(90, plain) == 90 and calibrate_xmins(0, plain) == 0
+    assert abs(calibrate_xmins(90, RateParams()) - 82.0) < 1e-9  # default produksi terkalibrasi
+    row = {
+        "mins": 900,
+        "xg": 4.0,
+        "xg_mins": 900,
+        "xa": 2.0,
+        "g": 6,
+        "a": 0,
+        "bonus": 5,
+        "saves": 0,
+        "yc": 1,
+        "dc_apps": 0,
+        "dc10": 0,
+        "dc12": 0,
+    }
+    t = rate_totals(row, 0.25)
+    assert t["xg"] == 4.5 and t["xa"] == 1.5
 
 
 def test_scoring_rules_flatten_positions():

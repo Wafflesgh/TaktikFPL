@@ -6,7 +6,7 @@ Semua angka deterministik dari data — tidak ada LLM.
 """
 
 from collections.abc import Callable
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field, fields, replace
 from statistics import mean
 from typing import Any
 
@@ -250,7 +250,14 @@ class EngineCache:
 
     base: v1.Context | None = None
     tactics: v1.Context | None = None
-    variants: dict[tuple[int, int, float], v1.Context] = field(default_factory=dict)
+    variants: dict[tuple[v1.RateParams, bool], v1.Context] = field(default_factory=dict)
+
+
+RATE_FIELDS = {f.name for f in fields(v1.RateParams)}
+
+
+def rate_params(params: dict[str, Any]) -> v1.RateParams:
+    return v1.RateParams(**{k: v for k, v in params.items() if k in RATE_FIELDS})
 
 
 def engine_context(
@@ -258,11 +265,7 @@ def engine_context(
 ) -> v1.Context:
     positions = {pid: p.position for pid, p in b.players.items()}
     p = spec.params
-    key = (
-        int(p.get("last_apps", v1.LAST_APPS)),
-        int(p.get("xmins_matches", 5)),
-        float(p.get("prior_min", v1.PLAYER_PRIOR_MIN)),
-    )
+    key = (rate_params(p), bool(p.get("minutes_curve", True)))
     if key not in cache.variants:
         cache.variants[key] = v1.build_context(
             conn,
@@ -270,10 +273,9 @@ def engine_context(
             b.season_id,
             positions,
             rules=rules,
-            last_apps=key[0],
-            xmins_matches=key[1],
-            prior_min=key[2],
+            rate_params=key[0],
             tactics=False,
+            minutes_curve=key[1],
         )
     ctx = cache.variants[key]
     if p.get("tactics"):

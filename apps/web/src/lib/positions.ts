@@ -1,0 +1,40 @@
+// Slot posisi Understat per laga → nama & koordinat di lapangan (x, y dalam %, serangan ke atas).
+// Understat mencatat slot posisi, bukan peran gaya FM (mis. "Inverted Forward").
+export const POSITION_NAME: Record<string, string> = {
+  GK: "Goalkeeper",
+  DR: "Right-back",
+  DL: "Left-back",
+  DC: "Centre-back",
+  DMR: "Right wing-back",
+  DML: "Left wing-back",
+  DMC: "Defensive mid",
+  MR: "Right mid",
+  ML: "Left mid",
+  MC: "Central mid",
+  AMR: "Right winger",
+  AML: "Left winger",
+  AMC: "Attacking mid",
+  FWR: "Right forward",
+  FWL: "Left forward",
+  FW: "Striker",
+  Sub: "Off the bench",
+};
+
+export const PITCH_SLOTS: { pos: string; x: number; y: number }[] = [
+  { pos: "FWL", x: 26, y: 11 },
+  { pos: "FW", x: 50, y: 9 },
+  { pos: "FWR", x: 74, y: 11 },
+  { pos: "AML", x: 13, y: 27 },
+  { pos: "AMC", x: 50, y: 28 },
+  { pos: "AMR", x: 87, y: 27 },
+  { pos: "ML", x: 13, y: 45 },
+  { pos: "MC", x: 50, y: 46 },
+  { pos: "MR", x: 87, y: 45 },
+  { pos: "DML", x: 13, y: 62 },
+  { pos: "DMC", x: 50, y: 63 },
+  { pos: "DMR", x: 87, y: 62 },
+  { pos: "DL", x: 13, y: 78 },
+  { pos: "DC", x: 50, y: 79 },
+  { pos: "DR", x: 87, y: 78 },
+  { pos: "GK", x: 50, y: 93 },
+];

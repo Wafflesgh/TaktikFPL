@@ -73,7 +73,7 @@ export function PlayerHero({
                   <span className="h-2 w-2 rounded-full" style={{ background: status.color }} />
                   {status.text}
                   {player.chanceNext != null && player.status !== "a" && (
-                    <span className="text-[var(--text-muted)]">· {player.chanceNext}% main GW berikut</span>
+                    <span className="text-[var(--text-muted)]">· {player.chanceNext}% chance next GW</span>
                   )}
                 </span>
               ) : (

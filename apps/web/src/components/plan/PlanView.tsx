@@ -170,7 +170,7 @@ export function PlanView({ data }: { data: SeasonPlanData | null }) {
                     <td className="text-right">{fmt(xi)}</td>
                     <td className="text-right">{fmt(bench)}</td>
                     <td className="pl-3">
-                      {data.name[capId] ?? "?"} <span className="text-xs text-[var(--text-muted)]">{fmt(capX)}</span>
+                      {capId ? <Link href={`/pemain/${capId}`} className="hover:underline">{data.name[capId] ?? "?"}</Link> : "?"} <span className="text-xs text-[var(--text-muted)]">{fmt(capX)}</span>
                     </td>
                     <td className={`text-right ${fh > 3 ? "text-green-300" : ""}`}>{signed(fh)}</td>
                     <td className={`text-right ${wc != null && wc > 3 ? "text-green-300" : ""}`}>{signed(wc)}</td>

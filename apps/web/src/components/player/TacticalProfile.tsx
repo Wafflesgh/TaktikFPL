@@ -1,25 +1,7 @@
 import { Panel } from "@/components/ui";
 import type { PlayerTacticsJson } from "@/lib/data/tactics";
+import { POSITION_NAME as ROLE } from "@/lib/positions";
 import { formatWIB } from "@/lib/time";
-
-const ROLE: Record<string, string> = {
-  GK: "Goalkeeper",
-  DR: "Right-back",
-  DL: "Left-back",
-  DC: "Centre-back",
-  DMR: "Right wing-back",
-  DML: "Left wing-back",
-  DMC: "Defensive mid",
-  MR: "Right mid",
-  ML: "Left mid",
-  MC: "Central mid",
-  AMR: "Right winger",
-  AML: "Left winger",
-  AMC: "Attacking mid",
-  FWR: "Right forward",
-  FWL: "Left forward",
-  FW: "Striker",
-};
 
 const STYLE: [string, string, string][] = [
   ["low_block", "vs low blocks", "The third of teams that press least and defend deep (highest PPDA)"],

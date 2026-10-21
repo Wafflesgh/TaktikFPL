@@ -2,6 +2,25 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.20.0] — 2026-10-21 · v1 mengalahkan Season PPG + halaman pemain detail
+
+### Diubah
+- **xPts v1** disetel lewat backtest offline 2022/23–2025/26 (GW4–38): bobot recency 0.95^i, penampilan musim
+  lalu ×0.5, 15% gol/assist aktual dicampur ke xG/xA, menit harapan EWMA 8 laga (α 0.4) dikalibrasi
+  5.5 + 0.85 × rata-rata, kurva empiris P(≥60) & P(tampil). Hasil vs Season PPG: season sim **8207 vs 7872**,
+  weekly Free Hit **8990 vs 8495**, Spearman ≈0.54 vs ≈0.48; menang 3 dari 4 musim (2025/26: 2042 vs 1994;
+  2022/23 masih kalah 1820 vs 2146). Varian lab berbasis v1 (Hot form, Minutes first, v1 + tactics) ikut
+  default baru. `RateParams` + SQL tertimbang diverifikasi identik dengan replika offline di DB produksi.
+
+### Ditambahkan
+- Halaman pemain `/pemain/[id]`: **Positions played** (lapangan ala FM, lingkaran per slot posisi lineup
+  Understat — apps, % total, menit, G/A, xG/xA, G+A/90 per posisi, per musim/semua musim; data mulai 2025/26),
+  **Detailed stats** (total, per 90, persentil vs posisi sama ≥270 menit), **Compare** (tabel pemain se-posisi
+  dengan form, bisa diurutkan). Nama pemain di Home (Hottest/Watch out/Spotlight) & Plan (kapten) bisa diklik.
+
+### Diperbaiki
+- Sisa teks UI Bahasa Indonesia di halaman pemain ("Club", "current", "chance next GW").
+
 ## [0.19.0] — 2026-10-21 · Model Lab: Points+ mengalahkan Season PPG
 
 ### Ditambahkan

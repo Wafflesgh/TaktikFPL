@@ -85,7 +85,7 @@ export function SeasonTable({ rows }: { rows: SeasonSummary[] }) {
         <thead className="text-xs text-[var(--text-muted)]">
           <tr>
             <th className="py-2 pr-2 text-left font-medium">Season</th>
-            <th className="px-2 py-2 text-left font-medium">Klub</th>
+            <th className="px-2 py-2 text-left font-medium">Club</th>
             <th className={th}>Pts</th>
             <th className={th}>Mins</th>
             <th className={th} title="Matches with minutes > 0">Apps</th>
@@ -100,7 +100,7 @@ export function SeasonTable({ rows }: { rows: SeasonSummary[] }) {
             <tr key={s.seasonId} className={`border-t border-white/5 ${s.isCurrent ? "bg-white/[0.04]" : "hover:bg-white/[0.03]"}`}>
               <td className="whitespace-nowrap py-2 pr-2 font-medium tabular-nums">
                 {s.label}
-                {s.isCurrent && <span className="ml-2 rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-medium">berjalan</span>}
+                {s.isCurrent && <span className="ml-2 rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-medium">current</span>}
               </td>
               <td className="px-2 py-2">
                 <span className="flex items-center gap-1.5 whitespace-nowrap">

@@ -29,6 +29,7 @@ class PlayerRates:
     saves90: float
     yc90: float
     p_defcon: float  # peluang mencapai ambang DefCon dalam laga ≥60 menit
+    calibrated: bool = False  # xmins sudah terkalibrasi → kurva P(≥60) & P(tampil) empiris
 
 
 @dataclass(frozen=True)
@@ -52,12 +53,34 @@ def p_sixty(xmins: float) -> float:
     return max(0.0, min(1.0, (xmins - 20.0) / 60.0))
 
 
+# Kurva empiris (PL 2023/24–2025/26): menit harapan terkalibrasi → P(main ≥60) dan P(tampil).
+# Pemain dengan harapan 84 menit pun hanya 93% main ≥60 (rotasi, cedera mendadak, kartu merah).
+MIN_KNOTS = (0.0, 10.0, 23.0, 45.0, 64.0, 73.0, 84.0, 90.0)
+P60_KNOTS = (0.0, 0.07, 0.20, 0.46, 0.70, 0.81, 0.93, 0.95)
+PANY_KNOTS = (0.0, 0.35, 0.54, 0.73, 0.87, 0.92, 0.96, 0.97)
+
+
+def _interp(x: float, ys: tuple[float, ...]) -> float:
+    xs = MIN_KNOTS
+    if x <= xs[0]:
+        return ys[0]
+    for i in range(1, len(xs)):
+        if x <= xs[i]:
+            t = (x - xs[i - 1]) / (xs[i] - xs[i - 1])
+            return ys[i - 1] + t * (ys[i] - ys[i - 1])
+    return ys[-1]
+
+
 def project_v1(p: PlayerRates, m: MatchRates, rules: dict[str, float]) -> dict[str, float]:
     pos = p.position
     xmins = p.xmins * p.p_play
     mins_frac = xmins / 90.0
-    p60 = p_sixty(p.xmins) * p.p_play
-    p_appear = p.p_play * (1.0 if p.xmins > 0 else 0.0) * min(1.0, p.xmins / 10.0)
+    if p.calibrated:
+        p60 = _interp(p.xmins, P60_KNOTS) * p.p_play
+        p_appear = _interp(p.xmins, PANY_KNOTS) * p.p_play
+    else:
+        p60 = p_sixty(p.xmins) * p.p_play
+        p_appear = p.p_play * (1.0 if p.xmins > 0 else 0.0) * min(1.0, p.xmins / 10.0)
 
     venue = HOME_ADV if m.is_home else 1.0 / HOME_ADV
     lam_team = m.league_goals * m.team_att * m.opp_def * venue

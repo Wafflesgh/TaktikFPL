@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FormBadge } from "@/components/FormBadge";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
 import { TeamBadge } from "@/components/ui";
@@ -45,7 +46,11 @@ export function Spotlight({ player }: { player: PlayerRow | null }) {
             <p className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
               Form spotlight · last 4 matches
             </p>
-            <h2 className="mt-2 font-display text-5xl uppercase leading-none xl:text-6xl">{player.webName}</h2>
+            <h2 className="mt-2 font-display text-5xl uppercase leading-none xl:text-6xl">
+              <Link href={`/pemain/${player.id}`} className="hover:text-[var(--accent)]">
+                {player.webName}
+              </Link>
+            </h2>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
               <TeamBadge url={player.team?.badge ?? null} short={player.team?.short ?? null} size={28} />
               <span>{player.team?.name}</span>

@@ -202,6 +202,7 @@ export const getPlayerProfile = cache(async (id: number) => {
   return {
     player,
     seasonLabel: current?.label ?? null,
+    seasonId: current?.id ?? null,
     gws,
     lastFour,
     bars,

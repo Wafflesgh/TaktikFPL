@@ -8,8 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from app.features.rates import (
-    LAST_APPS,
-    PLAYER_PRIOR_MIN,
+    RateParams,
     TeamRating,
     player_rates,
     shrunk_rates,
@@ -19,7 +18,7 @@ from app.features.rates import (
 from app.features.tactics import PlayerTactics, TeamStyle, player_tactics, team_styles
 from app.models.xpts_v1 import MODEL_VERSION, MatchRates, PlayerRates, project_v1
 
-__all__ = ["MODEL_VERSION", "Context", "build_context", "p_play", "project"]
+__all__ = ["MODEL_VERSION", "Context", "RateParams", "build_context", "p_play", "project"]
 
 UNAVAILABLE = {"i", "s", "u", "n"}
 
@@ -35,6 +34,8 @@ class Context:
     tactics: dict[int, PlayerTactics] = field(default_factory=dict)
     # Varian Model Lab: >1 memperkuat efek kekuatan lawan ("fixture chaser").
     fixture_power: float = 1.0
+    # Kurva peluang main ≥60 / tampil dari menit harapan terkalibrasi (lihat xpts_v1).
+    minutes_curve: bool = True
 
 
 def scoring_rules(conn: Connection, season_id: int) -> dict[str, float]:
@@ -54,24 +55,25 @@ def build_context(
     positions: dict[int, str],
     *,
     rules: dict[str, float] | None = None,
-    last_apps: int = LAST_APPS,
-    xmins_matches: int = 5,
-    prior_min: float = PLAYER_PRIOR_MIN,
+    rate_params: RateParams | None = None,
     tactics: bool = True,
     fixture_power: float = 1.0,
+    minutes_curve: bool = True,
 ) -> Context:
     """Parameter kata kunci dipakai Model Lab untuk varian model; default = model produksi."""
     rules = rules if rules is not None else scoring_rules(conn, season_id)
+    rp = rate_params or RateParams()
     ratings, league = team_ratings(conn, before)
-    raw = player_rates(conn, before, season_id, last_apps=last_apps, xmins_matches=xmins_matches)
+    raw = player_rates(conn, before, season_id, rp)
     return Context(
         rules,
         ratings,
         league,
-        shrunk_rates(raw, positions, rules, prior_min=prior_min),
+        shrunk_rates(raw, positions, rules, prior_min=rp.prior_min),
         styles=team_styles(conn, before) if tactics else {},
         tactics=player_tactics(conn, before) if tactics else {},
         fixture_power=fixture_power,
+        minutes_curve=minutes_curve,
     )
 
 
@@ -98,6 +100,7 @@ def project(
         saves90=float(r.get("saves90", 0.0)),
         yc90=float(r.get("yc90", 0.0)),
         p_defcon=float(r.get("p_defcon", 0.0)),
+        calibrated=ctx.minutes_curve,
     )
     # Gaya lawan (low block / high press) × rekam jejak pemain melawan gaya itu (ter-shrink, dibatasi).
     style = ctx.styles.get(opp_id)

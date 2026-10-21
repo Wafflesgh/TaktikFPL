@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FormBadge } from "@/components/FormBadge";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
 import { BestXiPanel } from "@/components/dashboard/BestXi";
@@ -70,7 +71,9 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, pos, sort }:
                 <PlayerHeadshot name={spotlight.webName} urls={spotlight.photos} size="md" status={spotlight.status} />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-[var(--text-muted)]">Hottest player</p>
-                  <p className="truncate font-semibold">{spotlight.webName}</p>
+                  <Link href={`/pemain/${spotlight.id}`} className="block truncate font-semibold hover:underline">
+                    {spotlight.webName}
+                  </Link>
                   <p className="text-xs text-[var(--text-muted)]">
                     {spotlight.team?.short} · {spotlight.position}
                   </p>
@@ -113,7 +116,10 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, pos, sort }:
                     <PlayerHeadshot name={p.webName} urls={p.photos} size="sm" status={p.status} />
                     <div className="min-w-0">
                       <p className="font-medium">
-                        {p.webName} <span className="text-xs text-[var(--text-muted)]">{p.team?.short}</span>
+                        <Link href={`/pemain/${p.id}`} className="hover:underline">
+                          {p.webName}
+                        </Link>{" "}
+                        <span className="text-xs text-[var(--text-muted)]">{p.team?.short}</span>
                       </p>
                       <p className="text-xs text-amber-300">{p.news ?? "Doubtful"}</p>
                     </div>

@@ -141,7 +141,9 @@ Model & optimasi:
 
 `/` Home (overview GW, **Best XI** 15 pemain + bench + alasan + "Full breakdown"), `/analisis` (harga & transfer,
 **Model accuracy**), `/jadwal` (fixtures, FDR, perubahan jadwal), `/pemain/[id]` (hero, poin per GW, form,
-**Tactical profile**, statistik), `/tim` (My Team: mode **Start a new team** vs **I already have a team** —
+**Positions played** (lapangan ala FM dari slot posisi lineup Understat, mulai 2025/26: apps, %, G/A, xG/xA per
+posisi), **Detailed stats** (total, per 90, persentil vs posisi sama), **Compare** (tabel pemain se-posisi,
+bisa diurutkan), **Tactical profile**, statistik; nama pemain di Home/Plan bisa diklik), `/tim` (My Team: mode **Start a new team** vs **I already have a team** —
 Team ID via cookie `tfpl_entry`, squad dari API FPL server-side, rencana transfer multi-transfer dengan
 estimasi free transfer `?ft=` & hit −4, kapten, catatan Hold/Sell, Wildcard), `/rencana` (Season Plan: kartu chip
 per jendela untuk squad pengguna/acuan, tabel GW-per-GW, Weekly baseline), `/model` (Model Lab: leaderboard per
@@ -158,14 +160,16 @@ Crowd 1843, v1+tactics 1806, Form×fixture 1793, v1 1766, Fixture chaser 1725, R
 MAE terbaik Season PPG 1.77 vs v1 1.95. **v1 kalah dari baseline sederhana** → prioritas perbaikan.
 **Points+** (0.19.0, backtest offline): 2025/26 season sim 2024 (> Season PPG 1994); 7 musim 2019/20–2025/26
 +865 sim & +1008 Free Hit vs Season PPG, menang 6/7 musim → akan jadi juara `auto` setelah `model_lab` penuh
-dijalankan ulang. Pelajaran: poin realisasi per penampilan + prior harga + peluang main dari menit > model
+dijalankan ulang. **v1 disetel** (0.20.0): 2022/23–2025/26 sim 8207 vs Season PPG 7872, FH 8990 vs 8495, Spearman
+≈0.54 vs ≈0.48; 2025/26 2042 vs 1994. Kunci: bobot recency (0.95^i, musim lalu ×0.5) + menit harapan terkalibrasi. Pelajaran: poin realisasi per penampilan + prior harga + peluang main dari menit > model
 komponen xG; pengali FDR ringan (±10%/tingkat) & kandang ±6% membantu; riwayat musim lalu untuk rate merugikan.
 Musim 2026/27 baru 4 GW (Hot form 262 teratas). Catatan: dengan Season PPG, xPts absolut lebih optimis (tanpa
 shrinkage; Best XI ±77 vs ±57 di v1) — ranking yang divalidasi, bukan level poin.
 
 ## 9. Backlog (belum dikerjakan), kira-kira urut prioritas
 
-1. ~~Model baru yang mengalahkan Season PPG~~ → Points+ (0.19.0). Lanjutan: v1 komponen masih kalah; coba
+1. ~~Model baru yang mengalahkan Season PPG~~ → Points+ (0.19.0); ~~v1 kalah~~ → v1 disetel (0.20.0, recency +
+   kalibrasi menit; 4 musim sim 8207 vs 7872). Lanjutan: coba
    pengali komponen v1 (CS untuk DEF/GKP vs serangan) sebagai pengganti FDR tunggal di Points+, atau model
    learned (LightGBM, latih musim sebelumnya) dengan fitur Points+.
 2. Kalibrasi Season PPG (shrink ke rata-rata posisi) agar xPts absolut tidak terlalu optimis; atau ensemble

@@ -1,7 +1,8 @@
 """Backtest Model Lab offline dari CSV hasil export.sh — tanpa koneksi DB, cepat untuk tuning model.
 
 GwBundle dibangun ulang dengan logika yang sama seperti app/lab/data.py (Season PPG, Recent, Form × fixture
-2025/26 identik dengan job model_lab produksi). Hanya model kind 'baseline' (model engine butuh DB).
+2025/26 identik dengan job model_lab produksi). Model engine (v1 & varian) memakai replika konteks di
+engine.py; v1_tactics tidak didukung (butuh data Understat).
 
     cd services/worker
     uv run python -m scripts.lab_offline.offline 2025/26 season_ppg,points_plus
@@ -25,8 +26,10 @@ import pandas as pd
 
 from app.jobs.evaluate_model import metrics
 from app.lab.data import HISTORY_ROWS, Fx, GwBundle, PInfo
-from app.lab.models import BASELINES
+from app.lab.models import BASELINES, SPECS, engine_model
 from app.lab.simulate import SeasonSim, free_hit_points
+
+from .engine import EngineData
 
 D = Path(__file__).parent / ".data"
 BAD = {"postponed", "cancelled", "abandoned"}
@@ -40,6 +43,10 @@ class Store:
         self.gws = pd.read_csv(D / "gameweeks.csv", parse_dates=["deadline_utc"])
         self.fx = pd.read_csv(D / "fixtures.csv", parse_dates=["kickoff_utc"], na_values=["NULL"])
         self.ps = pd.read_csv(D / "player_seasons.csv", na_values=["NULL"])
+        sr = pd.read_csv(D / "scoring_rules.csv")
+        cur = int(self.seasons.loc[self.seasons.is_current.astype(str).str.lower() == "true", "id"].iloc[0])
+        # Seperti model_lab: musim tanpa aturan tersimpan memakai aturan musim berjalan.
+        self.rules = {str(r.rule_key): float(r.value) for r in sr[sr.season_id == cur].itertuples()}
         st = pd.concat([pd.read_csv(p, na_values=["NULL"]) for p in D.glob("stats_*.csv")], ignore_index=True)
         cols = ["id", "season_id", "kickoff_utc", "status"]
         st = st.merge(self.fx[cols].rename(columns={"id": "fixture_id"}), on="fixture_id")
@@ -130,8 +137,25 @@ def backtest(label: str, name: str, fn: Callable[[GwBundle], Any]) -> dict[str, 
     return {"sim": sim.total, "fh": fh, "spearman": sum(sp) / len(sp), "hits": sim.hits}
 
 
+_ENGINE: EngineData | None = None
+
+
+def engine_data() -> EngineData:
+    """Data engine v1 offline (dibuat sekali per proses)."""
+    global _ENGINE
+    if _ENGINE is None:
+        s = Store()
+        _ENGINE = EngineData(s.st, s.fx, s.rules)
+    return _ENGINE
+
+
 def _load_models(cand: str | None) -> dict[str, Callable[[GwBundle], Any]]:
     models: dict[str, Callable[[GwBundle], Any]] = {k: v for k, v in BASELINES.items()}
+    for spec in SPECS:
+        if spec.kind == "engine" and not spec.params.get("tactics"):
+            models[spec.name] = lambda b, spec=spec: engine_model(
+                b, spec, engine_data().context(b, spec.params)
+            )
     if cand:
         spec = importlib.util.spec_from_file_location("cand", cand)
         assert spec and spec.loader

@@ -2,14 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRightIcon } from "@/components/icons";
+import { DetailedStats } from "@/components/player/DetailedStats";
+import { PeerTable } from "@/components/player/PeerTable";
 import { PlayerHero } from "@/components/player/PlayerHero";
 import { PointsChart } from "@/components/player/PointsChart";
+import { PositionMap } from "@/components/player/PositionMap";
 import { GwTable, SeasonTable } from "@/components/player/StatTables";
 import { TacticalProfile } from "@/components/player/TacticalProfile";
 import { BottomNav } from "@/components/shell/NavLinks";
 import { TopBar } from "@/components/shell/TopBar";
 import { Panel, StatTile } from "@/components/ui";
 import { getPlayerProfile, parsePlayerId } from "@/lib/data/player";
+import { getPlayerPositions, getPositionPeers, getSeasonDetail } from "@/lib/data/playerDetail";
 import { getPlayerTactics } from "@/lib/data/tactics";
 import { getViewer } from "@/lib/data/viewer";
 
@@ -29,8 +33,13 @@ export async function generateMetadata({ params }: PageProps<"/pemain/[id]">): P
 /** Profil pemain desktop-first (wireframe B): hero · grafik poin + form · laga musim ini + riwayat musim. */
 export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) {
   const [profile, viewer] = await Promise.all([load(params), getViewer()]);
-  const tactics = await getPlayerTactics(profile.player.id);
-  const { player, gws, bars, lastFour, seasons, thisSeason, seasonLabel, liveCount } = profile;
+  const { player, gws, bars, lastFour, seasons, thisSeason, seasonLabel, seasonId, liveCount } = profile;
+  const [tactics, positions, peers, detail] = await Promise.all([
+    getPlayerTactics(player.id),
+    getPlayerPositions(player.id),
+    player.position ? getPositionPeers(player.position) : Promise.resolve([]),
+    seasonId != null ? getSeasonDetail(player.id, seasonId) : Promise.resolve(null),
+  ]);
   const f = player.form;
   const pct = (v: number | null | undefined) => (v != null ? `${Math.round(v * 100)}%` : "-");
   const signed = (v: number | null | undefined) => (v != null ? `${v > 0 ? "+" : ""}${v.toFixed(2)}` : "-");
@@ -82,6 +91,25 @@ export default async function PlayerPage({ params }: PageProps<"/pemain/[id]">) 
             )}
           </Panel>
         </div>
+
+        <Panel
+          title="Positions played"
+          subtitle="Each circle is a position the player has played (size = share of appearances) · tap a circle or row for details"
+        >
+          <PositionMap seasons={positions} currentLabel={seasonLabel} />
+        </Panel>
+
+        {detail && detail.matches > 0 && (
+          <Panel title="Detailed stats" subtitle={seasonLabel ? `Season ${seasonLabel} · totals, per 90 and percentile vs same position` : undefined}>
+            <DetailedStats detail={detail} peers={peers} playerId={player.id} position={player.position} />
+          </Panel>
+        )}
+
+        {player.position && peers.length > 0 && (
+          <Panel title={`Compare with other ${player.position}s`} subtitle="Same FPL position · season totals and last-4 form · this player highlighted">
+            <PeerTable peers={peers} playerId={player.id} position={player.position} />
+          </Panel>
+        )}
 
         <TacticalProfile data={tactics} />
 

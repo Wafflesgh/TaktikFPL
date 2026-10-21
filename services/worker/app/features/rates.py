@@ -64,17 +64,21 @@ def team_ratings(conn: Connection, before: datetime) -> tuple[dict[int, TeamRati
         ),
         {"before": before, "k": LAST_TEAM_MATCHES},
     ).all()
+    return ratings_from_rows([(int(r.team), int(r.n), float(r.gf), float(r.ga)) for r in rows])
+
+
+def ratings_from_rows(rows: list[tuple[int, int, float, float]]) -> tuple[dict[int, TeamRating], float]:
+    """[(tim, laga, rata2 gol dicetak, rata2 kebobolan)] → rating ter-shrink + rata-rata gol liga."""
     if not rows:
         return {}, 1.35
-    total_n = sum(int(r.n) for r in rows)
-    league = sum(float(r.gf) * int(r.n) for r in rows) / max(1, total_n)
+    total_n = sum(n for _, n, _, _ in rows)
+    league = sum(gf * n for _, n, gf, _ in rows) / max(1, total_n)
     out: dict[int, TeamRating] = {}
-    for r in rows:
-        n = int(r.n)
+    for team, n, gf, ga in rows:
         prior_att, prior_def = PROMOTED_PRIOR if n < 10 else (1.0, 1.0)
-        att = (float(r.gf) / league * n + prior_att * TEAM_PRIOR_N) / (n + TEAM_PRIOR_N)
-        dfn = (float(r.ga) / league * n + prior_def * TEAM_PRIOR_N) / (n + TEAM_PRIOR_N)
-        out[int(r.team)] = TeamRating(att, dfn, n)
+        att = (gf / league * n + prior_att * TEAM_PRIOR_N) / (n + TEAM_PRIOR_N)
+        dfn = (ga / league * n + prior_def * TEAM_PRIOR_N) / (n + TEAM_PRIOR_N)
+        out[team] = TeamRating(att, dfn, n)
     return out, league
 
 
@@ -82,36 +86,63 @@ def team_rating(ratings: dict[int, TeamRating], team_id: int) -> TeamRating:
     return ratings.get(team_id) or TeamRating(*PROMOTED_PRIOR, 0)
 
 
-def player_rates(
-    conn: Connection, before: datetime, season_id: int, last_apps: int = LAST_APPS, xmins_matches: int = 5
-) -> dict[int, dict[str, Any]]:
-    """Rate per 90 (mentah + menit) dan menit harapan untuk semua pemain musim berjalan.
+@dataclass(frozen=True)
+class RateParams:
+    """Parameter rate pemain. Default = v1 produksi, disetel lewat backtest offline 2022/23–2025/26
+    (recency + kalibrasi menit); Model Lab memvariasikannya (mis. "hot form")."""
 
-    last_apps / xmins_matches divariasikan oleh Model Lab (mis. model "hot form", "nailed-first")."""
+    last_apps: int = LAST_APPS  # penampilan terakhir (menit > 0) lintas musim
+    decay: float = 0.95  # bobot penampilan ke-i ke belakang = decay**i
+    prev_weight: float = 0.5  # pengali bobot penampilan musim sebelumnya
+    finishing: float = 0.15  # porsi gol/assist aktual yang dicampur ke xG/xA (0 = murni xG/xA)
+    xmins_matches: int = 8  # laga tim musim berjalan untuk menit harapan
+    xmins_alpha: float = 0.4  # EWMA menit (0 = rata-rata biasa)
+    xmins_base: float = 5.5  # kalibrasi menit harapan: base + scale × rata-rata (bila > 0)
+    xmins_scale: float = 0.85
+    prior_min: float = PLAYER_PRIOR_MIN
+
+
+def player_rates(
+    conn: Connection, before: datetime, season_id: int, params: RateParams | None = None
+) -> dict[int, dict[str, Any]]:
+    """Rate (jumlah tertimbang + menit) dan menit harapan untuk semua pemain, as of `before`."""
+    rp = params or RateParams()
     stats = conn.execute(
         text(
             """
             with m as (
               select s.player_id, s.minutes, s.expected_goals xg, s.expected_assists xa, s.bonus, s.saves,
-                     s.yellow_cards yc, s.defensive_contribution dc,
-                     row_number() over (partition by s.player_id order by f.kickoff_utc desc) rn
+                     s.yellow_cards yc, s.defensive_contribution dc, s.goals_scored g, s.assists a,
+                     row_number() over (partition by s.player_id order by f.kickoff_utc desc) rn,
+                     f.season_id = :s cur
               from public.player_fpl_gw_stats s
               join public.fixtures f on f.id = s.fixture_id
               where f.status = 'finished' and f.kickoff_utc < :before and s.minutes > 0
+            ),
+            w as (
+              select *, power(:decay, rn - 1) * case when cur then 1 else :prev end w from m where rn <= :k
             )
             select player_id,
-                   sum(minutes) mins,
-                   sum(xg) filter (where xg is not null) xg,
-                   sum(minutes) filter (where xg is not null) xg_mins,
-                   sum(xa) filter (where xa is not null) xa,
-                   sum(bonus) bonus, sum(saves) saves, sum(yc) yc,
-                   count(*) filter (where minutes >= 60 and dc is not null) dc_apps,
-                   count(*) filter (where minutes >= 60 and dc >= 10) dc10,
-                   count(*) filter (where minutes >= 60 and dc >= 12) dc12
-            from m where rn <= :k group by player_id
+                   sum(w * minutes) mins,
+                   sum(w * xg) filter (where xg is not null) xg,
+                   sum(w * minutes) filter (where xg is not null) xg_mins,
+                   sum(w * xa) filter (where xa is not null) xa,
+                   sum(w * g) filter (where xg is not null) g,
+                   sum(w * a) filter (where xa is not null) a,
+                   sum(w * bonus) bonus, sum(w * saves) saves, sum(w * yc) yc,
+                   sum(w) filter (where minutes >= 60 and dc is not null) dc_apps,
+                   sum(w) filter (where minutes >= 60 and dc >= 10) dc10,
+                   sum(w) filter (where minutes >= 60 and dc >= 12) dc12
+            from w group by player_id
             """
         ),
-        {"before": before, "k": last_apps},
+        {
+            "before": before,
+            "s": season_id,
+            "k": rp.last_apps,
+            "decay": rp.decay,
+            "prev": rp.prev_weight,
+        },
     ).all()
     xmins = conn.execute(
         text(
@@ -123,27 +154,41 @@ def player_rates(
               join public.fixtures f on f.id = s.fixture_id
               where f.season_id = :s and f.status = 'finished' and f.kickoff_utc < :before
             )
-            select player_id, avg(minutes) xmins from r where rn <= :n group by player_id
+            select player_id, sum(minutes * power(:keep, rn - 1)) / sum(power(:keep, rn - 1)) xmins
+            from r where rn <= :n group by player_id
             """
         ),
-        {"s": season_id, "before": before, "n": xmins_matches},
+        {"s": season_id, "before": before, "n": rp.xmins_matches, "keep": 1.0 - rp.xmins_alpha},
     ).all()
-    out: dict[int, dict[str, Any]] = {int(r.player_id): {"xmins": float(r.xmins or 0)} for r in xmins}
+    out: dict[int, dict[str, Any]] = {
+        int(r.player_id): {"xmins": calibrate_xmins(float(r.xmins or 0), rp)} for r in xmins
+    }
     for r in stats:
         d = out.setdefault(int(r.player_id), {"xmins": 0.0})
-        d.update(
-            mins=float(r.mins or 0),
-            xg=float(r.xg or 0),
-            xg_mins=float(r.xg_mins or 0),
-            xa=float(r.xa or 0),
-            bonus=float(r.bonus or 0),
-            saves=float(r.saves or 0),
-            yc=float(r.yc or 0),
-            dc_apps=int(r.dc_apps or 0),
-            dc10=int(r.dc10 or 0),
-            dc12=int(r.dc12 or 0),
-        )
+        d.update(rate_totals(r._mapping, rp.finishing))
     return out
+
+
+def calibrate_xmins(avg: float, rp: RateParams) -> float:
+    """Menit rata-rata terakhir → menit harapan (regresi ke rata-rata: pemain 90 menit ≈ 82 menit)."""
+    return min(90.0, rp.xmins_base + rp.xmins_scale * avg) if avg > 0 else 0.0
+
+
+def rate_totals(r: Any, finishing: float) -> dict[str, float]:
+    """Baris agregat → jumlah rate; xG/xA dicampur gol/assist aktual sebesar `finishing`."""
+    xg, xa = float(r["xg"] or 0), float(r["xa"] or 0)
+    return {
+        "mins": float(r["mins"] or 0),
+        "xg": (1 - finishing) * xg + finishing * float(r["g"] or 0),
+        "xg_mins": float(r["xg_mins"] or 0),
+        "xa": (1 - finishing) * xa + finishing * float(r["a"] or 0),
+        "bonus": float(r["bonus"] or 0),
+        "saves": float(r["saves"] or 0),
+        "yc": float(r["yc"] or 0),
+        "dc_apps": float(r["dc_apps"] or 0),
+        "dc10": float(r["dc10"] or 0),
+        "dc12": float(r["dc12"] or 0),
+    }
 
 
 def _per90(total: float, minutes: float) -> float:
@@ -178,9 +223,9 @@ def shrunk_rates(
             mins = float(m.get(mk, 0.0))
             obs = _per90(float(m.get(k, 0.0)), mins)
             res[f"{k}90"] = (obs * mins + prior[pos][k] * prior_min) / (mins + prior_min)
-        apps = int(m.get("dc_apps", 0))
+        apps = float(m.get("dc_apps", 0))
         thr = rules.get(f"defcon_threshold_{pos}", 12.0)
-        hits = int(m.get("dc10" if thr <= 10 else "dc12", 0))
+        hits = float(m.get("dc10" if thr <= 10 else "dc12", 0))
         res["p_defcon"] = (hits + prior[pos]["p_defcon"] * 5) / (apps + 5)
         out[pid] = res
     return out

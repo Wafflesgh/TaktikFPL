@@ -133,6 +133,57 @@ export type Database = {
         xpts: number;
         component_breakdown: Json | null;
       }>;
+      lineups: Table<
+        {
+          fixture_id: number;
+          team_id: number;
+          player_id: number;
+          is_starter: boolean;
+          formation: string | null;
+          grid_position: string | null;
+          position_label: string | null;
+          minute_on: number | null;
+          minute_off: number | null;
+          source: string;
+        },
+        [
+          {
+            foreignKeyName: "lineups_fixture_id_fkey";
+            columns: ["fixture_id"];
+            isOneToOne: false;
+            referencedRelation: "fixtures";
+            referencedColumns: ["id"];
+          },
+        ]
+      >;
+      player_match_stats: Table<
+        {
+          fixture_id: number;
+          player_id: number;
+          team_id: number | null;
+          source: string;
+          minutes: number | null;
+          goals: number | null;
+          assists: number | null;
+          shots: number | null;
+          key_passes: number | null;
+          xg: number | null;
+          npxg: number | null;
+          xa: number | null;
+          yellow_cards: number | null;
+          red_cards: number | null;
+          extra: Json | null;
+        },
+        [
+          {
+            foreignKeyName: "player_match_stats_fixture_id_fkey";
+            columns: ["fixture_id"];
+            isOneToOne: false;
+            referencedRelation: "fixtures";
+            referencedColumns: ["id"];
+          },
+        ]
+      >;
       player_form_features: Table<{
         player_id: number;
         as_of: string;
@@ -206,6 +257,22 @@ export type Database = {
           starts: number | null;
           fpl_xp: number | null;
           source: string;
+          bps: number | null;
+          clean_sheets: number | null;
+          goals_conceded: number | null;
+          own_goals: number | null;
+          penalties_saved: number | null;
+          penalties_missed: number | null;
+          yellow_cards: number | null;
+          red_cards: number | null;
+          saves: number | null;
+          defensive_contribution: number | null;
+          defcon_points: number | null;
+          expected_goals_conceded: number | null;
+          influence: number | null;
+          creativity: number | null;
+          threat: number | null;
+          ict_index: number | null;
         },
         [
           {
