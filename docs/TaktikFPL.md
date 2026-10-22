@@ -195,6 +195,7 @@ shrinkage; Best XI ±77 vs ±57 di v1) — ranking yang divalidasi, bukan level 
 ## 10. Checklist saat mulai sesi baru
 
 1. Baca file ini + `MEMORY.md`. Cek `git status` / `git log origin/main..HEAD` (commit lokal belum di-push?).
-2. Cek kesehatan produksi: `node_modules/.bin/supabase db query --linked "select job_name,status,max(finished_at) from public.job_runs group by 1,2 order by 3 desc limit 20"`.
+2. Cek kesehatan produksi: `bash scripts/status-check.sh` (data, job, pemicu, web, layanan). Dilan cukup mengetik
+   **"status check"** → skill `.claude/skills/status-check` menjalankannya dan merangkum ✅/⚠️/❌.
 3. Sebelum push/migrasi minta **"next"**; setelah push, beri perintah workflow terpisah.
 4. Setelah fitur selesai: test + lint + typecheck, update `CHANGELOG.md`, update docs/TaktikFPL.md bila arsitektur berubah.
