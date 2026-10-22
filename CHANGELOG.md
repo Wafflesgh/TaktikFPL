@@ -2,6 +2,16 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.22.2] — 2026-10-22 · Home tanpa ruang kosong
+
+### Diubah
+- Home (xl) jadi tiga kolom seimbang: kiri Top Form + GW Overview + Watch Out + Form Guide; tengah Best XI +
+  Fixtures + Spotlight; kanan FPL News + Next Match + Standings. Panel terakhir kolom samping memanjang sampai
+  dasar kolom tengah, jadi tidak ada area kosong lagi (sebelumnya ±300–400 px di bawah Top Form/News dan ±2.800 px
+  di bawah kolom samping bawah). Tabel pemain kini selebar halaman di bawah tiga kolom.
+- Dokumen usulan `docs/proposals/2026-10-22-fitur-dan-ekspansi-liga.md`: referensi fitur vs backlog, sumber data
+  & tahapan ekspansi UCL / La Liga.
+
 ## [0.22.1] — 2026-10-21 · Pemicu worker andal dari Supabase
 
 ### Diperbaiki

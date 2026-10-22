@@ -63,22 +63,22 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, news, pos, s
     <div className="mx-auto flex w-full max-w-[1880px] flex-col gap-6 px-4 pb-28 pt-4 lg:px-8 lg:pb-10">
       <TopBar displayName={displayName} isAdmin={isAdmin} liveCount={live.length} />
 
-      <main className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* Baris atas: Top Form (kiri) · Best XI ±45% (tengah) · FPL News (kanan) */}
-        <div className="grid min-w-0 grid-cols-1 gap-6 lg:col-span-12 xl:grid-cols-[minmax(0,27fr)_minmax(0,46fr)_minmax(0,27fr)]">
-          <div className="min-w-0 xl:order-1">
-            <TopForm players={leaders} />
-          </div>
-          <div className="min-w-0 xl:order-2">
-            <BestXiPanel xi={bestXi} />
-          </div>
-          <div className="min-w-0 xl:order-3">
-            <NewsFeed items={news} serverNow={fetchedAt} />
-          </div>
+      <main className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,27fr)_minmax(0,46fr)_minmax(0,27fr)]">
+        {/* Tiga kolom (xl): Top Form + overview (kiri) · Best XI ±45% + jadwal (tengah) · FPL News + laga (kanan).
+            Panel dibagi per kolom agar tinggi ketiganya mirip — tidak ada ruang kosong di bawah kolom samping. */}
+        <div className="flex min-w-0 flex-col gap-6 lg:col-span-2 xl:order-2 xl:col-span-1">
+          <BestXiPanel xi={bestXi} />
+          <Panel
+            title={next ? `GW${next.number} Fixtures` : "Fixtures"}
+            subtitle="Kick-off times in WIB · coloured numbers = FDR"
+          >
+            <FixtureGrid fixtures={fixtures} />
+          </Panel>
+          <Spotlight player={spotlight} />
         </div>
 
-        {/* Kolom kiri: overview GW */}
-        <div className="flex min-w-0 flex-col gap-6 lg:col-span-4 xl:col-span-3">
+        <div className="flex min-w-0 flex-col gap-6 xl:order-1 xl:[&>*:last-child]:flex-1">
+          <TopForm players={leaders} />
           <Panel
             title={next ? `GW${next.number} Overview` : "Overview"}
             subtitle={next ? `Deadline ${formatWIB(next.deadline_utc)}` : "Gameweek data not available yet"}
@@ -144,24 +144,6 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, news, pos, s
               </ul>
             </Panel>
           )}
-        </div>
-
-        {/* Kolom tengah: hero + jadwal + pemain */}
-        <div className="flex min-w-0 flex-col gap-6 lg:col-span-8 xl:col-span-6">
-          <Spotlight player={spotlight} />
-          <Panel
-            title={next ? `GW${next.number} Fixtures` : "Fixtures"}
-            subtitle="Kick-off times in WIB · coloured numbers = FDR"
-          >
-            <FixtureGrid fixtures={fixtures} />
-          </Panel>
-          <PlayerTable players={filtered} pos={pos} sort={sort} hrefFor={hrefFor} />
-        </div>
-
-        {/* Kolom kanan: laga + klasemen */}
-        <div className="flex min-w-0 flex-col gap-6 lg:col-span-12 lg:grid lg:grid-cols-2 xl:col-span-3 xl:flex">
-          <NextMatchCard live={live} next={upcoming} />
-          <StandingsTable rows={standings} />
           {spotlight?.form && (
             <Panel title="Form Guide" subtitle="How to read the labels">
               <ul className="flex flex-col gap-2 text-xs text-[var(--text-muted)]">
@@ -180,6 +162,17 @@ export function DashboardView({ displayName, isAdmin, data, bestXi, news, pos, s
               </ul>
             </Panel>
           )}
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-6 xl:order-3 xl:[&>*:last-child]:flex-1">
+          <NewsFeed items={news} serverNow={fetchedAt} />
+          <NextMatchCard live={live} next={upcoming} />
+          <StandingsTable rows={standings} />
+        </div>
+
+        {/* Tabel pemain selebar halaman di bawah tiga kolom. */}
+        <div className="min-w-0 lg:col-span-2 xl:order-4 xl:col-span-3">
+          <PlayerTable players={filtered} pos={pos} sort={sort} hrefFor={hrefFor} />
         </div>
       </main>
 
