@@ -97,3 +97,94 @@ export async function getRecentLineups(
   );
   return new Map(teamIds.map((t) => [t, { rows: rows.filter((r) => r.team_id === t), order: order.get(t) ?? [] }]));
 }
+
+/** Satu baris tabel skuad klub: total musim berjalan dari statistik FPL per laga. */
+export type SquadStat = {
+  id: number;
+  webName: string;
+  photos: string[];
+  position: string | null;
+  status: string | null;
+  news: string | null;
+  priceTenths: number | null;
+  ownedPct: number | null;
+  formLabel: string | null;
+  apps: number;
+  starts: number;
+  minutes: number;
+  goals: number;
+  assists: number;
+  xg: number;
+  xa: number;
+  cleanSheets: number;
+  saves: number;
+  yellow: number;
+  red: number;
+  bonus: number;
+  defcon: number;
+  points: number;
+};
+
+/** Seluruh skuad klub saat ini + total musim (laga untuk klub lain musim ini ikut dihitung). */
+export async function getSquadStats(teamId: number, seasonId: number | undefined): Promise<SquadStat[]> {
+  const supabase = await createClient();
+  const { data: squad } = await supabase
+    .from("v_player_current")
+    .select("id, web_name, fpl_code, photo_url_resolved, fpl_position, status, news, price_tenths, selected_by_pct")
+    .eq("team_id", teamId);
+  const ids = (squad ?? []).map((p) => p.id).filter((x): x is number => x != null);
+  if (ids.length === 0) return [];
+  const gwRes = seasonId != null ? await supabase.from("gameweeks").select("id").eq("season_id", seasonId) : { data: [] };
+  const gwIds = (gwRes.data ?? []).map((g) => g.id);
+  const [rows, formRes] = await Promise.all([
+    gwIds.length
+      ? fetchAll((a, b) =>
+          supabase
+            .from("player_fpl_gw_stats")
+            .select("player_id, fixture_id, minutes, total_points, bonus, goals_scored, assists, clean_sheets, saves, yellow_cards, red_cards, defensive_contribution, expected_goals, expected_assists")
+            .in("player_id", ids)
+            .in("gameweek_id", gwIds)
+            .order("player_id")
+            .order("fixture_id")
+            .range(a, b),
+        )
+      : Promise.resolve([]),
+    supabase.from("v_player_form").select("player_id, form_label").in("player_id", ids),
+  ]);
+  const form = new Map((formRes.data ?? []).map((f) => [f.player_id, f.form_label]));
+  const agg = new Map<number, Omit<SquadStat, "id" | "webName" | "photos" | "position" | "status" | "news" | "priceTenths" | "ownedPct" | "formLabel">>();
+  for (const r of rows) {
+    const a = agg.get(r.player_id) ?? { apps: 0, starts: 0, minutes: 0, goals: 0, assists: 0, xg: 0, xa: 0, cleanSheets: 0, saves: 0, yellow: 0, red: 0, bonus: 0, defcon: 0, points: 0 };
+    const mins = r.minutes ?? 0;
+    if (mins > 0) a.apps += 1;
+    if (mins >= 60) a.starts += 1; // FPL tidak memberi status starter; ≥60 menit dipakai sebagai pendekatan
+    a.minutes += mins;
+    a.goals += r.goals_scored ?? 0;
+    a.assists += r.assists ?? 0;
+    a.xg += num(r.expected_goals) ?? 0;
+    a.xa += num(r.expected_assists) ?? 0;
+    a.cleanSheets += r.clean_sheets ?? 0;
+    a.saves += r.saves ?? 0;
+    a.yellow += r.yellow_cards ?? 0;
+    a.red += r.red_cards ?? 0;
+    a.bonus += r.bonus ?? 0;
+    a.defcon += r.defensive_contribution ?? 0;
+    a.points += r.total_points ?? 0;
+    agg.set(r.player_id, a);
+  }
+  const empty = { apps: 0, starts: 0, minutes: 0, goals: 0, assists: 0, xg: 0, xa: 0, cleanSheets: 0, saves: 0, yellow: 0, red: 0, bonus: 0, defcon: 0, points: 0 };
+  return (squad ?? [])
+    .filter((p): p is typeof p & { id: number } => p.id != null)
+    .map((p) => ({
+      id: p.id,
+      webName: p.web_name ?? String(p.id),
+      photos: playerPhotoUrls(p.fpl_code, p.photo_url_resolved),
+      position: p.fpl_position,
+      status: p.status,
+      news: p.news,
+      priceTenths: p.price_tenths,
+      ownedPct: num(p.selected_by_pct),
+      formLabel: form.get(p.id) ?? null,
+      ...(agg.get(p.id) ?? empty),
+    }));
+}

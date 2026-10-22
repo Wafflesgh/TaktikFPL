@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Insights } from "@/components/analysis/Insights";
+import { SquadTable } from "@/components/club/SquadTable";
 import { XiPitch } from "@/components/club/XiPitch";
 import { ArrowRightIcon } from "@/components/icons";
 import { BottomNav } from "@/components/shell/NavLinks";
@@ -13,6 +14,7 @@ import { getClub, type ClubData } from "@/lib/data/club";
 import type { TeamInfo } from "@/lib/data/dashboard";
 import type { TeamRow } from "@/lib/data/league";
 import { parsePlayerId } from "@/lib/data/player";
+import { getSquadStats } from "@/lib/data/squad";
 import { getViewer } from "@/lib/data/viewer";
 import { formatDateWIB, formatWIB } from "@/lib/time";
 
@@ -35,6 +37,7 @@ const n2 = (v: number | null | undefined) => (v == null ? "-" : v.toFixed(2));
 /** Profil klub: XI utama & taktik pelatih, rekor musim, jadwal, dan review laga terakhir. */
 export default async function ClubPage({ params }: PageProps<"/klub/[id]">) {
   const [club, viewer] = await Promise.all([load(params), getViewer()]);
+  const squad = await getSquadStats(club.team.id, club.seasonId);
   const { team, style, record: rec, xi, shotProfile: sp } = club;
   const form = club.last.slice(0, 5).reverse();
   const tactics = tacticsInsights({
@@ -101,6 +104,10 @@ export default async function ClubPage({ params }: PageProps<"/klub/[id]">) {
             </Panel>
           </div>
         </div>
+
+        <Panel title="Squad" subtitle={`${squad.length} players · ${club.seasonLabel} totals · click a player for the full profile`}>
+          {squad.length ? <SquadTable players={squad} /> : <p className="text-sm text-[var(--text-muted)]">No squad data yet.</p>}
+        </Panel>
 
         <Panel title="Season overview" subtitle={`${club.seasonLabel} · overall, home and away`}>
           <Overview club={club} />

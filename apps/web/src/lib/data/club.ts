@@ -204,6 +204,7 @@ export async function getClub(teamId: number) {
 
   return {
     team,
+    seasonId,
     seasonLabel: league.season?.label ?? null,
     style,
     tablePos: tablePos.get(teamId) ?? null,

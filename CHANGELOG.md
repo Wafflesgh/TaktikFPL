@@ -2,6 +2,15 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.23.0] — 2026-10-22 · Daftar skuad di profil klub
+
+### Ditambahkan
+- Panel **Squad** di `/klub/[id]`: seluruh pemain klub saat ini dengan foto, posisi, berita cedera, label form,
+  harga, penampilan (start ≥60 menit), menit, gol, assist, xG, xA, clean sheet, save, kontribusi bertahan, kartu
+  kuning/merah, bonus, poin FPL, poin/penampilan, dan % kepemilikan — total musim berjalan dari statistik FPL per
+  laga. Filter posisi, kolom bisa diurutkan, klik baris → profil pemain. Kolom pemain menempel saat tabel
+  digeser di HP.
+
 ## [0.22.2] — 2026-10-22 · Home tanpa ruang kosong
 
 ### Diubah
