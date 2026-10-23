@@ -38,8 +38,8 @@ class SquadPlan:
 
 def optimize_squad(
     candidates: list[Candidate],
-    budget_tenths: int = 1000,
-    max_per_team: int = 3,
+    budget_tenths: int | None = 1000,
+    max_per_team: int | None = 3,
     squad_size: dict[str, int] | None = None,
 ) -> SquadPlan:
     sizes = squad_size or SQUAD_SIZE
@@ -52,7 +52,8 @@ def optimize_squad(
         c.value * start[c.player_id] + BENCH_WEIGHT * c.value * (pick[c.player_id] - start[c.player_id])
         for c in candidates
     )
-    prob += pulp.lpSum(c.price_tenths * pick[c.player_id] for c in candidates) <= budget_tenths
+    if budget_tenths is not None:
+        prob += pulp.lpSum(c.price_tenths * pick[c.player_id] for c in candidates) <= budget_tenths
     for pos, n in sizes.items():
         prob += pulp.lpSum(pick[c.player_id] for c in candidates if c.position == pos) == n
         prob += pulp.lpSum(start[c.player_id] for c in candidates if c.position == pos) >= XI_MIN[pos]
@@ -60,7 +61,7 @@ def optimize_squad(
     prob += pulp.lpSum(start.values()) == 11
     for c in candidates:
         prob += start[c.player_id] <= pick[c.player_id]
-    for team in {c.team_id for c in candidates}:
+    for team in {c.team_id for c in candidates} if max_per_team is not None else ():
         prob += pulp.lpSum(pick[c.player_id] for c in candidates if c.team_id == team) <= max_per_team
 
     stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=60))
@@ -91,9 +92,12 @@ class XIPlan:
     status: str
 
 
-def best_xi(candidates: list[Candidate], budget_tenths: int = 1000, max_per_team: int = 3) -> XIPlan:
-    """Squad 15 pemain terbaik untuk SATU GW (`value` = xPts GW itu) yang muat budget — XI + cadangan
-    bisa langsung disalin ke FPL. Cadangan berbobot kecil sehingga optimizer memilih yang murah tapi main."""
+def best_xi(
+    candidates: list[Candidate], budget_tenths: int | None = None, max_per_team: int | None = None
+) -> XIPlan:
+    """XI dengan xPts tertinggi untuk SATU GW (`value` = xPts GW itu) + 4 cadangan terbaik berikutnya.
+    Default tanpa budget & tanpa batas per klub (keputusan Dilan 2026-10-23: Best XI murni form/poin;
+    kendala harga hanya untuk squad optimal & My Team). Formasi XI tetap valid."""
     plan = optimize_squad(candidates, budget_tenths=budget_tenths, max_per_team=max_per_team)
     by_id = {c.player_id: c for c in candidates}
     ranked = sorted(plan.starters, key=lambda pid: by_id[pid].value, reverse=True)

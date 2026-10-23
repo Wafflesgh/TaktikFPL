@@ -32,14 +32,16 @@ export type BestXi = {
   /** Cadangan sesuai urutan FPL (kiper dulu); kosong untuk laporan lama tanpa budget. */
   bench: XiPlayer[];
   costTenths: number | null;
+  /** null = tanpa budget & batas klub (murni xPts tertinggi); laporan lama = £100m, maks 3 per klub. */
+  budgetTenths: number | null;
   finishedAt: string | null;
 };
 
 const POS_ORDER = ["GKP", "DEF", "MID", "FWD"];
 
-type BestXiJson = { gw: number; starters: number[]; bench?: number[]; cost_tenths?: number; captain: number; vice: number; formation: string; xpts: number };
+type BestXiJson = { gw: number; starters: number[]; bench?: number[]; cost_tenths?: number; budget_tenths?: number | null; captain: number; vice: number; formation: string; xpts: number };
 
-/** Squad terbaik GW berikutnya (ILP worker, budget £100m, maks 3 per klub): XI + cadangan + alasan. */
+/** XI dengan xPts tertinggi GW berikutnya (ILP worker, tanpa budget sejak 2026-10-23): XI + cadangan + alasan. */
 export async function getBestXi(): Promise<BestXi | null> {
   const supabase = await createClient();
   const { data: report } = await supabase
@@ -113,6 +115,7 @@ export async function getBestXi(): Promise<BestXi | null> {
     players: starters,
     bench,
     costTenths: xi.cost_tenths ?? null,
+    budgetTenths: "budget_tenths" in xi ? (xi.budget_tenths ?? null) : 1000,
     finishedAt: report.created_at,
   };
 }

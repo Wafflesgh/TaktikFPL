@@ -417,6 +417,8 @@ def run_projections(run_type: str = "adhoc") -> dict[str, Any]:
                             "starters": xi.starters,
                             "bench": xi.bench,
                             "cost_tenths": xi.cost_tenths,
+                            "budget_tenths": None,
+                            "max_per_team": None,
                             "captain": xi.captain,
                             "vice": xi.vice,
                             "formation": xi.formation,

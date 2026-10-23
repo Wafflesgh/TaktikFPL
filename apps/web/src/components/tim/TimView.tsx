@@ -4,7 +4,7 @@ import { PlayerHeadshot } from "@/components/PlayerHeadshot";
 import { Reasons } from "@/components/Reasons";
 import { Panel } from "@/components/ui";
 import type { TimData } from "@/lib/data/tim";
-import type { ProjPlayer } from "@/lib/reco";
+import type { ProjPlayer, TransferIdea } from "@/lib/reco";
 import { formatPrice } from "@/lib/time";
 
 const POS_ORDER = ["GKP", "DEF", "MID", "FWD"];
@@ -180,6 +180,61 @@ function ModeTabs({ mode }: { mode: TimMode }) {
 
 type Ok = Extract<TimData, { status: "ok" }>;
 
+/** Kenapa pemain ini yang dijual & kenapa pengganti ini — hanya membandingkan angka engine yang sudah ada. */
+function TransferWhy({ t, squad, firstGw, horizonGw }: { t: TransferIdea; squad: ProjPlayer[]; firstGw: number; horizonGw: number }) {
+  const { out, in: inP } = t;
+  const samePos = [...squad.filter((p) => p.position === out.position)].sort((a, b) => b.horizon - a.horizon);
+  const rank = samePos.findIndex((p) => p.id === out.id) + 1;
+  const gws = Array.from({ length: horizonGw }, (_, i) => firstGw + i);
+  const ahead = gws.filter((gw) => (inP.byGw[gw] ?? 0) > (out.byGw[gw] ?? 0)).length;
+  const outWarn = out.reasons.filter((r) => r.tone !== "good");
+  const pos = out.position;
+
+  return (
+    <div className="mt-3 flex flex-col gap-3 border-t border-white/5 pt-3">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-red-300">Why sell {out.name}</p>
+        <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-[var(--text-muted)]">
+          <li>
+            {rank === samePos.length ? "Lowest" : `#${rank} of ${samePos.length}`} {horizonGw}-GW xPts among your {pos}s ({out.horizon.toFixed(1)}
+            {rank > 1 ? `; best ${samePos[0].name} ${samePos[0].horizon.toFixed(1)}` : ""})
+          </li>
+          <li>
+            This sale gives the biggest upgrade in your squad (+{t.gainHorizon.toFixed(1)})
+            {t.nextSwap ? `; next best swap: ${t.nextSwap.out.name} → ${t.nextSwap.in.name} (+${t.nextSwap.gainHorizon.toFixed(1)})` : ""}
+          </li>
+        </ul>
+        <Reasons reasons={outWarn.length ? outWarn : out.reasons} max={3} className="mt-1.5" />
+      </div>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-green-300">Why {inP.name}</p>
+        <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-[var(--text-muted)]">
+          <li>
+            Highest {horizonGw}-GW xPts ({inP.horizon.toFixed(1)}) of {t.options} {pos}s you can afford (≤ {formatPrice(t.maxPriceTenths)}, max 3 per club)
+          </li>
+          {t.runnerUp && (
+            <li>
+              Next option: {t.runnerUp.name} ({t.runnerUp.teamShort}, {formatPrice(t.runnerUp.priceTenths)}) {t.runnerUp.horizon.toFixed(1)} xPts
+            </li>
+          )}
+          <li>
+            Out-projects {out.name} in {ahead} of {horizonGw} GWs
+          </li>
+        </ul>
+        <Reasons reasons={inP.reasons} max={3} className="mt-1.5" />
+      </div>
+      <div className="flex flex-col gap-1 text-[11px] text-[var(--text-muted)]">
+        {[out, inP].map((p) => (
+          <div key={p.id} className="flex items-center gap-2">
+            <span className={`w-20 truncate ${p === out ? "text-red-300" : "text-green-300"}`}>{p.name}</span>
+            <GwStrip p={p} firstGw={firstGw} n={horizonGw} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TransferPlanPanel({ data }: { data: Ok }) {
   const { firstGw, horizonGw, plans, bestPlan, freeTransfers, ftEstimate } = data;
   const unlimited = ftEstimate == null && !data.ftOverridden;
@@ -265,7 +320,7 @@ function TransferPlanPanel({ data }: { data: Ok }) {
                   {t.gainNext.toFixed(1)}
                 </span>
               </p>
-              <Reasons reasons={t.in.reasons} max={3} className="mt-2" />
+              <TransferWhy t={t} squad={data.squad} firstGw={firstGw} horizonGw={horizonGw} />
             </li>
           ))}
         </ol>

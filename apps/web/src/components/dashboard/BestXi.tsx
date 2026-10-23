@@ -110,7 +110,11 @@ export function BestXiPanel({ xi }: { xi: BestXi | null }) {
   return (
     <Panel
       title={`Best XI · GW${xi.gw}`}
-      subtitle={`${xi.formation} · XI ${xi.xpts.toFixed(1)} xPts (captain not doubled) · ${xi.costTenths != null ? `full 15-man squad £${(xi.costTenths / 10).toFixed(1)}m of £100.0m` : "no budget"} · max 3 per club · updated ${when(xi.finishedAt)}`}
+      subtitle={`${xi.formation} · XI ${xi.xpts.toFixed(1)} xPts (captain not doubled) · ${
+        xi.budgetTenths == null
+          ? "highest xPts from all players, no price or club limit"
+          : `full 15-man squad £${((xi.costTenths ?? 0) / 10).toFixed(1)}m of £${(xi.budgetTenths / 10).toFixed(1)}m · max 3 per club`
+      } · updated ${when(xi.finishedAt)}`}
     >
       <div className="-mx-1 overflow-x-auto px-1">
         <div className="flex min-w-[540px] gap-2">

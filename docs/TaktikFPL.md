@@ -140,7 +140,7 @@ Model & optimasi:
 
 ## 7. Web (`apps/web/src/app`) — https://taktik-fpl.vercel.app
 
-`/` Home (overview GW, **Best XI** 15 pemain + bench + alasan + "Full breakdown", **FPL News** realtime,
+`/` Home (overview GW, **Best XI** xPts tertinggi tanpa budget/batas klub + bench + alasan + "Full breakdown", **FPL News** realtime,
 Top Form dengan filter posisi; top bar: toggle **Auto-update** per perangkat), `/analisis` (harga & transfer,
 **Model accuracy**), `/jadwal` (fixtures, FDR, perubahan jadwal), `/pemain/[id]` (hero, poin per GW, form,
 **Positions played** (lapangan ala FM dari slot posisi lineup Understat, mulai 2025/26: apps, %, G/A, xG/xA per

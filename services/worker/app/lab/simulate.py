@@ -58,7 +58,7 @@ def free_hit_points(pred_gw: dict[int, float], b: GwBundle) -> tuple[int, int]:
         for pid, info in b.players.items()
         if pred_gw.get(pid, 0.0) > 0
     ]
-    plan = best_xi(cands)
+    plan = best_xi(cands, budget_tenths=1000, max_per_team=3)
     position = {pid: info.position for pid, info in b.players.items()}
     pts, _ = score_xi(plan.starters, plan.bench, plan.captain, plan.vice, b, position)
     return pts, plan.captain

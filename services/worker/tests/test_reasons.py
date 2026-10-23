@@ -68,7 +68,7 @@ def test_best_xi_fits_budget_with_bench():
             cands.append(
                 Candidate(pid, pos, 1 if i < 2 else 10 + pid, 130 - i * 10 if i < 5 else 40, 10.0 - i)
             )
-    xi = best_xi(cands, budget_tenths=1000)
+    xi = best_xi(cands, budget_tenths=1000, max_per_team=3)
     by = {c.player_id: c for c in cands}
     assert xi.status == "Optimal" and len(xi.starters) == 11 and len(xi.bench) == 4
     assert xi.cost_tenths <= 1000
@@ -77,6 +77,24 @@ def test_best_xi_fits_budget_with_bench():
     d, m, f = (int(x) for x in xi.formation.split("-"))
     assert d + m + f == 10 and 3 <= d <= 5 and 2 <= m <= 5 and 1 <= f <= 3
     assert by[xi.captain].value >= by[xi.vice].value
+
+
+def test_best_xi_default_ignores_price_and_club():
+    # Pemain terbaik semuanya mahal & dari satu klub → default Best XI tetap memilih mereka.
+    cands = []
+    pid = 0
+    for pos, n in (("GKP", 3), ("DEF", 7), ("MID", 7), ("FWD", 4)):
+        for i in range(n):
+            pid += 1
+            cands.append(Candidate(pid, pos, 1 if i < 3 else 10 + pid, 150 if i < 3 else 40, 10.0 - i))
+    xi = best_xi(cands)
+    by = {c.player_id: c for c in cands}
+    assert xi.status == "Optimal" and len(xi.starters) == 11 and len(xi.bench) == 4
+    top = sorted(by.values(), key=lambda c: -c.value)
+    assert xi.value == round(sum(by[p].value for p in xi.starters), 2)
+    assert sum(1 for p in xi.starters if by[p].team_id == 1) > 3
+    assert xi.cost_tenths > 1000
+    assert by[xi.captain].value == top[0].value
 
 
 def test_reasons_carry_percentages():

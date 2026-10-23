@@ -2,6 +2,22 @@
 
 Semua perubahan penting TaktikFPL. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
+## [0.24.0] — 2026-10-23 · Best XI murni xPts
+
+### Diubah
+- **Best XI** di Home tidak lagi memakai budget £100m maupun batas 3 per klub: XI = xPts GW berikutnya tertinggi
+  dari seluruh pemain (formasi tetap valid), cadangan = 4 terbaik berikutnya. Sebelumnya kenaikan harga satu
+  pemain (Mbeumo £7.8m → £7.9m) bisa menggeser XI walau proyeksi tidak berubah. Kendala harga tetap berlaku di
+  squad optimal (wildcard), My Team (transfer dari tim sendiri: free transfer, bank, hit −4), dan simulasi
+  free hit Model Lab. Laporan lama tetap tampil dengan keterangan budget-nya.
+
+### Ditambahkan
+- **My Team → Transfer plan**: tiap transfer kini menjelaskan *kenapa pemain itu yang dijual* (peringkat xPts
+  6-GW di posisinya dalam squad, kenapa dia bukan pemain lain: swap terbaik berikutnya beserta gain-nya, alasan
+  peringatan dari engine) dan *kenapa penggantinya itu* (xPts tertinggi dari N pemain yang terjangkau dengan
+  batas harga & maks 3 per klub, opsi berikutnya, unggul di berapa dari 6 GW, alasan engine), plus strip xPts
+  per GW keduanya berdampingan. Semua dari angka engine yang sudah ada — tidak ada angka baru.
+
 ## [0.23.0] — 2026-10-22 · Daftar skuad di profil klub
 
 ### Ditambahkan

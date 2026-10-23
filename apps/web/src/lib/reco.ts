@@ -26,6 +26,12 @@ export type TransferIdea = {
   gainHorizon: number;
   gainNext: number;
   budgetLeftTenths: number;
+  /** Penjelasan pilihan pengganti: berapa kandidat yang lolos syarat (posisi, budget, klub) & runner-up-nya. */
+  options: number;
+  maxPriceTenths: number;
+  runnerUp: ProjPlayer | null;
+  /** Penjelasan pemain yang dijual: swap terbaik berikutnya bila pemain lain yang dijual (diisi planTransfers). */
+  nextSwap?: { out: ProjPlayer; in: ProjPlayer; gainHorizon: number } | null;
 };
 
 export type HoldNote = { player: ProjPlayer; kind: "tahan" | "jual"; reason: string };
@@ -52,11 +58,17 @@ export function bestTransfers(
   for (const out of squad) {
     const budget = out.priceTenths + bankTenths;
     let best: ProjPlayer | null = null;
+    let runnerUp: ProjPlayer | null = null;
+    let options = 0;
     for (const c of pool) {
       if (inSquad.has(c.id) || c.position !== out.position || c.priceTenths > budget) continue;
       const clubAfter = (teamCount.get(c.teamId) ?? 0) - (c.teamId === out.teamId ? 1 : 0) + 1;
       if (clubAfter > maxPerTeam) continue;
-      if (!best || c.horizon > best.horizon) best = c;
+      options++;
+      if (!best || c.horizon > best.horizon) {
+        runnerUp = best;
+        best = c;
+      } else if (!runnerUp || c.horizon > runnerUp.horizon) runnerUp = c;
     }
     if (best && best.horizon - out.horizon > 0.3) {
       ideas.push({
@@ -65,6 +77,9 @@ export function bestTransfers(
         gainHorizon: best.horizon - out.horizon,
         gainNext: best.next - out.next,
         budgetLeftTenths: budget - best.priceTenths,
+        options,
+        maxPriceTenths: budget,
+        runnerUp,
       });
     }
   }
@@ -156,12 +171,15 @@ export function planTransfers(
   const done: TransferIdea[] = [];
   for (let k = 1; k <= maxTransfers; k++) {
     const bought = new Set(done.map((t) => t.in.id));
-    const next = bestTransfers(
+    const ideas = bestTransfers(
       current.filter((p) => !bought.has(p.id)),
       pool.filter((p) => !sold.has(p.id)),
       bank,
-    ).find((t) => !current.some((p) => p.id === t.in.id));
-    if (!next) break;
+    ).filter((t) => !current.some((p) => p.id === t.in.id));
+    const found = ideas[0];
+    if (!found) break;
+    const alt = ideas.find((t) => t.out.id !== found.out.id);
+    const next: TransferIdea = { ...found, nextSwap: alt ? { out: alt.out, in: alt.in, gainHorizon: alt.gainHorizon } : null };
     // bestTransfers hanya melihat squad tanpa pemain yang baru dibeli → cek ulang batas klub & budget.
     const clubAfter = current.filter((p) => p.teamId === next.in.teamId && p.id !== next.out.id).length + 1;
     if (clubAfter > 3) break;
