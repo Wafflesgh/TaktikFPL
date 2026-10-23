@@ -61,7 +61,9 @@ def optimize_squad(
     prob += pulp.lpSum(start.values()) == 11
     for c in candidates:
         prob += start[c.player_id] <= pick[c.player_id]
-    for team in {c.team_id for c in candidates} if max_per_team is not None else ():
+    teams = {c.team_id for c in candidates} if max_per_team is not None else set()
+    for team in teams:
+        assert max_per_team is not None
         prob += pulp.lpSum(pick[c.player_id] for c in candidates if c.team_id == team) <= max_per_team
 
     stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=60))
